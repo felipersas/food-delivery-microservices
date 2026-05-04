@@ -10,6 +10,7 @@
     "test:watch": "bun test --watch"
   },
   "dependencies": {
+    "@app/messaging": "workspace:*",
     "@app/shared": "workspace:*",
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",

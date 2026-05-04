@@ -1,12 +1,14 @@
 import type { DomainEvent } from '@app/shared';
+import type { RabbitMQConnection } from '@app/messaging';
 import type { EventPublisher } from '../../../application/use-cases/create-order/create-order.use-case';
 
 export class RabbitMQEventPublisher implements EventPublisher {
+  constructor(private readonly connection: RabbitMQConnection) {}
+
   async publishAll(events: ReadonlyArray<DomainEvent>): Promise<void> {
-    // TODO: implement real RabbitMQ publishing via amqp-connection-manager
-    // For now, just log
     for (const event of events) {
-      console.log(`[EventPublisher] Publishing ${event.eventType}`, event);
+      const routingKey = event.eventType;
+      await this.connection.publish(routingKey, event);
     }
   }
 }
