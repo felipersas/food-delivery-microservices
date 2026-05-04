@@ -1,7 +1,9 @@
 import type { KitchenTicket } from '@domain/aggregates/kitchen-ticket.aggregate';
 import type { KitchenTicketRepository } from '@domain/repositories/kitchen-ticket.repository.interface';
 
-export class InMemoryKitchenTicketRepository implements KitchenTicketRepository {
+export class InMemoryKitchenTicketRepository
+  implements KitchenTicketRepository
+{
   private tickets: Map<string, KitchenTicket> = new Map();
 
   async findById(id: string): Promise<KitchenTicket | null> {

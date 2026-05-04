@@ -9,7 +9,11 @@ export enum KitchenTicketStatus {
 
 export class KitchenTicket extends AggregateRoot<string> {
   private orderId: string;
-  private items: Array<{ productId: string; productName: string; quantity: number }>;
+  private items: Array<{
+    productId: string;
+    productName: string;
+    quantity: number;
+  }>;
   private status: KitchenTicketStatus;
 
   constructor(props: {
@@ -73,7 +77,11 @@ export class KitchenTicket extends AggregateRoot<string> {
     return this.orderId;
   }
 
-  getItems(): Array<{ productId: string; productName: string; quantity: number }> {
+  getItems(): Array<{
+    productId: string;
+    productName: string;
+    quantity: number;
+  }> {
     return [...this.items];
   }
 }

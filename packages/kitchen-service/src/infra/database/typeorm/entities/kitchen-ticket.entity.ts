@@ -28,6 +28,9 @@ export class KitchenTicketEntity {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 
-  @OneToMany(() => KitchenTicketItemEntity, (item) => item.ticket, { cascade: true, eager: true })
+  @OneToMany(() => KitchenTicketItemEntity, (item) => item.ticket, {
+    cascade: true,
+    eager: true,
+  })
   items!: KitchenTicketItemEntity[];
 }

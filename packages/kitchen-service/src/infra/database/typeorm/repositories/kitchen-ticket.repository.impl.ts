@@ -6,7 +6,9 @@ import { KitchenTicketItemEntity } from '@infra/database/typeorm/entities/kitche
 import type { KitchenTicketRepository } from '@domain/repositories/kitchen-ticket.repository.interface';
 import { v4 as uuidv4 } from 'uuid';
 
-export class PostgresKitchenTicketRepository implements KitchenTicketRepository {
+export class PostgresKitchenTicketRepository
+  implements KitchenTicketRepository
+{
   constructor(private readonly dataSource: DataSource) {}
 
   async findById(id: string): Promise<KitchenTicket | null> {

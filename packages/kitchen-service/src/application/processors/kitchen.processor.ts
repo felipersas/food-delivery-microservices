@@ -9,7 +9,9 @@ export class KitchenProcessor {
   async process(job: Job<KitchenJobData>): Promise<void> {
     const { orderId, items } = job.data;
 
-    console.log(`[Kitchen] Processing order ${orderId} with ${items.length} items`);
+    console.log(
+      `[Kitchen] Processing order ${orderId} with ${items.length} items`,
+    );
 
     // Simulate preparation time
     await job.updateProgress(50);
