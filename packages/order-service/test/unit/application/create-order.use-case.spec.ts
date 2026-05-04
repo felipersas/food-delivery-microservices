@@ -1,8 +1,8 @@
 import { describe, it, expect, mock } from 'bun:test';
 import type { DomainEvent } from '@app/shared';
-import { CreateOrderUseCase } from '../../../src/application/use-cases/create-order/create-order.use-case';
-import type { OrderRepository } from '../../../src/domain/repositories/order.repository.interface';
-import type { CreateOrderInput } from '../../../src/application/use-cases/create-order/create-order.dto';
+import { CreateOrderUseCase } from '@application/use-cases/create-order/create-order.use-case';
+import type { OrderRepository } from '@domain/repositories/order.repository.interface';
+import type { CreateOrderInput } from '@application/use-cases/create-order/create-order.dto';
 
 function makeMockRepo(): OrderRepository {
   const store = new Map();

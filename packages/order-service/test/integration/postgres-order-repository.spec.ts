@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { DataSource } from 'typeorm';
 import { Money } from '@app/shared';
-import { PostgresOrderRepository } from '../../src/infra/database/typeorm/repositories/order.repository.impl';
-import { Order } from '../../src/domain/aggregates/order.aggregate';
-import { OrderItem } from '../../src/domain/value-objects/order-item.vo';
-import { OrderEntity } from '../../src/infra/database/typeorm/entities/order.entity';
-import { OrderItemEntity } from '../../src/infra/database/typeorm/entities/order-item.entity';
+import { PostgresOrderRepository } from '@infra/database/typeorm/repositories/order.repository.impl';
+import { Order } from '@domain/aggregates/order.aggregate';
+import { OrderItem } from '@domain/value-objects/order-item.vo';
+import { OrderEntity } from '@infra/database/typeorm/entities/order.entity';
+import { OrderItemEntity } from '@infra/database/typeorm/entities/order-item.entity';
 
 const DB_URL = process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/orders';
 

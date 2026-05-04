@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import type { DomainEvent } from '@app/shared';
 import { RabbitMQConnection } from '@app/messaging';
-import { CreateOrderUseCase } from '../../src/application/use-cases/create-order/create-order.use-case';
-import { InMemoryOrderRepository } from '../../src/infra/database/memory/order.repository';
-import { RabbitMQEventPublisher } from '../../src/infra/messaging/rabbitmq/order-event.publisher';
-import type { CreateOrderInput } from '../../src/application/use-cases/create-order/create-order.dto';
+import { CreateOrderUseCase } from '@application/use-cases/create-order/create-order.use-case';
+import { InMemoryOrderRepository } from '@infra/database/memory/order.repository';
+import { RabbitMQEventPublisher } from '@infra/messaging/rabbitmq/order-event.publisher';
+import type { CreateOrderInput } from '@application/use-cases/create-order/create-order.dto';
 
 const RABBIT_URL = process.env.RABBITMQ_URL ?? 'amqp://guest:guest@localhost:5672';
 const EXCHANGE = 'food-ordering';

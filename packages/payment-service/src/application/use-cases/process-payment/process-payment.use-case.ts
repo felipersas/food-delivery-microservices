@@ -1,5 +1,5 @@
 import { Money } from '@app/shared';
-import { Payment, PaymentMethod } from '../../../domain/aggregates/payment.aggregate';
+import { Payment, PaymentMethod } from '@domain/aggregates/payment.aggregate';
 import type { ProcessPaymentInput, ProcessPaymentOutput } from './process-payment.dto';
 
 export class ProcessPaymentUseCase {

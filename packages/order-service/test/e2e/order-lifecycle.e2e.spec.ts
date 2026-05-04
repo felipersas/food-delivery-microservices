@@ -2,12 +2,12 @@ import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { DataSource } from 'typeorm';
 import type { DomainEvent } from '@app/shared';
 import { RabbitMQConnection } from '@app/messaging';
-import { PostgresOrderRepository } from '../../src/infra/database/typeorm/repositories/order.repository.impl';
-import { RabbitMQEventPublisher } from '../../src/infra/messaging/rabbitmq/order-event.publisher';
-import { CreateOrderUseCase } from '../../src/application/use-cases/create-order/create-order.use-case';
-import { GetOrderUseCase } from '../../src/application/use-cases/get-order/get-order.use-case';
-import { OrderEntity } from '../../src/infra/database/typeorm/entities/order.entity';
-import { OrderItemEntity } from '../../src/infra/database/typeorm/entities/order-item.entity';
+import { PostgresOrderRepository } from '@infra/database/typeorm/repositories/order.repository.impl';
+import { RabbitMQEventPublisher } from '@infra/messaging/rabbitmq/order-event.publisher';
+import { CreateOrderUseCase } from '@application/use-cases/create-order/create-order.use-case';
+import { GetOrderUseCase } from '@application/use-cases/get-order/get-order.use-case';
+import { OrderEntity } from '@infra/database/typeorm/entities/order.entity';
+import { OrderItemEntity } from '@infra/database/typeorm/entities/order-item.entity';
 
 const DB_URL = process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/orders';
 const RABBIT_URL = process.env.RABBITMQ_URL ?? 'amqp://guest:guest@localhost:5672';

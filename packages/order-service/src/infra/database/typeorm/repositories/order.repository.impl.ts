@@ -1,13 +1,14 @@
 import { DataSource } from 'typeorm';
 import { Money } from '@app/shared';
-import { Order } from '../../../../domain/aggregates/order.aggregate';
-import { OrderStatusEnum } from '../../../../domain/value-objects/order-status.vo';
-import { OrderItem } from '../../../../domain/value-objects/order-item.vo';
-import { OrderEntity } from '../entities/order.entity';
-import { OrderItemEntity } from '../entities/order-item.entity';
+import { Order } from '@domain/aggregates/order.aggregate';
+import { OrderStatusEnum } from '@domain/value-objects/order-status.vo';
+import { OrderItem } from '@domain/value-objects/order-item.vo';
+import { OrderEntity } from '@infra/database/typeorm/entities/order.entity';
+import { OrderItemEntity } from '@infra/database/typeorm/entities/order-item.entity';
+import type { OrderRepository } from '@domain/repositories/order.repository.interface';
 import { v4 as uuidv4 } from 'uuid';
 
-export class PostgresOrderRepository {
+export class PostgresOrderRepository implements OrderRepository {
   constructor(private readonly dataSource: DataSource) {}
 
   async findById(id: string): Promise<Order | null> {

@@ -1,8 +1,8 @@
 import { Money } from '@app/shared';
 import type { DomainEvent } from '@app/shared';
-import { Order } from '../../../domain/aggregates/order.aggregate';
-import { OrderItem } from '../../../domain/value-objects/order-item.vo';
-import type { OrderRepository } from '../../../domain/repositories/order.repository.interface';
+import { Order } from '@domain/aggregates/order.aggregate';
+import { OrderItem } from '@domain/value-objects/order-item.vo';
+import type { OrderRepository } from '@domain/repositories/order.repository.interface';
 import type { CreateOrderInput, CreateOrderOutput } from './create-order.dto';
 
 export interface EventPublisher {

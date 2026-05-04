@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import type { DomainEvent } from '@app/shared';
 import type { RabbitMQConnection } from '@app/messaging';
-import { KitchenQueue } from '../../queue/kitchen.queue';
+import { KitchenQueue } from '@infra/queue/kitchen.queue';
 
 @Injectable()
 export class KitchenConsumer {

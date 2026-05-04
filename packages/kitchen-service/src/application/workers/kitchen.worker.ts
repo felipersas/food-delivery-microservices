@@ -1,8 +1,8 @@
 import { Worker, type Job } from 'bullmq';
 import type { RabbitMQConnection } from '@app/messaging';
 import type { DomainEvent } from '@app/shared';
-import type { KitchenJobData } from '../../infra/queue/kitchen.queue';
-import { KitchenTicket } from '../../domain/aggregates/kitchen-ticket.aggregate';
+import type { KitchenJobData } from '@infra/queue/kitchen.queue';
+import { KitchenTicket } from '@domain/aggregates/kitchen-ticket.aggregate';
 import { v4 as uuidv4 } from 'uuid';
 
 export class KitchenWorkerService {

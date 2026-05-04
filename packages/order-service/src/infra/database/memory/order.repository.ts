@@ -1,5 +1,5 @@
-import type { Order } from '../../domain/aggregates/order.aggregate';
-import type { OrderRepository } from '../../domain/repositories/order.repository.interface';
+import type { Order } from '@domain/aggregates/order.aggregate';
+import type { OrderRepository } from '@domain/repositories/order.repository.interface';
 
 export class InMemoryOrderRepository implements OrderRepository {
   private orders: Map<string, Order> = new Map();

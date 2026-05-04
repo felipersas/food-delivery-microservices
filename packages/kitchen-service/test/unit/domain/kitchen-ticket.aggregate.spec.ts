@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { KitchenTicket, KitchenTicketStatus } from '../../../src/domain/aggregates/kitchen-ticket.aggregate';
+import { KitchenTicket, KitchenTicketStatus } from '@domain/aggregates/kitchen-ticket.aggregate';
 
 describe('KitchenTicket Aggregate', () => {
   it('should create with WAITING status', () => {

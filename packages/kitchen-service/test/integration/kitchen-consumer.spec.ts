@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import type { DomainEvent } from '@app/shared';
 import { RabbitMQConnection } from '@app/messaging';
-import { KitchenConsumer } from '../../src/infra/messaging/rabbitmq/kitchen.consumer';
-import { KitchenQueue } from '../../src/infra/queue/kitchen.queue';
-import { KitchenWorkerService } from '../../src/application/workers/kitchen.worker';
+import { KitchenConsumer } from '@infra/messaging/rabbitmq/kitchen.consumer';
+import { KitchenQueue } from '@infra/queue/kitchen.queue';
+import { KitchenWorkerService } from '@application/workers/kitchen.worker';
 
 const RABBIT_URL = process.env.RABBITMQ_URL ?? 'amqp://guest:guest@localhost:5672';
 const EXCHANGE = 'food-ordering';

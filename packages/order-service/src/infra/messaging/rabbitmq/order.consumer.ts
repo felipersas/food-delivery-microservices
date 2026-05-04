@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import type { DomainEvent } from '@app/shared';
 import type { RabbitMQConnection } from '@app/messaging';
-import type { OrderRepository } from '../../../domain/repositories/order.repository.interface';
+import type { OrderRepository } from '@domain/repositories/order.repository.interface';
 
 @Injectable()
 export class OrderConsumer {

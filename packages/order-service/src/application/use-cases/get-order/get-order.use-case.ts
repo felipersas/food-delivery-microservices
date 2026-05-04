@@ -1,4 +1,4 @@
-import type { OrderRepository } from '../../../domain/repositories/order.repository.interface';
+import type { OrderRepository } from '@domain/repositories/order.repository.interface';
 import type { GetOrderOutput } from './get-order.dto';
 
 export class GetOrderUseCase {

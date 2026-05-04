@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test';
 import { Money } from '@app/shared';
-import { Payment, PaymentStatus, PaymentMethod } from '../../../src/domain/aggregates/payment.aggregate';
+import { Payment, PaymentStatus, PaymentMethod } from '@domain/aggregates/payment.aggregate';
 
 describe('Payment Aggregate', () => {
   function makePayment(): Payment {

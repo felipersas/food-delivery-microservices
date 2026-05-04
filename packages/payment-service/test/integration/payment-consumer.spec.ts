@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import type { DomainEvent } from '@app/shared';
 import { RabbitMQConnection } from '@app/messaging';
-import { PaymentConsumer } from '../../src/infra/messaging/rabbitmq/payment.consumer';
+import { PaymentConsumer } from '@infra/messaging/rabbitmq/payment.consumer';
 
 const RABBIT_URL = process.env.RABBITMQ_URL ?? 'amqp://guest:guest@localhost:5672';
 const EXCHANGE = 'food-ordering';

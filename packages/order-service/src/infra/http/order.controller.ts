@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
-import { CreateOrderUseCase } from '../../application/use-cases/create-order/create-order.use-case';
-import { GetOrderUseCase } from '../../application/use-cases/get-order/get-order.use-case';
-import type { CreateOrderInput } from '../../application/use-cases/create-order/create-order.dto';
+import { CreateOrderUseCase } from '@application/use-cases/create-order/create-order.use-case';
+import { GetOrderUseCase } from '@application/use-cases/get-order/get-order.use-case';
+import type { CreateOrderInput } from '@application/use-cases/create-order/create-order.dto';
 
 @Controller('orders')
 export class OrderController {

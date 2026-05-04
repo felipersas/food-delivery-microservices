@@ -1,6 +1,6 @@
 import { AggregateRoot, Money } from '@app/shared';
-import { OrderStatus, OrderStatusEnum } from '../value-objects/order-status.vo';
-import { OrderItem } from '../value-objects/order-item.vo';
+import { OrderStatus, OrderStatusEnum } from '@domain/value-objects/order-status.vo';
+import { OrderItem } from '@domain/value-objects/order-item.vo';
 import { v4 as uuidv4 } from 'uuid';
 
 export class Order extends AggregateRoot<string> {

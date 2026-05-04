@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'bun:test';
 import { Money } from '@app/shared';
-import { Order } from '../../../src/domain/aggregates/order.aggregate';
-import { OrderItem } from '../../../src/domain/value-objects/order-item.vo';
-import { OrderStatusEnum } from '../../../src/domain/value-objects/order-status.vo';
+import { Order } from '@domain/aggregates/order.aggregate';
+import { OrderItem } from '@domain/value-objects/order-item.vo';
+import { OrderStatusEnum } from '@domain/value-objects/order-status.vo';
 
 function makeItem(overrides: { price?: number; quantity?: number } = {}): OrderItem {
   return new OrderItem({

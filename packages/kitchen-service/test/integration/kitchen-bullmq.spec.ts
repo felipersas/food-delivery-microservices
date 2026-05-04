@@ -2,8 +2,8 @@ import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import type { Worker } from 'bullmq';
 import type { DomainEvent } from '@app/shared';
 import { RabbitMQConnection } from '@app/messaging';
-import { KitchenQueue } from '../../src/infra/queue/kitchen.queue';
-import { KitchenWorkerService } from '../../src/application/workers/kitchen.worker';
+import { KitchenQueue } from '@infra/queue/kitchen.queue';
+import { KitchenWorkerService } from '@application/workers/kitchen.worker';
 
 const REDIS_URL = { host: 'localhost', port: 6379 };
 const RABBIT_URL = process.env.RABBITMQ_URL ?? 'amqp://guest:guest@localhost:5672';
