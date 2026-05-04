@@ -1,50 +1,35 @@
 {
-  "name": "nestjs-bun-test",
+  "name": "food-ordering-monorepo",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
   "private": true,
   "type": "module",
-  "license": "UNLICENSED",
-  "module": "src/main.ts",
+  "workspaces": ["packages/*"],
   "scripts": {
-    "build": "NODE_ENV=production bun run scripts/build.ts",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "NODE_ENV=development tsc && bun .",
-    "start:dev": "NODE_ENV=development tsc-watch --onSuccess \"bun .\"",
-    "start:debug": "NODE_ENV=development tsc-watch --onSuccess \"bun . --inspect\"",
-    "start:prod": "NODE_ENV=production bun dist/main.js",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "bun test",
-    "test:watch": "bun test --watch",
-    "test:cov": "bun test --coverage",
-    "test:debug": "bun --inspect-brk --runInBand",
-    "test:e2e": "bun test ./test/app.e2e-spec.ts"
-  },
-  "dependencies": {
-    "@nestjs/common": "^10.0.0",
-    "@nestjs/core": "^10.0.0",
-    "@nestjs/mapped-types": "*",
-    "@nestjs/platform-express": "^10.0.0",
-    "reflect-metadata": "^0.2.0",
-    "rxjs": "^7.8.1"
+    "test:shared": "bun test --cwd packages/shared",
+    "test:order": "bun test --cwd packages/order-service",
+    "test:kitchen": "bun test --cwd packages/kitchen-service",
+    "test:payment": "bun test --cwd packages/payment-service",
+    "test:notification": "bun test --cwd packages/notification-service",
+    "test:analytics": "bun test --cwd packages/analytics-service",
+    "dev:order": "bun --cwd packages/order-service src/main.ts",
+    "dev:kitchen": "bun --cwd packages/kitchen-service src/main.ts",
+    "dev:payment": "bun --cwd packages/payment-service src/main.ts",
+    "dev:notification": "bun --cwd packages/notification-service src/main.ts",
+    "dev:analytics": "bun --cwd packages/analytics-service src/main.ts",
+    "dev:infra": "docker compose up -d",
+    "dev:infra:down": "docker compose down",
+    "lint": "eslint \"packages/*/src/**/*.ts\" --fix",
+    "format": "prettier --write \"packages/*/src/**/*.ts\" \"packages/*/test/**/*.ts\""
   },
   "devDependencies": {
-    "@nestjs/testing": "^10.0.0",
     "@types/bun": "^1.1.13",
-    "@types/express": "^5.0.0",
-    "@types/supertest": "^6.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^8.0.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
     "prettier": "^3.0.0",
-    "supertest": "^7.0.0",
-    "tsc-watch": "^6.2.1",
     "typescript": "^5.1.3"
-  },
-  "trustedDependencies": [
-    "@nestjs/core"
-  ]
+  }
 }
