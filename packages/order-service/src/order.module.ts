@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, type OnModuleInit } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrderController } from './infra/http/order.controller';
 import { CreateOrderUseCase } from './application/use-cases/create-order/create-order.use-case';
@@ -6,6 +6,7 @@ import { GetOrderUseCase } from './application/use-cases/get-order/get-order.use
 import { InMemoryOrderRepository } from './infra/database/memory/order.repository';
 import { PostgresOrderRepository } from './infra/database/typeorm/repositories/order.repository.impl';
 import { RabbitMQEventPublisher } from './infra/messaging/rabbitmq/order-event.publisher';
+import { OrderConsumer } from './infra/messaging/rabbitmq/order.consumer';
 import { RabbitMQConnection } from '@app/messaging';
 import { OrderEntity } from './infra/database/typeorm/entities/order.entity';
 import { OrderItemEntity } from './infra/database/typeorm/entities/order-item.entity';
@@ -44,6 +45,13 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
     },
     CreateOrderUseCase,
     GetOrderUseCase,
+    OrderConsumer,
   ],
 })
-export class OrderModule {}
+export class OrderModule implements OnModuleInit {
+  constructor(private readonly orderConsumer: OrderConsumer) {}
+
+  async onModuleInit() {
+    await this.orderConsumer.start();
+  }
+}

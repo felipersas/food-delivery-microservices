@@ -24,6 +24,29 @@ export class Order extends AggregateRoot<string> {
     this.totalAmount = this.calculateTotal();
   }
 
+  static reconstitute(props: {
+    id: string;
+    customerId: string;
+    restaurantId: string;
+    items: OrderItem[];
+    status: OrderStatusEnum;
+    totalAmount: Money;
+    version: number;
+  }): Order {
+    const order = new Order({
+      id: props.id,
+      customerId: props.customerId,
+      restaurantId: props.restaurantId,
+      items: props.items,
+    });
+    (order as any).status = new OrderStatus({ status: props.status });
+    (order as any).totalAmount = props.totalAmount;
+    for (let i = 0; i < props.version; i++) {
+      order.incrementVersion();
+    }
+    return order;
+  }
+
   static create(props: {
     customerId: string;
     restaurantId: string;

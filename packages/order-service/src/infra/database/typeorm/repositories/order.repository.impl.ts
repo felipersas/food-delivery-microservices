@@ -1,6 +1,7 @@
 import { DataSource } from 'typeorm';
 import { Money } from '@app/shared';
 import { Order } from '../../../../domain/aggregates/order.aggregate';
+import { OrderStatusEnum } from '../../../../domain/value-objects/order-status.vo';
 import { OrderItem } from '../../../../domain/value-objects/order-item.vo';
 import { OrderEntity } from '../entities/order.entity';
 import { OrderItemEntity } from '../entities/order-item.entity';
@@ -51,23 +52,15 @@ export class PostgresOrderRepository {
         }),
     );
 
-    const order = new Order({
+    return Order.reconstitute({
       id: entity.id,
       customerId: entity.customerId,
       restaurantId: entity.restaurantId,
       items,
+      status: entity.status as OrderStatusEnum,
+      totalAmount: Money.BRL(Number(entity.totalAmount)),
+      version: entity.version,
     });
-
-    // Restore state without emitting events
-    while (order.getStatus() !== entity.status && order.getStatus() !== 'CANCELLED') {
-      if (entity.status === 'CONFIRMED') order.confirm();
-      else if (entity.status === 'PREPARING') order.startPreparing();
-      else if (entity.status === 'READY') order.markReady();
-      else break;
-    }
-
-    order.clearDomainEvents();
-    return order;
   }
 
   private toEntity(order: Order): OrderEntity {
