@@ -1,4 +1,5 @@
 import { Module, type OnModuleInit } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrderController } from './infra/http/order.controller';
 import { CreateOrderUseCase } from './application/use-cases/create-order/create-order.use-case';
@@ -10,29 +11,39 @@ import { OrderConsumer } from './infra/messaging/rabbitmq/order.consumer';
 import { RabbitMQConnection } from '@app/messaging';
 import { OrderEntity } from './infra/database/typeorm/entities/order.entity';
 import { OrderItemEntity } from './infra/database/typeorm/entities/order-item.entity';
+import configuration from './config/configuration';
+import { validationSchema } from './config/validation';
 
 const usePostgres = process.env.DB_DRIVER === 'postgres';
 
 @Module({
-  imports: usePostgres
-    ? [
-        TypeOrmModule.forRoot({
-          type: 'postgres',
-          url: process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/orders',
-          entities: [OrderEntity, OrderItemEntity],
-          synchronize: process.env.NODE_ENV !== 'production',
-        }),
-      ]
-    : [],
+  imports: [
+    ConfigModule.forRoot({
+      load: [configuration],
+      validationSchema,
+      isGlobal: true,
+    }),
+    ...(usePostgres
+      ? [
+          TypeOrmModule.forRoot({
+            type: 'postgres',
+            url: process.env.ORDER_DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/orders',
+            entities: [OrderEntity, OrderItemEntity],
+            synchronize: process.env.NODE_ENV !== 'production',
+          }),
+        ]
+      : []),
+  ],
   controllers: [OrderController],
   providers: [
     {
       provide: 'RabbitMQConnection',
-      useFactory: () =>
+      useFactory: (configService: ConfigService) =>
         new RabbitMQConnection({
-          url: process.env.RABBITMQ_URL ?? 'amqp://guest:guest@localhost:5672',
-          exchange: process.env.RABBITMQ_EXCHANGE ?? 'food-ordering',
+          url: configService.get<string>('rabbitmq.url')!,
+          exchange: configService.get<string>('rabbitmq.exchange')!,
         }),
+      inject: [ConfigService],
     },
     {
       provide: 'OrderRepository',

@@ -1,16 +1,27 @@
 import { Module, type OnModuleInit } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AnalyticsConsumer } from './infra/messaging/rabbitmq/analytics.consumer';
 import { RabbitMQConnection } from '@app/messaging';
+import configuration from './config/configuration';
+import { validationSchema } from './config/validation';
 
 @Module({
+  imports: [
+    ConfigModule.forRoot({
+      load: [configuration],
+      validationSchema,
+      isGlobal: true,
+    }),
+  ],
   providers: [
     {
       provide: 'RabbitMQConnection',
-      useFactory: () =>
+      useFactory: (configService: ConfigService) =>
         new RabbitMQConnection({
-          url: process.env.RABBITMQ_URL ?? 'amqp://guest:guest@localhost:5672',
-          exchange: process.env.RABBITMQ_EXCHANGE ?? 'food-ordering',
+          url: configService.get<string>('rabbitmq.url')!,
+          exchange: configService.get<string>('rabbitmq.exchange')!,
         }),
+      inject: [ConfigService],
     },
     AnalyticsConsumer,
   ],

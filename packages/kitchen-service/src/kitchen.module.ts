@@ -1,4 +1,5 @@
 import { Module, type OnModuleInit } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { KitchenProcessor } from './application/processors/kitchen.processor';
 import { KitchenWorkerService } from './application/workers/kitchen.worker';
@@ -10,34 +11,48 @@ import { KitchenTicketEntity } from './infra/database/typeorm/entities/kitchen-t
 import { KitchenTicketItemEntity } from './infra/database/typeorm/entities/kitchen-ticket-item.entity';
 import { RabbitMQConnection } from '@app/messaging';
 import type { KitchenTicketRepository } from './domain/repositories/kitchen-ticket.repository.interface';
+import configuration from './config/configuration';
+import { validationSchema } from './config/validation';
 
-const REDIS_OPTS = { host: 'localhost', port: 6379 };
 const usePostgres = process.env.DB_DRIVER === 'postgres';
 
 @Module({
-  imports: usePostgres
-    ? [
-        TypeOrmModule.forRoot({
-          type: 'postgres',
-          url: process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5434/kitchen',
-          entities: [KitchenTicketEntity, KitchenTicketItemEntity],
-          synchronize: process.env.NODE_ENV !== 'production',
-        }),
-      ]
-    : [],
+  imports: [
+    ConfigModule.forRoot({
+      load: [configuration],
+      validationSchema,
+      isGlobal: true,
+    }),
+    ...(usePostgres
+      ? [
+          TypeOrmModule.forRoot({
+            type: 'postgres',
+            url: process.env.KITCHEN_DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5434/kitchen',
+            entities: [KitchenTicketEntity, KitchenTicketItemEntity],
+            synchronize: process.env.NODE_ENV !== 'production',
+          }),
+        ]
+      : []),
+  ],
   providers: [
     KitchenProcessor,
     {
       provide: 'RabbitMQConnection',
-      useFactory: () =>
+      useFactory: (configService: ConfigService) =>
         new RabbitMQConnection({
-          url: process.env.RABBITMQ_URL ?? 'amqp://guest:guest@localhost:5672',
-          exchange: process.env.RABBITMQ_EXCHANGE ?? 'food-ordering',
+          url: configService.get<string>('rabbitmq.url')!,
+          exchange: configService.get<string>('rabbitmq.exchange')!,
         }),
+      inject: [ConfigService],
     },
     {
       provide: 'KitchenQueue',
-      useFactory: () => new KitchenQueue(REDIS_OPTS),
+      useFactory: (configService: ConfigService) =>
+        new KitchenQueue({
+          host: configService.get<string>('redis.host')!,
+          port: configService.get<number>('redis.port')!,
+        }),
+      inject: [ConfigService],
     },
     {
       provide: 'KitchenTicketRepository',
@@ -45,9 +60,18 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
     },
     {
       provide: 'KitchenWorkerService',
-      useFactory: (rabbit: RabbitMQConnection, repo: KitchenTicketRepository) =>
-        new KitchenWorkerService(REDIS_OPTS, 'kitchen-jobs', rabbit, repo),
-      inject: ['RabbitMQConnection', 'KitchenTicketRepository'],
+      useFactory: (
+        rabbit: RabbitMQConnection,
+        repo: KitchenTicketRepository,
+        configService: ConfigService,
+      ) =>
+        new KitchenWorkerService(
+          { host: configService.get<string>('redis.host')!, port: configService.get<number>('redis.port')! },
+          'kitchen-jobs',
+          rabbit,
+          repo,
+        ),
+      inject: ['RabbitMQConnection', 'KitchenTicketRepository', ConfigService],
     },
     KitchenConsumer,
   ],
