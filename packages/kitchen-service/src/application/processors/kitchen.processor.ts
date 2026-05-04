@@ -1,22 +1,40 @@
-import type { Job } from 'bullmq';
+import type { DomainEvent } from '@app/shared';
+import { KitchenTicket } from '@domain/aggregates/kitchen-ticket.aggregate';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface KitchenJobData {
   orderId: string;
   items: Array<{ productId: string; productName: string; quantity: number }>;
 }
 
+export interface KitchenProcessingResult {
+  ticket: KitchenTicket;
+  readyEvent: DomainEvent;
+}
+
 export class KitchenProcessor {
-  async process(job: Job<KitchenJobData>): Promise<void> {
-    const { orderId, items } = job.data;
+  process(data: KitchenJobData): KitchenProcessingResult {
+    const ticket = KitchenTicket.createFromOrder({
+      orderId: data.orderId,
+      items: data.items,
+    });
 
-    console.log(
-      `[Kitchen] Processing order ${orderId} with ${items.length} items`,
-    );
+    ticket.startPreparing();
+    ticket.markReady();
 
-    // Simulate preparation time
-    await job.updateProgress(50);
+    const readyEvent: DomainEvent = {
+      eventId: uuidv4(),
+      eventType: 'order.ready',
+      occurredAt: new Date().toISOString(),
+      aggregateId: ticket.getId(),
+      aggregateType: 'KitchenTicket',
+      data: {
+        orderId: data.orderId,
+        kitchenTicketId: ticket.getId(),
+        readyAt: new Date().toISOString(),
+      },
+    };
 
-    // In real app: update ticket status, publish OrderReady event
-    console.log(`[Kitchen] Order ${orderId} ready!`);
+    return { ticket, readyEvent };
   }
 }

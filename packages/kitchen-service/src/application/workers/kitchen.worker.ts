@@ -1,13 +1,12 @@
 import { Worker, type Job } from 'bullmq';
 import type { RabbitMQConnection } from '@app/messaging';
-import type { DomainEvent } from '@app/shared';
-import type { KitchenJobData } from '@infra/queue/kitchen.queue';
 import type { KitchenTicketRepository } from '@domain/repositories/kitchen-ticket.repository.interface';
-import { KitchenTicket } from '@domain/aggregates/kitchen-ticket.aggregate';
-import { v4 as uuidv4 } from 'uuid';
+import type { KitchenJobData } from '@application/processors/kitchen.processor';
+import { KitchenProcessor } from '@application/processors/kitchen.processor';
 
 export class KitchenWorkerService {
   private worker: Worker<KitchenJobData>;
+  private processor = new KitchenProcessor();
 
   constructor(
     redisOpts: { host: string; port: number },
@@ -25,43 +24,17 @@ export class KitchenWorkerService {
   }
 
   private async processJob(job: Job<KitchenJobData>): Promise<void> {
-    const { orderId, items } = job.data;
-
     await job.updateProgress(10);
 
-    const ticket = KitchenTicket.createFromOrder({ orderId, items });
+    const { ticket, readyEvent } = this.processor.process(job.data);
 
-    await job.updateProgress(30);
-    ticket.startPreparing();
-
-    if (this.ticketRepository) {
-      await this.ticketRepository.save(ticket);
-    }
-
-    // Simulate preparation time
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    await job.updateProgress(80);
-    ticket.markReady();
+    await job.updateProgress(50);
 
     if (this.ticketRepository) {
       await this.ticketRepository.save(ticket);
     }
 
     await job.updateProgress(100);
-
-    const readyEvent: DomainEvent = {
-      eventId: uuidv4(),
-      eventType: 'order.ready',
-      occurredAt: new Date().toISOString(),
-      aggregateId: ticket.getId(),
-      aggregateType: 'KitchenTicket',
-      data: {
-        orderId,
-        kitchenTicketId: ticket.getId(),
-        readyAt: new Date().toISOString(),
-      },
-    };
 
     await this.rabbitConnection.publish('order.ready', readyEvent);
   }
