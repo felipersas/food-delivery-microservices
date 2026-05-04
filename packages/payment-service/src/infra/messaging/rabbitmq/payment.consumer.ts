@@ -6,11 +6,10 @@ import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class PaymentConsumer {
-  private processPayment: ProcessPaymentUseCase;
-
-  constructor(@Inject('RabbitMQConnection') private readonly connection: RabbitMQConnection) {
-    this.processPayment = new ProcessPaymentUseCase();
-  }
+  constructor(
+    @Inject('RabbitMQConnection') private readonly connection: RabbitMQConnection,
+    private readonly processPayment: ProcessPaymentUseCase,
+  ) {}
 
   async start(): Promise<void> {
     await this.connection.subscribe(

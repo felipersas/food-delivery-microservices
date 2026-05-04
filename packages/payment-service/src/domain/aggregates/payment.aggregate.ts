@@ -32,6 +32,27 @@ export class Payment extends AggregateRoot<string> {
     this.status = PaymentStatus.PENDING;
   }
 
+  static reconstitute(props: {
+    id: string;
+    orderId: string;
+    amount: Money;
+    method: PaymentMethod;
+    status: PaymentStatus;
+    version: number;
+  }): Payment {
+    const payment = new Payment({
+      id: props.id,
+      orderId: props.orderId,
+      amount: props.amount,
+      method: props.method,
+    });
+    (payment as any).status = props.status;
+    for (let i = 0; i < props.version; i++) {
+      payment.incrementVersion();
+    }
+    return payment;
+  }
+
   confirm(): void {
     if (this.status !== PaymentStatus.PENDING) {
       throw new Error(`Cannot confirm payment in ${this.status} status`);

@@ -30,6 +30,25 @@ export class KitchenTicket extends AggregateRoot<string> {
     return new KitchenTicket(data);
   }
 
+  static reconstitute(props: {
+    id: string;
+    orderId: string;
+    items: Array<{ productId: string; productName: string; quantity: number }>;
+    status: KitchenTicketStatus;
+    version: number;
+  }): KitchenTicket {
+    const ticket = new KitchenTicket({
+      id: props.id,
+      orderId: props.orderId,
+      items: props.items,
+    });
+    (ticket as any).status = props.status;
+    for (let i = 0; i < props.version; i++) {
+      ticket.incrementVersion();
+    }
+    return ticket;
+  }
+
   startPreparing(): void {
     if (this.status !== KitchenTicketStatus.WAITING) {
       throw new Error(`Cannot start preparing from ${this.status}`);

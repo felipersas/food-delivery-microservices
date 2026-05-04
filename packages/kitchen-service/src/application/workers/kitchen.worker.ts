@@ -2,6 +2,7 @@ import { Worker, type Job } from 'bullmq';
 import type { RabbitMQConnection } from '@app/messaging';
 import type { DomainEvent } from '@app/shared';
 import type { KitchenJobData } from '@infra/queue/kitchen.queue';
+import type { KitchenTicketRepository } from '@domain/repositories/kitchen-ticket.repository.interface';
 import { KitchenTicket } from '@domain/aggregates/kitchen-ticket.aggregate';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -12,6 +13,7 @@ export class KitchenWorkerService {
     redisOpts: { host: string; port: number },
     queueName: string,
     private readonly rabbitConnection: RabbitMQConnection,
+    private readonly ticketRepository?: KitchenTicketRepository,
   ) {
     this.worker = new Worker<KitchenJobData>(
       queueName,
@@ -32,11 +34,19 @@ export class KitchenWorkerService {
     await job.updateProgress(30);
     ticket.startPreparing();
 
+    if (this.ticketRepository) {
+      await this.ticketRepository.save(ticket);
+    }
+
     // Simulate preparation time
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     await job.updateProgress(80);
     ticket.markReady();
+
+    if (this.ticketRepository) {
+      await this.ticketRepository.save(ticket);
+    }
 
     await job.updateProgress(100);
 
