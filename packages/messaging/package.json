@@ -1,0 +1,21 @@
+{
+  "name": "@app/messaging",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@app/shared": "workspace:*",
+    "amqp-connection-manager": "^4.1.14",
+    "amqplib": "^0.10.3"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.10.0",
+    "@types/bun": "^1.1.13",
+    "typescript": "^5.1.3"
+  }
+}
