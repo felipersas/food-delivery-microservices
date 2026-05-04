@@ -9,29 +9,25 @@ export enum OrderStatusEnum {
   CANCELLED = 'CANCELLED',
 }
 
-export class OrderStatus extends ValueObject<{ status: OrderStatusEnum }> {
-  get value(): OrderStatusEnum {
-    return this.props.status;
-  }
-
+export class OrderStatus extends ValueObject<OrderStatusEnum> {
   static pending(): OrderStatus {
-    return new OrderStatus({ status: OrderStatusEnum.PENDING });
+    return new OrderStatus(OrderStatusEnum.PENDING);
   }
 
   static confirmed(): OrderStatus {
-    return new OrderStatus({ status: OrderStatusEnum.CONFIRMED });
+    return new OrderStatus(OrderStatusEnum.CONFIRMED);
   }
 
   static preparing(): OrderStatus {
-    return new OrderStatus({ status: OrderStatusEnum.PREPARING });
+    return new OrderStatus(OrderStatusEnum.PREPARING);
   }
 
   static ready(): OrderStatus {
-    return new OrderStatus({ status: OrderStatusEnum.READY });
+    return new OrderStatus(OrderStatusEnum.READY);
   }
 
   static cancelled(): OrderStatus {
-    return new OrderStatus({ status: OrderStatusEnum.CANCELLED });
+    return new OrderStatus(OrderStatusEnum.CANCELLED);
   }
 
   canTransitionTo(target: OrderStatus): boolean {

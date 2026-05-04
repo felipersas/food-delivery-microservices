@@ -39,7 +39,7 @@ export class Order extends AggregateRoot<string> {
       restaurantId: props.restaurantId,
       items: props.items,
     });
-    (order as any).status = new OrderStatus({ status: props.status });
+    (order as any).status = new OrderStatus(props.status);
     (order as any).totalAmount = props.totalAmount;
     for (let i = 0; i < props.version; i++) {
       order.incrementVersion();

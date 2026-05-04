@@ -34,7 +34,7 @@ const REDIS_OPTS = { host: 'localhost', port: 6379 };
 export class KitchenModule implements OnModuleInit {
   constructor(
     private readonly consumer: KitchenConsumer,
-    private readonly workerService: KitchenWorkerService,
+    private readonly _workerService: KitchenWorkerService,
   ) {}
 
   async onModuleInit() {
