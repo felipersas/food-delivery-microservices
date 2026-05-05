@@ -17,12 +17,13 @@ export class KitchenConsumer {
   async start(): Promise<void> {
     await this.connection.subscribe(
       'kitchen-service-orders',
-      ['order.created'],
+      ['order.confirmed'],
       async (event: DomainEvent) => {
         const data = event.data as any;
 
         await this.kitchenQueue.addJob({
           orderId: data.orderId,
+          restaurantId: data.restaurantId,
           items: data.items,
         });
       },

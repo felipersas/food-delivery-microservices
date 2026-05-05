@@ -87,7 +87,13 @@ export class Order extends AggregateRoot<string> {
       aggregateType: 'Order',
       data: {
         orderId: this.getId(),
+        restaurantId: this.restaurantId,
         confirmedAt: new Date().toISOString(),
+        items: this.items.map((item) => ({
+          productId: item.productId,
+          productName: item.productName,
+          quantity: item.quantity,
+        })),
       },
     });
   }

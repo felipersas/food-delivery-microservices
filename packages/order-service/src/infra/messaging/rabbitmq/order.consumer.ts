@@ -13,7 +13,7 @@ export class OrderConsumer {
   async start(): Promise<void> {
     await this.connection.subscribe(
       'order-service-events',
-      ['payment.confirmed', 'order.ready'],
+      ['payment.confirmed', 'payment.rejected', 'order.ready'],
       async (event: DomainEvent) => {
         const data = event.data as any;
         const orderId = data.orderId;
@@ -27,6 +27,9 @@ export class OrderConsumer {
         switch (event.eventType) {
           case 'payment.confirmed':
             order.confirm();
+            break;
+          case 'payment.rejected':
+            order.cancel();
             break;
           case 'order.ready':
             if (order.getStatus() === 'PENDING') {

@@ -12,6 +12,17 @@ async function bootstrap() {
   const port = configService.get<number>('port') ?? 3001;
   await app.listen(port);
   console.log(`[OrderService] Running on port ${port}`);
+
+  // Graceful shutdown
+  const shutdown = async (signal: string) => {
+    console.log(`[OrderService] Received ${signal}, shutting down gracefully...`);
+    await app.close();
+    console.log('[OrderService] Shutdown complete');
+    process.exit(0);
+  };
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
 bootstrap();

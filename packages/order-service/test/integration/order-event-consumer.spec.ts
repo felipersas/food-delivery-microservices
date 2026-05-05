@@ -9,6 +9,7 @@ import { OrderEntity } from '@infra/database/typeorm/entities/order.entity';
 import { OrderItemEntity } from '@infra/database/typeorm/entities/order-item.entity';
 import { Order } from '@domain/aggregates/order.aggregate';
 import { OrderItem } from '@domain/value-objects/order-item.vo';
+import { OrderStatusEnum } from '@domain/value-objects/order-status.vo';
 
 const DB_URL = process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/orders';
 const RABBIT_URL = process.env.RABBITMQ_URL ?? 'amqp://guest:guest@localhost:5672';
@@ -77,7 +78,7 @@ describe('Order Consumer (Integration)', () => {
 
     const order = await repository.findById(orderId);
     expect(order).not.toBeNull();
-    expect(order!.getStatus()).toBe('CONFIRMED');
+    expect(order!.getStatus()).toBe(OrderStatusEnum.CONFIRMED);
   });
 
   it('should mark order ready when order.ready event arrives', async () => {
@@ -95,6 +96,45 @@ describe('Order Consumer (Integration)', () => {
 
     const order = await repository.findById(orderId);
     expect(order).not.toBeNull();
-    expect(order!.getStatus()).toBe('READY');
+    expect(order!.getStatus()).toBe(OrderStatusEnum.READY);
+  });
+
+  it('should cancel order when payment.rejected event arrives', async () => {
+    // Create a new pending order for this test
+    const newOrder = Order.create({
+      customerId: 'customer-cancel-test',
+      restaurantId: 'restaurant-cancel-test',
+      items: [new OrderItem({
+        productId: 'p-cancel',
+        productName: 'Pizza',
+        quantity: 1,
+        unitPrice: Money.BRL(30),
+      })],
+    });
+    newOrder.clearDomainEvents();
+    await repository.save(newOrder);
+    const cancelOrderId = newOrder.getId();
+
+    const event: DomainEvent = {
+      eventId: 'evt-pay-reject-1',
+      eventType: 'payment.rejected',
+      occurredAt: new Date().toISOString(),
+      aggregateId: 'payment-rejected-1',
+      aggregateType: 'Payment',
+      data: {
+        orderId: cancelOrderId,
+        paymentId: 'payment-rejected-1',
+        amount: 30,
+        method: 'PIX',
+        reason: 'Insufficient funds',
+      },
+    };
+
+    await publisherConnection.publish('payment.rejected', event);
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    const order = await repository.findById(cancelOrderId);
+    expect(order).not.toBeNull();
+    expect(order!.getStatus()).toBe(OrderStatusEnum.CANCELLED);
   });
 });

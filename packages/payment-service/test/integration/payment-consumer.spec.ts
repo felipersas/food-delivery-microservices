@@ -3,6 +3,7 @@ import type { DomainEvent } from '@app/shared';
 import { RabbitMQConnection } from '@app/messaging';
 import { PaymentConsumer } from '@infra/messaging/rabbitmq/payment.consumer';
 import { ProcessPaymentUseCase } from '@application/use-cases/process-payment/process-payment.use-case';
+import { InMemoryPaymentRepository } from '@infra/database/memory/payment.repository';
 
 const RABBIT_URL = process.env.RABBITMQ_URL ?? 'amqp://guest:guest@localhost:5672';
 const EXCHANGE = 'food-ordering';
@@ -21,7 +22,12 @@ describe('Payment Consumer (Integration)', () => {
     testConnection = new RabbitMQConnection({ url: RABBIT_URL, exchange: EXCHANGE });
 
     // Start the payment consumer
-    const consumer = new PaymentConsumer(consumerConnection, new ProcessPaymentUseCase());
+    const paymentRepository = new InMemoryPaymentRepository();
+    const consumer = new PaymentConsumer(
+      consumerConnection,
+      new ProcessPaymentUseCase(paymentRepository),
+      paymentRepository,
+    );
     await consumer.start();
 
     // Subscribe to payment events with a unique test queue

@@ -7,6 +7,7 @@ import { InMemoryPaymentRepository } from './infra/database/memory/payment.repos
 import { PostgresPaymentRepository } from './infra/database/typeorm/repositories/payment.repository.impl';
 import { PaymentEntity } from './infra/database/typeorm/entities/payment.entity';
 import { RabbitMQConnection } from '@app/messaging';
+import type { PaymentRepository } from './domain/repositories/payment.repository.interface';
 import configuration from './config/configuration';
 import { validationSchema } from './config/validation';
 
@@ -35,7 +36,11 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
       provide: 'PaymentRepository',
       useClass: usePostgres ? PostgresPaymentRepository : InMemoryPaymentRepository,
     },
-    ProcessPaymentUseCase,
+    {
+      provide: ProcessPaymentUseCase,
+      useFactory: (repo: PaymentRepository) => new ProcessPaymentUseCase(repo),
+      inject: ['PaymentRepository'],
+    },
     {
       provide: 'RabbitMQConnection',
       useFactory: (configService: ConfigService) =>

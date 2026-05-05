@@ -53,25 +53,24 @@ describe('Kitchen Consumer (Integration)', () => {
     await (globalThis as any).__testQueue?.close();
   });
 
-  it('should consume order.created, enqueue BullMQ job, and publish order.ready', async () => {
-    const orderCreatedEvent: DomainEvent = {
+  it('should consume order.confirmed, enqueue BullMQ job, and publish order.ready', async () => {
+    const orderConfirmedEvent: DomainEvent = {
       eventId: 'evt-kitchen-1',
-      eventType: 'order.created',
+      eventType: 'order.confirmed',
       occurredAt: new Date().toISOString(),
       aggregateId: 'order-456',
       aggregateType: 'Order',
       data: {
         orderId: 'order-456',
-        customerId: 'customer-1',
         restaurantId: 'restaurant-1',
-        totalAmount: 50,
+        confirmedAt: new Date().toISOString(),
         items: [
-          { productId: 'p-1', productName: 'Burger', quantity: 2, price: 25 },
+          { productId: 'p-1', productName: 'Burger', quantity: 2 },
         ],
       },
     };
 
-    await publisherConnection.publish('order.created', orderCreatedEvent);
+    await publisherConnection.publish('order.confirmed', orderConfirmedEvent);
 
     // Wait for RabbitMQ consumer -> BullMQ enqueue -> Worker -> publish
     await new Promise((resolve) => setTimeout(resolve, 3000));

@@ -30,6 +30,10 @@ export class PostgresOrderRepository implements OrderRepository {
     if (existing) {
       await itemRepo.delete({ orderId: order.getId() });
       await repo.save(entity);
+      // Explicitly save items to ensure cascade works after delete
+      if (entity.items.length > 0) {
+        await itemRepo.save(entity.items);
+      }
     } else {
       await repo.save(entity);
     }

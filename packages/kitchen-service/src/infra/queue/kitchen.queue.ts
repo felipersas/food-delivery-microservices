@@ -2,6 +2,7 @@ import { Queue } from 'bullmq';
 
 export interface KitchenJobData {
   orderId: string;
+  restaurantId: string;
   items: Array<{ productId: string; productName: string; quantity: number }>;
 }
 
