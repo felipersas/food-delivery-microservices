@@ -20,7 +20,6 @@ describe('Order Consumer (Integration)', () => {
   let publisherConnection: RabbitMQConnection;
   let consumerConnection: RabbitMQConnection;
   let repository: PostgresOrderRepository;
-  let orderId: string;
 
   beforeAll(async () => {
     dataSource = new DataSource({
@@ -35,26 +34,17 @@ describe('Order Consumer (Integration)', () => {
     publisherConnection = new RabbitMQConnection({ url: RABBIT_URL, exchange: EXCHANGE });
     consumerConnection = new RabbitMQConnection({ url: RABBIT_URL, exchange: EXCHANGE });
 
-    // Create an order in the database
-    const order = Order.create({
-      customerId: 'customer-e2e',
-      restaurantId: 'restaurant-e2e',
-      items: [new OrderItem({
-        productId: 'p-1',
-        productName: 'Burger',
-        quantity: 2,
-        unitPrice: Money.BRL(25),
-      })],
-    });
-    order.clearDomainEvents();
-    await repository.save(order);
-    orderId = order.getId();
+    // Wait for connections to be established
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // Start the consumer
+    // Start the consumer (no need for a pre-created order)
     const consumer = new OrderConsumer(consumerConnection, repository);
     await consumer.start();
 
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    // Wait longer for RabbitMQ consumer setup to complete
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    console.log('[OrderConsumerTest] Setup complete, consumer ready');
   });
 
   afterAll(async () => {
@@ -64,37 +54,68 @@ describe('Order Consumer (Integration)', () => {
   });
 
   it('should confirm order when payment.confirmed event arrives', async () => {
+    // Create a fresh order for this test
+    const testOrder = Order.create({
+      customerId: 'customer-test-1',
+      restaurantId: 'restaurant-test-1',
+      items: [new OrderItem({
+        productId: 'p-test-1',
+        productName: 'Burger',
+        quantity: 1,
+        unitPrice: Money.BRL(25),
+      })],
+    });
+    testOrder.clearDomainEvents();
+    await repository.save(testOrder);
+    const testOrderId = testOrder.getId();
+
     const event: DomainEvent = {
       eventId: 'evt-pay-1',
       eventType: 'payment.confirmed',
       occurredAt: new Date().toISOString(),
       aggregateId: 'payment-1',
       aggregateType: 'Payment',
-      data: { orderId, paymentId: 'payment-1', amount: 50, method: 'PIX' },
+      data: { orderId: testOrderId, paymentId: 'payment-1', amount: 25, method: 'PIX' },
     };
 
     await publisherConnection.publish('payment.confirmed', event);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    const order = await repository.findById(orderId);
+    const order = await repository.findById(testOrderId);
     expect(order).not.toBeNull();
     expect(order!.getStatus()).toBe(OrderStatusEnum.CONFIRMED);
   });
 
   it('should mark order ready when order.ready event arrives', async () => {
+    // Create a fresh confirmed order for this test
+    const testOrder = Order.create({
+      customerId: 'customer-test-2',
+      restaurantId: 'restaurant-test-2',
+      items: [new OrderItem({
+        productId: 'p-test-2',
+        productName: 'Pizza',
+        quantity: 1,
+        unitPrice: Money.BRL(30),
+      })],
+    });
+    testOrder.confirm();
+    testOrder.clearDomainEvents();
+    await repository.save(testOrder);
+    const testOrderId = testOrder.getId();
+
     const event: DomainEvent = {
       eventId: 'evt-kitchen-1',
       eventType: 'order.ready',
       occurredAt: new Date().toISOString(),
       aggregateId: 'ticket-1',
       aggregateType: 'KitchenTicket',
-      data: { orderId, kitchenTicketId: 'ticket-1', readyAt: new Date().toISOString() },
+      data: { orderId: testOrderId, kitchenTicketId: 'ticket-1', readyAt: new Date().toISOString() },
     };
 
     await publisherConnection.publish('order.ready', event);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    const order = await repository.findById(orderId);
+    const order = await repository.findById(testOrderId);
     expect(order).not.toBeNull();
     expect(order!.getStatus()).toBe(OrderStatusEnum.READY);
   });
@@ -131,7 +152,7 @@ describe('Order Consumer (Integration)', () => {
     };
 
     await publisherConnection.publish('payment.rejected', event);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     const order = await repository.findById(cancelOrderId);
     expect(order).not.toBeNull();
