@@ -1,183 +1,183 @@
-# DDD + TDD: Guia Pratico
+# DDD + TDD: Practical Guide
 
-Este documento explica os conceitos de **Domain-Driven Design (DDD)** e **Test-Driven Development (TDD)** aplicados neste projeto.
+This document explains **Domain-Driven Design (DDD)** and **Test-Driven Development (TDD)** concepts applied to this project.
 
 ---
 
-## Sumario
+## Table of Contents
 
 - [DDD: Domain-Driven Design](#ddd-domain-driven-design)
-  - [A Filosofia](#a-filosofia)
+  - [The Philosophy](#the-philosophy)
   - [Bounded Contexts](#bounded-contexts)
   - [Ubiquitous Language](#ubiquitous-language)
-  - [Camadas da Arquitetura](#camadas-da-arquitetura)
-  - [Building Blocks do DDD](#building-blocks-do-ddd)
+  - [Architecture Layers](#architecture-layers)
+  - [DDD Building Blocks](#ddd-building-blocks)
   - [Domain Events](#domain-events)
 - [TDD: Test-Driven Development](#tdd-test-driven-development)
-  - [A Filosofia](#a-filosofia-1)
-  - [O Ciclo Red-Green-Refactor](#o-ciclo-red-green-refactor)
-  - [Piramide de Testes](#piramide-de-testes)
-  - [O que testamos neste projeto](#o-que-testamos-neste-projeto)
-- [Como tudo se conecta](#como-tudo-se-conecta)
+  - [The Philosophy](#the-philosophy-1)
+  - [The Red-Green-Refactor Cycle](#the-red-green-refactor-cycle)
+  - [Test Pyramid](#test-pyramid)
+  - [What We Test in This Project](#what-we-test-in-this-project)
+- [How It All Connects](#how-it-all-connects)
 
 ---
 
 ## DDD: Domain-Driven Design
 
-### A Filosofia
+### The Philosophy
 
-DDD nao e uma arquitetura. E uma **forma de pensar** sobre software.
+DDD is not an architecture. It's a **way of thinking** about software.
 
-A ideia central: **o software existe para resolver problemas de negocio**. O codigo deve refletir o dominio (o mundo real do negocio), nao abstracoes genericas de banco de dados ou frameworks.
+The core idea: **software exists to solve business problems**. Code should reflect the domain (the real-world business), not generic abstractions of databases or frameworks.
 
-> "If you cant explain the code to a domain expert, the model is wrong." — Eric Evans
+> "If you can't explain the code to a domain expert, the model is wrong." — Eric Evans
 
-No nosso caso: o dominio e **pedidos de comida**. O codigo fala de `Order`, `OrderItem`, `KitchenTicket`, `Payment` — nao de "tabela orders" ou "registro no banco".
+In our case: the domain is **food ordering**. The code speaks of `Order`, `OrderItem`, `KitchenTicket`, `Payment` — not "orders table" or "database record".
 
 ### Bounded Contexts
 
-Um sistema complexo nao pode ser descrito por um unico modelo. DDD divide o sistema em **contextos delimitados**, cada um com seu proprio modelo, sua propria linguagem, e suas proprias regras.
+A complex system can't be described by a single model. DDD divides the system into **bounded contexts**, each with its own model, language, and rules.
 
-No nosso projeto:
+In our project:
 
-| Bounded Context | Responsabilidade | Modelo principal |
+| Bounded Context | Responsibility | Main Model |
 |---|---|---|
-| **Order** | Gerencia pedidos | `Order` aggregate |
-| **Kitchen** | Prepara os itens | `KitchenTicket` aggregate |
-| **Payment** | Processa pagamentos | `Payment` aggregate |
-| **Notification** | Envia alertas | Handler de eventos |
-| **Analytics** | Acumula metricas | Handler de eventos |
+| **Order** | Manages orders | `Order` aggregate |
+| **Kitchen** | Prepares items | `KitchenTicket` aggregate |
+| **Payment** | Processes payments | `Payment` aggregate |
+| **Notification** | Sends alerts | Event handlers |
+| **Analytics** | Accumulates metrics | Event handlers |
 
-**Exemplo pratico:** O conceito de "pedido" significa coisas diferentes em cada contexto:
-- No **Order**: um pedido tem itens, status, total
-- Na **Kitchen**: um pedido e uma lista de itens pra preparar
-- No **Payment**: um pedido e um valor a cobrar
+**Practical example:** The concept of "order" means different things in each context:
+- In **Order**: an order has items, status, total
+- In **Kitchen**: an order is a list of items to prepare
+- In **Payment**: an order is an amount to charge
 
-Cada contexto tem seu proprio modelo. Eles nao compartilham entidades — compartilham **eventos**.
+Each context has its own model. They don't share entities — they share **events**.
 
 ### Ubiquitous Language
 
-Cada bounded context tem sua propria **linguagem ubiqua** — um vocabulario compartilhado entre devs e domain experts.
+Each bounded context has its own **ubiquitous language** — a shared vocabulary between devs and domain experts.
 
-Se o dev fala "Order" e o chef fala "comanda", tem um problema. A linguagem deve ser a mesma em conversas, documentos, e codigo.
+If the dev says "Order" and the chef says "ticket", there's a problem. The language should be the same in conversations, documents, and code.
 
-No nosso codigo: `Order.create()`, `order.confirm()`, `order.startPreparing()` — o codigo *e* a linguagem do dominio.
+In our code: `Order.create()`, `order.confirm()`, `order.startPreparing()` — the code *is* the domain language.
 
-### Camadas da Arquitetura
+### Architecture Layers
 
-Cada bounded context segue uma arquitetura em camadas com dependencia apontando pra dentro:
+Each bounded context follows a layered architecture with dependencies pointing inward:
 
 ```
   ┌─────────────────────────┐
-  │        HTTP / MQ        │  ← Interface externa
+  │        HTTP / MQ        │  ← External interface
   │    (Controllers,        │
   │     Consumers)          │
   ├─────────────────────────┤
-  │     Application         │  ← Casos de uso
-  │  (Use Cases, DTOs)      │     Orquestra, nao tem regra
+  │     Application         │  ← Use cases
+  │  (Use Cases, DTOs)      │     Orchestrates, no rules
   ├─────────────────────────┤
-  │      Domain             │  ← O CORACAO
-  │  (Aggregates, VOs,      │     Regras de negocio puras
-  │   Events, Repositories) │     Zero dependencia externa
+  │      Domain             │  ← THE HEART
+  │  (Aggregates, VOs,      │     Pure business rules
+  │   Events, Repositories) │     Zero external dependencies
   ├─────────────────────────┤
-  │     Infrastructure      │  ← Detalhes tecnicos
-  │  (Database, RabbitMQ,   │     Implementa interfaces do domain
+  │     Infrastructure      │  ← Technical details
+  │  (Database, RabbitMQ,   │     Implements domain interfaces
   │   External APIs)        │
   └─────────────────────────┘
 ```
 
-**Regra de ouro:** O domain nunca importa nada das outras camadas. As outras camadas importam do domain.
+**Golden rule:** Domain never imports from other layers. Other layers import from domain.
 
-No codigo:
-- `domain/` importa so de `@app/shared` (que tambem e domain puro)
-- `application/` importa de `domain/`
-- `infra/` importa de `domain/` e `application/`
-- `infra/` nunca e importada por ninguem
+In code:
+- `domain/` only imports from `@app/shared` (also pure domain)
+- `application/` imports from `domain/`
+- `infra/` imports from `domain/` and `application/`
+- `infra/` is never imported by anyone
 
-### Building Blocks do DDD
+### DDD Building Blocks
 
-#### Entity (Entidade)
+#### Entity
 
-Um objeto que tem **identidade propria**. Dois objetos podem ter os mesmos dados mas serem entidades diferentes se tiverem IDs diferentes.
-
-```
-Pedido #123 e Pedido #456 sao diferentes,
-mesmo que ambos tenham "2 X-Burgers".
-```
-
-No codigo: `class Order extends AggregateRoot<string>` — a identidade e o `id`.
-
-#### Value Object (Objeto de Valor)
-
-Um objeto definido **pelos seus atributos**, nao por identidade. Dois VOs com os mesmos atributos sao iguais. Sao **imutaveis**.
+An object with its own **identity**. Two objects can have the same data but be different entities if they have different IDs.
 
 ```
-Money.BRL(50) === Money.BRL(50)  → verdadeiro
-OrderStatus.pending() === OrderStatus.pending()  → verdadeiro
+Order #123 and Order #456 are different,
+even if both have "2 X-Burgers".
 ```
 
-Caracteristicas:
-- **Imutavel** — nunca muda, cria um novo
-- **Sem identidade** — comparado pelo valor
-- **Auto-validavel** — nao existe Money com valor negativo (por exemplo)
+In code: `class Order extends AggregateRoot<string>` — identity is the `id`.
 
-No codigo: `Money`, `OrderStatus`, `OrderItem` sao VOs.
+#### Value Object
 
-#### Aggregate Root (Raiz de Agregacao)
+An object defined **by its attributes**, not by identity. Two VOs with the same attributes are equal. They are **immutable**.
 
-Um **cluster de objetos** tratado como uma unidade. O Aggregate Root e o "porteiro" — tudo que esta dentro do aggregate so pode ser acessado atraves dele.
+```
+Money.BRL(50) === Money.BRL(50)  → true
+OrderStatus.pending() === OrderStatus.pending()  → true
+```
+
+Characteristics:
+- **Immutable** — never changes, creates new instance
+- **No identity** — compared by value
+- **Self-validating** — Money can't have negative value
+
+In code: `Money`, `OrderStatus`, `OrderItem` are VOs.
+
+#### Aggregate Root
+
+A **cluster of objects** treated as a unit. The Aggregate Root is the "gatekeeper" — everything inside the aggregate can only be accessed through it.
 
 ```
 Order (Aggregate Root)
-  ├── OrderItem (VO, vive dentro do Order)
-  ├── OrderStatus (VO, vive dentro do Order)
-  └── Domain Events (emitidos pelo Order)
+  ├── OrderItem (VO, lives inside Order)
+  ├── OrderStatus (VO, lives inside Order)
+  └── Domain Events (emitted by Order)
 ```
 
-Regras:
-1. Toda modificacao interna passa pelo Aggregate Root
-2. Fora do aggregate, voce so referencia pelo ID, nao pelo objeto
-3. Uma transacao = um aggregate
+Rules:
+1. All internal modifications go through Aggregate Root
+2. Outside the aggregate, you reference only by ID, not the object
+3. One transaction = one aggregate
 
-No codigo: `Order.create()`, `order.confirm()`, `order.cancel()` — todas as modificacoes passam pelo aggregate.
+In code: `Order.create()`, `order.confirm()`, `order.cancel()` — all modifications go through the aggregate.
 
-#### Repository (Repositorio)
+#### Repository
 
-Uma **interface** que abstrai a persistencia. O domain define *o que* precisa (salvar, buscar), a infra define *como* (Postgres, MongoDB, in-memory).
+An **interface** that abstracts persistence. The domain defines *what* it needs (save, find), infra defines *how* (Postgres, MongoDB, in-memory).
 
 ```typescript
-// Domain define a interface
+// Domain defines the interface
 interface OrderRepository {
   findById(id: string): Promise<Order | null>;
   save(order: Order): Promise<void>;
 }
 
-// Infra implementa
+// Infra implements
 class InMemoryOrderRepository implements OrderRepository { ... }
 class PostgresOrderRepository implements OrderRepository { ... }
 ```
 
-O domain nunca sabe se esta salvando em memoria, num banco, ou num arquivo. Isso permite testar o domain puro sem infra.
+The domain never knows if it's saving in memory, database, or file. This allows testing pure domain without infra.
 
 #### Domain Service
 
-Quando uma logica de negocio **nao pertence a nenhuma entidade ou VO** especificamente, ela vira um Domain Service.
+When business logic **doesn't belong to any entity or VO** specifically, it becomes a Domain Service.
 
-Exemplo: `PricingService.calculateTotal(order, coupons, taxes)` — a logica envolve multiplos conceitos, nao so o Order.
+Example: `PricingService.calculateTotal(order, coupons, taxes)` — logic involves multiple concepts, not just Order.
 
-*(Nosso projeto ainda nao tem domain services, mas o padrao esta pronto no shared kernel.)*
+*(Our project doesn't have domain services yet, but the pattern is ready in the shared kernel.)*
 
 ### Domain Events
 
-Domain Events representam **coisas que aconteceram** no dominio. Sao a cola entre bounded contexts.
+Domain Events represent **things that happened** in the domain. They're the glue between bounded contexts.
 
 ```
-Order cria → emite OrderCreated
-Payment confirma → emite PaymentConfirmed
-Kitchen finaliza → emite OrderReady
+Order creates → emits OrderCreated
+Payment confirms → emits PaymentConfirmed
+Kitchen finishes → emits OrderReady
 ```
 
-No codigo:
+In code:
 ```typescript
 order.addDomainEvent({
   eventId: uuidv4(),
@@ -189,61 +189,61 @@ order.addDomainEvent({
 });
 ```
 
-**Fluxo:**
-1. Aggregate Root acumula eventos internamente
-2. Application Service salva no repositorio
-3. Application Service publica os eventos (RabbitMQ)
-4. Outros bounded contexts consomem e reagem
+**Flow:**
+1. Aggregate Root accumulates events internally
+2. Application Service saves to repository
+3. Application Service publishes events (RabbitMQ)
+4. Other bounded contexts consume and react
 
-**Por que isso importa?** Desacoplamento. O Order Service nao precisa saber que existe Kitchen Service. Ele so emite "pedido criado". Quem quiser ouvir, ouve.
+**Why this matters?** Decoupling. Order Service doesn't need to know Kitchen Service exists. It just emits "order created". Whoever wants to listen, listens.
 
 ---
 
 ## TDD: Test-Driven Development
 
-### A Filosofia
+### The Philosophy
 
-TDD inverte a ordem tradicional: **escreva o teste primeiro, depois o codigo**.
+TDD flips the traditional order: **write the test first, then the code**.
 
-> "If you cant write a test for it, you dont understand the requirement." — Kent Beck
+> "If you can't write a test for it, you don't understand the requirement." — Kent Beck
 
-Beneficios:
-- **Design guiado por uso** — voce escreve a API que gostaria de ter, depois implementa
-- **Seguranca pra refatorar** — testes verde = codigo funciona
-- **Documentacao viva** — os testes descrevem o comportamento esperado
-- **Menos bugs** — voce pensa nos edge cases antes de codar
+Benefits:
+- **Usage-driven design** — you write the API you'd like to have, then implement
+- **Safe to refactor** — green tests = working code
+- **Living documentation** — tests describe expected behavior
+- **Fewer bugs** — you think about edge cases before coding
 
-### O Ciclo Red-Green-Refactor
+### The Red-Green-Refactor Cycle
 
 ```
    ┌──────────┐
-   │   RED    │  1. Escreve um teste que FALHA
-   │          │     (define o comportamento desejado)
+   │   RED    │  1. Write a FAILING test
+   │          │     (defines desired behavior)
    └────┬─────┘
         ▼
    ┌──────────┐
-   │  GREEN   │  2. Escreve o codigo minimo pra passar
-   │          │     (sem over-engineering)
+   │  GREEN   │  2. Write MINIMUM code to pass
+   │          │     (no over-engineering)
    └────┬─────┘
         ▼
    ┌──────────┐
-   │ REFACTOR │  3. Melhora o codigo mantendo testes verde
-   │          │     (remove duplicacao, melhora nomes)
+   │ REFACTOR │  3. Improve code keeping tests green
+   │          │     (remove duplication, improve names)
    └──────────┘
 ```
 
-#### Exemplo real do nosso projeto
+#### Real Example from Our Project
 
-**RED** — Escrevemos o teste:
+**RED** — Write the test:
 ```typescript
 it('should NOT transition from PENDING to PREPARING', () => {
   const order = makeOrder();
   expect(() => order.startPreparing()).toThrow();
 });
 ```
-Teste falha porque `startPreparing()` ainda nao existe ou nao valida a transicao.
+Test fails because `startPreparing()` doesn't exist or doesn't validate transition.
 
-**GREEN** — Implementamos o minimo:
+**GREEN** — Implement minimum:
 ```typescript
 startPreparing(): void {
   this.transitionTo(OrderStatus.preparing());
@@ -256,29 +256,29 @@ private transitionTo(newStatus: OrderStatus): void {
   this.status = newStatus;
 }
 ```
-Teste passa.
+Test passes.
 
-**REFACTOR** — A transicao ja esta generica, reutilizavel por todos os metodos. Nada a refatorar.
+**REFACTOR** — Transition is already generic, reusable. Nothing to refactor.
 
-### Piramide de Testes
+### Test Pyramid
 
 ```
-         ╱  E2E  ╲           Poucos, lentos, testam tudo integrado
+         ╱  E2E  ╲           Few, slow, test everything integrated
         ╱──────────╲
-       ╱ Integration ╲       Alguns, testam repo + filas reais
+       ╱ Integration ╲       Some, test real repos + queues
       ╱────────────────╲
-     ╱     Unit          ╲   Muitos, rapidos, testam domain puro
-    ╱──────────────────────╲
+    ╱     Unit          ╲   Many, fast, test pure domain
+   ╱──────────────────────╲
 ```
 
-No nosso projeto:
-- **Unit (base da piramide):** Aggregate, VOs, use cases com mocks — roda em ms
-- **Integration (meio):** Repositorio com banco real, publisher com RabbitMQ real
-- **E2E (topo):** HTTP → service completo → banco → fila → resultado
+In our project:
+- **Unit (pyramid base):** Aggregates, VOs, use cases with mocks — runs in ms
+- **Integration (middle):** Repository with real database, publisher with real RabbitMQ
+- **E2E (top):** HTTP → full service → database → queue → result
 
-### O que testamos neste projeto
+### What We Test in This Project
 
-#### Domain (Unit tests puros)
+#### Domain (Pure unit tests)
 
 ```typescript
 // Aggregate: state machine, events, transitions
@@ -289,64 +289,64 @@ describe('Order Aggregate', () => {
 });
 ```
 
-**Por que:** O domain e a parte mais importante. Regras de negocio puras, zero dependencia externa, testes instantaneos.
+**Why:** Domain is most important. Pure business rules, zero external dependencies, instant tests.
 
-#### Application (Unit tests com mocks)
+#### Application (Unit tests with mocks)
 
 ```typescript
-// Use case: orquestracao com dependencias mockadas
+// Use case: orchestration with mocked dependencies
 describe('CreateOrderUseCase', () => {
   it('should create an order and persist it', async () => { ... });
   it('should publish domain events after saving', async () => { ... });
 });
 ```
 
-**Por que:** Testamos que o use case faz a orquestracao certa (cria → salva → publica). O repositorio e o publisher sao mocks — testamos o fluxo, nao o banco.
+**Why:** We test that use case orchestrates correctly (create → save → publish). Repository and publisher are mocks — we test flow, not database.
 
 ---
 
-## Como tudo se conecta
+## How It All Connects
 
-O fluxo completo de um pedido, mostrando como DDD e TDD trabalham juntos:
-
-```
-1. [TDD] Escrevemos teste: "Order deve emitir OrderCreated"
-2. [DDD] Implementamos Order.create() com domain event
-3. [TDD] Escrevemos teste: "CreateOrderUseCase deve publicar eventos"
-4. [DDD] Implementamos use case com Repository + EventPublisher (ports)
-5. [DDD] Implementamos InMemoryOrderRepository e RabbitMQEventPublisher (adapters)
-6. [TDD] Testamos tudo integrado
-```
+Complete order flow, showing how DDD and TDD work together:
 
 ```
-Cliente → POST /orders
+1. [TDD] Write test: "Order should emit OrderCreated"
+2. [DDD] Implement Order.create() with domain event
+3. [TDD] Write test: "CreateOrderUseCase should publish events"
+4. [DDD] Implement use case with Repository + EventPublisher (ports)
+5. [DDD] Implement InMemoryOrderRepository and RabbitMQEventPublisher (adapters)
+6. [TDD] Test everything integrated
+```
+
+```
+Client → POST /orders
   → OrderController (infra)
     → CreateOrderUseCase (application)
-      → Order.create() (domain) → emite OrderCreated
+      → Order.create() (domain) → emits OrderCreated
       → orderRepository.save() (infra)
       → eventPublisher.publishAll() (infra) → RabbitMQ
-        → Kitchen Service consome → BullMQ queue
-        → Payment Service consome → processa pagamento
-        → Notification Service consome → envia alerta
-        → Analytics Service consome → acumula metricas
+        → Kitchen Service consumes → BullMQ queue
+        → Payment Service consumes → processes payment
+        → Notification Service consumes → sends alert
+        → Analytics Service consumes → accumulates metrics
 ```
 
-### Praticas que usamos
+### Practices We Use
 
-| Practica | Onde | Exemplo |
+| Practice | Where | Example |
 |---|---|---|
-| **Dependency Inversion** | Domain define interfaces | `OrderRepository` e interface |
-| **Ports & Adapters** | Application define ports | `EventPublisher` e port |
-| **Immutability** | Value Objects | `Money.BRL(50)` nunca muda |
-| **State Machine** | Aggregate Root | `OrderStatus` com transicoes validas |
-| **Event-Driven** | Domain Events | `OrderCreated` desacopla services |
-| **Test First** | TDD | Teste do aggregate antes do use case |
-| **Mock at boundaries** | Testes de application | Repository e Publisher sao mocks |
-| **Monorepo, micro deploy** | Estrutura | Codigo junto, deploy separado |
+| **Dependency Inversion** | Domain defines interfaces | `OrderRepository` as interface |
+| **Ports & Adapters** | Application defines ports | `EventPublisher` as port |
+| **Immutability** | Value Objects | `Money.BRL(50)` never changes |
+| **State Machine** | Aggregate Root | `OrderStatus` with valid transitions |
+| **Event-Driven** | Domain Events | `OrderCreated` decouples services |
+| **Test First** | TDD | Test aggregate before use case |
+| **Mock at boundaries** | Application tests | Repository and Publisher are mocks |
+| **Monorepo, micro deploy** | Structure | Code together, deploy separately |
 
 ---
 
-## Referencias
+## References
 
 - *Domain-Driven Design* — Eric Evans (2003)
 - *Implementing Domain-Driven Design* — Vaughn Vernon (2013)

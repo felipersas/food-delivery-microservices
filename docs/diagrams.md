@@ -113,14 +113,16 @@ flowchart TD
     D --> E[BullMQ Queue<br/>kitchen-jobs in Redis]
 
     E --> F[KitchenWorkerService<br/>BullMQ Worker]
-    F --> G[Create KitchenTicket<br/>createFromOrder]
+    F --> G[ProcessKitchenTicketUseCase<br/>delegate to use case]
+    
+    G --> H[Create KitchenTicket<br/>createFromOrder]
 
-    G --> H[startPreparing<br/>WAITING → PREPARING]
-    H --> I[Simulate prep time<br/>500ms]
-    I --> J[markReady<br/>PREPARING → READY]
+    H --> I[startPreparing<br/>WAITING → PREPARING]
+    I --> J[Simulate prep time<br/>1-30s random]
+    J --> K[markReady<br/>PREPARING → READY]
 
-    J --> K[Publish order.ready<br/>via RabbitMQ]
-    K --> L[Done]
+    K --> L[Publish order.ready<br/>via EventPublisher]
+    L --> M[Done]
 
     style E fill:#d44,stroke:#333,color:#fff
     style F fill:#4a9,stroke:#333,color:#fff
