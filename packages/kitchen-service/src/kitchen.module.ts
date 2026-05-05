@@ -9,7 +9,6 @@ import { GetKitchenTicketUseCase } from './application/use-cases/get-kitchen-tic
 import { UpdateKitchenTicketStatusUseCase } from './application/use-cases/update-kitchen-ticket-status';
 import { ProcessKitchenTicketUseCase } from './application/use-cases/process-kitchen-ticket/process-kitchen-ticket.use-case';
 import { RabbitMQEventPublisher } from './infra/messaging/rabbitmq/kitchen-event.publisher';
-import { KitchenProcessor } from './application/processors/kitchen.processor';
 import { KitchenWorkerService } from './application/workers/kitchen.worker';
 import { KitchenConsumer } from './infra/messaging/rabbitmq/kitchen.consumer';
 import { KitchenQueue } from './infra/queue/kitchen.queue';
@@ -53,7 +52,6 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
       provide: APP_INTERCEPTOR,
       useClass: SuccessResponseInterceptor,
     },
-    KitchenProcessor,
     {
       provide: 'RabbitMQConnection',
       useFactory: (configService: ConfigService) =>
