@@ -115,6 +115,24 @@ export class Order extends AggregateRoot<string> {
     this.transitionTo(OrderStatus.ready());
   }
 
+  complete(): void {
+    this.transitionTo(OrderStatus.delivered());
+    this.addDomainEvent({
+      eventId: uuidv4(),
+      eventType: 'order.completed',
+      occurredAt: new Date().toISOString(),
+      aggregateId: this.getId(),
+      aggregateType: 'Order',
+      data: {
+        orderId: this.getId(),
+        customerId: this.customerId,
+        restaurantId: this.restaurantId,
+        totalAmount: this.totalAmount.amount,
+        completedAt: new Date().toISOString(),
+      },
+    });
+  }
+
   cancel(): void {
     this.transitionTo(OrderStatus.cancelled());
   }

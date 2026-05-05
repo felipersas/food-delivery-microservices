@@ -26,6 +26,10 @@ export class OrderStatus extends ValueObject<OrderStatusEnum> {
     return new OrderStatus(OrderStatusEnum.READY);
   }
 
+  static delivered(): OrderStatus {
+    return new OrderStatus(OrderStatusEnum.DELIVERED);
+  }
+
   static cancelled(): OrderStatus {
     return new OrderStatus(OrderStatusEnum.CANCELLED);
   }
