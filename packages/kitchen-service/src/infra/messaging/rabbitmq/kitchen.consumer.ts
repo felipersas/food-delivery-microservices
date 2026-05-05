@@ -16,8 +16,8 @@ export class KitchenConsumer {
 
   async start(): Promise<void> {
     await this.connection.subscribe(
-      'kitchen-service-orders',
-      ['order.confirmed'],
+      'kitchen-service-payments',
+      ['payment.confirmed'],
       async (event: DomainEvent) => {
         const data = event.data as any;
 
