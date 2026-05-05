@@ -56,7 +56,19 @@ services:
     volumes:
       - pgdata_kitchen:/var/lib/postgresql/data
 
+  postgres-customer:
+    image: postgres:16-alpine
+    ports:
+      - "5436:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: customers
+    volumes:
+      - pgdata_customer:/var/lib/postgresql/data
+
 volumes:
   pgdata_order:
   pgdata_payment:
   pgdata_kitchen:
+  pgdata_customer:
