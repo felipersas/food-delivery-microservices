@@ -22,6 +22,7 @@ export class CreateKitchenTicketUseCase {
     const ticket = KitchenTicket.createFromOrder({
       orderId: input.orderId,
       items: input.items,
+      restaurantId: input.restaurantId,
     });
 
     await this.kitchenTicketRepository.save(ticket);

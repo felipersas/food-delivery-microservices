@@ -17,6 +17,24 @@ export class KitchenController {
     private readonly updateKitchenTicketStatusUseCase: UpdateKitchenTicketStatusUseCase,
   ) {}
 
+  @Get('tickets')
+  @ApiOperation({ summary: 'List kitchen tickets', description: 'List all kitchen tickets, optionally filtered by restaurant' })
+  @ApiResponse({ status: 200, description: 'List of kitchen tickets', type: [GetKitchenTicketDto] })
+  async listTickets(@Query('restaurantId') restaurantId?: string) {
+    // TODO: Implement proper use case
+    // For now, return empty array - endpoint exists for API Gateway compatibility
+    return [];
+  }
+
+  @Get('tickets/queue')
+  @ApiOperation({ summary: 'List kitchen queue', description: 'List kitchen tickets by queue status' })
+  @ApiResponse({ status: 200, description: 'List of tickets in queue', type: [GetKitchenTicketDto] })
+  async listQueue(@Query('restaurantId') restaurantId?: string) {
+    // TODO: Implement proper use case
+    // For now, return empty array - endpoint exists for API Gateway compatibility
+    return [];
+  }
+
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create kitchen ticket', description: 'Creates a new kitchen ticket for order preparation' })
@@ -38,24 +56,6 @@ export class KitchenController {
       throw new NotFoundException(`Kitchen ticket ${id} not found`);
     }
     return ticket;
-  }
-
-  @Get('tickets')
-  @ApiOperation({ summary: 'List kitchen tickets', description: 'List all kitchen tickets, optionally filtered by restaurant' })
-  @ApiResponse({ status: 200, description: 'List of kitchen tickets', type: [GetKitchenTicketDto] })
-  async listTickets(@Query('restaurantId') restaurantId?: string) {
-    // TODO: Implement proper use case
-    // For now, return empty array - endpoint exists for API Gateway compatibility
-    return [];
-  }
-
-  @Get('tickets/queue')
-  @ApiOperation({ summary: 'List kitchen queue', description: 'List kitchen tickets by queue status' })
-  @ApiResponse({ status: 200, description: 'List of tickets in queue', type: [GetKitchenTicketDto] })
-  async listQueue(@Query('restaurantId') restaurantId?: string) {
-    // TODO: Implement proper use case
-    // For now, return empty array - endpoint exists for API Gateway compatibility
-    return [];
   }
 
   @Put(':id/status')
