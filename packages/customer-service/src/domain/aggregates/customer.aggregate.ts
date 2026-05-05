@@ -133,15 +133,13 @@ export class Customer extends AggregateRoot<string> {
     state: string;
     zipCode: string;
   }): void {
+    // Remove default from all existing addresses
+    this.addresses = this.addresses.map((a) => a.removeDefault());
+
     const address = CustomerAddress.create({
       ...addressProps,
-      isDefault: this.addresses.length === 0, // First address is default
+      isDefault: true, // New address becomes default
     });
-
-    // Remove default from others if this is default
-    if (address.isDefault) {
-      this.addresses = this.addresses.map((a) => a.removeDefault());
-    }
 
     this.addresses.push(address);
     this.markAsUpdated();
@@ -199,15 +197,13 @@ export class Customer extends AggregateRoot<string> {
     expiryMonth: number;
     expiryYear: number;
   }): void {
+    // Remove default from all existing payment methods
+    this.paymentMethods = this.paymentMethods.map((p) => p.removeDefault());
+
     const paymentMethod = PaymentMethod.create({
       ...paymentMethodProps,
-      isDefault: this.paymentMethods.length === 0, // First is default
+      isDefault: true, // New payment method becomes default
     });
-
-    // Remove default from others if this is default
-    if (paymentMethod.isDefault) {
-      this.paymentMethods = this.paymentMethods.map((p) => p.removeDefault());
-    }
 
     this.paymentMethods.push(paymentMethod);
     this.markAsUpdated();
