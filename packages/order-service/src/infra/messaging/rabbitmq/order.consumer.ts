@@ -16,6 +16,7 @@ export class OrderConsumer {
       'order-service-events',
       ['payment.confirmed', 'payment.rejected', 'order.ready'],
       async (event: DomainEvent) => {
+        console.log(`[OrderConsumer] Received event: ${event.eventType}`, JSON.stringify(event.data).slice(0, 200));
         const data = event.data as any;
         const orderId = data.orderId;
 
