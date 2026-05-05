@@ -1,12 +1,7 @@
 import type { DomainEvent } from '@app/shared';
+import type { KitchenJobData } from '@application/dto/kitchen-job.dto';
 import { KitchenTicket } from '@domain/aggregates/kitchen-ticket.aggregate';
 import { v4 as uuidv4 } from 'uuid';
-
-export interface KitchenJobData {
-  orderId: string;
-  restaurantId: string;
-  items: Array<{ productId: string; productName: string; quantity: number }>;
-}
 
 export interface KitchenProcessingResult {
   ticket: KitchenTicket;

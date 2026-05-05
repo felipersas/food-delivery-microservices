@@ -1,45 +1,27 @@
 import { Worker, type Job } from 'bullmq';
-import type { RabbitMQConnection } from '@app/messaging';
-import type { DomainEvent } from '@app/shared';
-import type { KitchenTicketRepository } from '../../domain/repositories/kitchen-ticket.repository.interface';
-import type { KitchenJobData } from '../processors/kitchen.processor';
-import { KitchenProcessor } from '../processors/kitchen.processor';
-
-export interface EventPublisher {
-  publishAll(events: ReadonlyArray<DomainEvent>): Promise<void>;
-}
+import type { ProcessKitchenTicketUseCase } from '../use-cases/process-kitchen-ticket/process-kitchen-ticket.use-case';
+import type { KitchenJobData } from '@application/dto/kitchen-job.dto';
 
 export class KitchenWorkerService {
   private worker: Worker<KitchenJobData>;
-  private processor = new KitchenProcessor();
 
   constructor(
     redisOpts: { host: string; port: number },
     queueName: string,
-    private readonly rabbitConnection: RabbitMQConnection,
-    private readonly ticketRepository?: KitchenTicketRepository,
-  ) {}
+    private readonly processTicketUseCase: ProcessKitchenTicketUseCase,
+  ) {
+    this.worker = new Worker<KitchenJobData>(
+      queueName,
+      (job: Job<KitchenJobData>) => this.processJob(job),
+      { connection: { host: redisOpts.host, port: redisOpts.port } },
+    );
+  }
 
   private async processJob(job: Job<KitchenJobData>): Promise<void> {
     await job.updateProgress(10);
 
-    const { ticket } = await this.processor.process(job.data);
-
-    await job.updateProgress(50);
-
-    if (this.ticketRepository) {
-      await this.ticketRepository.save(ticket);
-    }
+    await this.processTicketUseCase.execute(job.data);
 
     await job.updateProgress(100);
-
-    // Publish domain events through EventPublisher (not directly!)
-    const events = ticket.getDomainEvents();
-    await this.rabbitConnection.publish('order.ready', events[0]);
-    ticket.clearDomainEvents();
-  }
-
-  getWorker(): Worker<KitchenJobData> {
-    return this.worker;
   }
 }

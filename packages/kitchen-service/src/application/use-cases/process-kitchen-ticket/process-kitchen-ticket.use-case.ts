@@ -1,18 +1,8 @@
-import { Injectable } from "@nestjs/common";
-import { type DomainEvent } from '@app/shared';
+import { Injectable } from '@nestjs/common';
 import type { KitchenTicketRepository } from '../../../domain/repositories/kitchen-ticket.repository.interface';
 import { KitchenTicket } from '../../../domain/aggregates/kitchen-ticket.aggregate';
-import { KitchenTicketStatus } from '../../../domain/aggregates/kitchen-ticket.aggregate';
-
-export interface KitchenJobData {
-  orderId: string;
-  restaurantId: string;
-  items: Array<{ productId: string; productName: string; quantity: number }>;
-}
-
-export interface EventPublisher {
-  publishAll(events: ReadonlyArray<DomainEvent>): Promise<void>;
-}
+import type { KitchenJobData } from '@application/dto/kitchen-job.dto';
+import type { EventPublisher } from '@infra/messaging/rabbitmq/kitchen-event.publisher';
 
 /**
  * Use case for async processing of kitchen tickets via BullMQ worker
@@ -31,7 +21,9 @@ export class ProcessKitchenTicketUseCase {
     private readonly eventPublisher: EventPublisher,
   ) {}
 
-  async execute(data: KitchenJobData): Promise<{ ticketId: string; orderId: string }> {
+  async execute(
+    data: KitchenJobData,
+  ): Promise<{ ticketId: string; orderId: string }> {
     // 1. Create ticket from order
     const ticket = KitchenTicket.createFromOrder({
       orderId: data.orderId,
