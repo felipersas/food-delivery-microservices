@@ -1,5 +1,5 @@
 import { Module, type OnModuleInit } from '@nestjs/common';
-import { APP_FILTER } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrderController } from './infra/http/order.controller';
@@ -11,7 +11,7 @@ import { PostgresOrderRepository } from './infra/database/typeorm/repositories/o
 import { RabbitMQEventPublisher } from './infra/messaging/rabbitmq/order-event.publisher';
 import { OrderConsumer } from './infra/messaging/rabbitmq/order.consumer';
 import { RabbitMQConnection } from '@app/messaging';
-import { AllExceptionsFilter } from '@app/shared';
+import { AllExceptionsFilter, SuccessResponseInterceptor } from '@app/shared';
 import { OrderEntity } from './infra/database/typeorm/entities/order.entity';
 import { OrderItemEntity } from './infra/database/typeorm/entities/order-item.entity';
 import configuration from './config/configuration';
@@ -42,6 +42,10 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: SuccessResponseInterceptor,
     },
     {
       provide: 'RabbitMQConnection',

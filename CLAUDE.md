@@ -155,6 +155,37 @@ Copy `.env.example` to `.env`. Key variables:
 
 ## Development Notes
 
+### Documentation Lookup - Context7 MCP
+
+**IMPORTANT**: When you need documentation for ANY framework, library, SDK, API, CLI tool, or cloud service (including NestJS), ALWAYS use the **Context7 MCP server** first:
+
+1. **For first-time library lookup** (when you don't know the exact Context7 ID):
+```
+Use: mcp__context7__resolve-library-id
+Parameters:
+- libraryName: e.g., "NestJS", "Prisma", "React", "Next.js"
+- query: specific task context
+```
+
+2. **For querying documentation** (after you have the library ID):
+```
+Use: mcp__context7__query-docs
+Parameters:
+- libraryId: e.g., "/nestjs/docs.nestjs.com"
+- query: specific question or task
+```
+
+**Why use Context7 MCP?**
+- Provides up-to-date documentation (your training data may be outdated)
+- Returns official docs with code examples
+- Faster and more accurate than web search
+- Covers version-specific changes
+
+**Common library IDs** (pre-resolved):
+- NestJS: `/nestjs/docs.nestjs.com`
+- Prisma: `/prisma/prisma`
+- Next.js: `/vercel/next.js`
+
 - Use `bun --watch` for hot reload during development
 - API Gateway is the only service with a build step (Bun bundler)
 - All TypeScript is executed directly by Bun (no transpile step for services)
