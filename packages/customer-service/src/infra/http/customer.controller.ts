@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, ValidationPipe, NotFoundException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBadRequestResponse, ApiNotFoundResponse, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBadRequestResponse, ApiNotFoundResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { CreateCustomerUseCase } from '../../application/use-cases/create-customer/create-customer.use-case';
 import { GetCustomerUseCase } from '../../application/use-cases/get-customer/get-customer.use-case';
 import { UpdateCustomerProfileUseCase } from '../../application/use-cases/update-customer-profile/update-customer-profile.use-case';
@@ -8,19 +8,14 @@ import { RemoveCustomerAddressUseCase } from '../../application/use-cases/remove
 import { SavePaymentMethodUseCase } from '../../application/use-cases/save-payment-method/save-payment-method.use-case';
 import { RemovePaymentMethodUseCase } from '../../application/use-cases/remove-payment-method/remove-payment-method.use-case';
 import { ListCustomersUseCase } from '../../application/use-cases/list-customers/list-customers.use-case';
-import type { CreateCustomerDto } from '../../application/use-cases/create-customer/create-customer.dto';
-import type { UpdateCustomerProfileDto } from '../../application/use-cases/update-customer-profile/update-customer-profile.dto';
-import type { AddCustomerAddressDto } from '../../application/use-cases/add-customer-address/add-customer-address.dto';
-import type { SavePaymentMethodDto } from '../../application/use-cases/save-payment-method/save-payment-method.dto';
-import type { ListCustomersDto } from '../../application/use-cases/list-customers/list-customers.dto';
-import { CreateCustomerOutput } from '../../application/use-cases/create-customer/create-customer.dto';
+import { CreateCustomerDto, CreateCustomerOutput } from '../../application/use-cases/create-customer/create-customer.dto';
+import { UpdateCustomerProfileDto, UpdateCustomerProfileOutput } from '../../application/use-cases/update-customer-profile/update-customer-profile.dto';
+import { AddCustomerAddressDto, AddCustomerAddressOutput } from '../../application/use-cases/add-customer-address/add-customer-address.dto';
+import { SavePaymentMethodDto, SavePaymentMethodOutput } from '../../application/use-cases/save-payment-method/save-payment-method.dto';
+import { ListCustomersDto, ListCustomersOutput } from '../../application/use-cases/list-customers/list-customers.dto';
 import { GetCustomerOutput } from '../../application/use-cases/get-customer/get-customer.dto';
-import { UpdateCustomerProfileOutput } from '../../application/use-cases/update-customer-profile/update-customer-profile.dto';
-import { AddCustomerAddressOutput } from '../../application/use-cases/add-customer-address/add-customer-address.dto';
 import { RemoveCustomerAddressOutput } from '../../application/use-cases/remove-customer-address/remove-customer-address.dto';
-import { SavePaymentMethodOutput } from '../../application/use-cases/save-payment-method/save-payment-method.dto';
 import { RemovePaymentMethodOutput } from '../../application/use-cases/remove-payment-method/remove-payment-method.dto';
-import { ListCustomersOutput } from '../../application/use-cases/list-customers/list-customers.dto';
 
 @ApiTags('customers')
 @Controller('customers')
@@ -38,6 +33,7 @@ export class CustomerController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new customer', description: 'Registers a new customer in the system with name, email, and phone' })
+  @ApiBody({ type: CreateCustomerDto, description: 'Customer data to create' })
   @ApiResponse({ status: 201, description: 'Customer created successfully', type: CreateCustomerOutput })
   @ApiBadRequestResponse({ description: 'Invalid request data (validation failed)' })
   async create(@Body(ValidationPipe) input: CreateCustomerDto) {
@@ -46,6 +42,7 @@ export class CustomerController {
 
   @Get()
   @ApiOperation({ summary: 'List all customers', description: 'Retrieves a paginated list of customers with optional filtering and sorting' })
+  @ApiBody({ type: ListCustomersDto, required: false, description: 'Filter and pagination options' })
   @ApiResponse({ status: 200, description: 'Customers retrieved successfully', type: ListCustomersOutput })
   @ApiBadRequestResponse({ description: 'Invalid query parameters' })
   async list(@Body(ValidationPipe) input: ListCustomersDto) {
@@ -68,6 +65,7 @@ export class CustomerController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update customer profile', description: 'Updates customer name, email, or phone. All fields are optional.' })
   @ApiParam({ name: 'id', description: 'Customer ID (UUID)', example: '123e4567-e89b-12d3-a456-426614174000' })
+  @ApiBody({ type: UpdateCustomerProfileDto, description: 'Customer fields to update (all optional)' })
   @ApiResponse({ status: 200, description: 'Customer updated successfully', type: UpdateCustomerProfileOutput })
   @ApiBadRequestResponse({ description: 'Invalid request data' })
   @ApiNotFoundResponse({ description: 'Customer not found' })
@@ -81,6 +79,7 @@ export class CustomerController {
   @Post(':id/addresses')
   @ApiOperation({ summary: 'Add address to customer', description: 'Adds a new delivery address to the customer profile. The first address becomes default.' })
   @ApiParam({ name: 'id', description: 'Customer ID (UUID)', example: '123e4567-e89b-12d3-a456-426614174000' })
+  @ApiBody({ type: AddCustomerAddressDto, description: 'Address details to add' })
   @ApiResponse({ status: 201, description: 'Address added successfully', type: AddCustomerAddressOutput })
   @ApiBadRequestResponse({ description: 'Invalid address data' })
   @ApiNotFoundResponse({ description: 'Customer not found' })
@@ -108,6 +107,7 @@ export class CustomerController {
   @Post(':id/payment-methods')
   @ApiOperation({ summary: 'Save payment method', description: 'Saves a payment method for the customer (stores only last 4 digits for security). The first payment method becomes default.' })
   @ApiParam({ name: 'id', description: 'Customer ID (UUID)', example: '123e4567-e89b-12d3-a456-426614174000' })
+  @ApiBody({ type: SavePaymentMethodDto, description: 'Payment method details (last 4 digits only)' })
   @ApiResponse({ status: 201, description: 'Payment method saved successfully', type: SavePaymentMethodOutput })
   @ApiBadRequestResponse({ description: 'Invalid payment method data' })
   @ApiNotFoundResponse({ description: 'Customer not found' })

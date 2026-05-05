@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Body, Param, NotFoundException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBadRequestResponse, ApiNotFoundResponse } from '@nestjs/swagger';
+import { Controller, Post, Get, Body, Param, NotFoundException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBadRequestResponse, ApiNotFoundResponse, ApiBody } from '@nestjs/swagger';
 import { CreateOrderUseCase } from '@application/use-cases/create-order/create-order.use-case';
 import { GetOrderUseCase } from '@application/use-cases/get-order/get-order.use-case';
-import type { CreateOrderDto } from '@application/use-cases/create-order/create-order.dto';
+import { CreateOrderDto } from '@application/use-cases/create-order/create-order.dto';
 import { GetOrderOutput } from '@application/use-cases/get-order/get-order.dto';
 
 @ApiTags('orders')
@@ -15,6 +15,7 @@ export class OrderController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new order', description: 'Creates a new order with items for a customer at a restaurant' })
+  @ApiBody({ type: CreateOrderDto, description: 'Order data with customer ID, restaurant ID, and items' })
   @ApiResponse({ status: 201, description: 'Order created successfully', type: GetOrderOutput })
   @ApiBadRequestResponse({ description: 'Invalid request data' })
   async create(@Body() input: CreateOrderDto) {
