@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import type { KitchenTicketRepository } from '../../../domain/repositories/kitchen-ticket.repository.interface';
-import { KitchenTicket } from '../../../domain/aggregates/kitchen-ticket.aggregate';
+import type { KitchenTicketRepository } from '@domain/repositories/kitchen-ticket.repository.interface';
+import { KitchenTicket } from '@domain/aggregates/kitchen-ticket.aggregate';
 import type { KitchenJobData } from '@application/dto/kitchen-job.dto';
 import type { EventPublisher } from '@infra/messaging/rabbitmq/kitchen-event.publisher';
 
