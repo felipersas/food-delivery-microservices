@@ -24,4 +24,12 @@ export class KitchenWorkerService {
 
     await job.updateProgress(100);
   }
+
+  getWorker(): Worker<KitchenJobData> {
+    return this.worker;
+  }
+
+  async close(): Promise<void> {
+    await this.worker.close();
+  }
 }
