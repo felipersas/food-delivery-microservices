@@ -26,6 +26,8 @@
     "dev:gateway": "bun --cwd packages/api-gateway src/main.ts",
     "dev:infra": "docker compose up -d",
     "dev:infra:down": "docker compose down",
+    "dev": "bun run dev:infra && bun run dev:customer & bun run dev:order & bun run dev:kitchen & bun run dev:payment & bun run dev:notification & bun run dev:analytics & sleep 3 && bun run dev:gateway",
+    "stop": "pkill -f 'bun.*src/main.ts' && bun run dev:infra:down",
     "lint": "eslint \"packages/*/src/**/*.ts\" --fix",
     "format": "prettier --write \"packages/*/src/**/*.ts\" \"packages/*/test/**/*.ts\""
   },
