@@ -75,8 +75,8 @@ describe('E2E: Complete Order Lifecycle', () => {
       customerId: 'customer-e2e',
       restaurantId: 'restaurant-e2e',
       items: [
-        { productId: 'p-1', productName: 'X-Burger', quantity: 2, price: 25 },
-        { productId: 'p-2', productName: 'Fries', quantity: 1, price: 15 },
+        { productId: 'p-1', productName: 'X-Burger', quantity: 2, unitPrice: 25 },
+        { productId: 'p-2', productName: 'Fries', quantity: 1, unitPrice: 15 },
       ],
     });
 

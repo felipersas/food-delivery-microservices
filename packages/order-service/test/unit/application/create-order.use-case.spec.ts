@@ -29,7 +29,7 @@ describe('CreateOrderUseCase', () => {
       customerId: 'customer-1',
       restaurantId: 'restaurant-1',
       items: [
-        { productId: 'prod-1', productName: 'X-Burger', quantity: 2, price: 25 },
+        { productId: 'prod-1', productName: 'X-Burger', quantity: 2, unitPrice: 25 },
       ],
     };
 
@@ -49,7 +49,7 @@ describe('CreateOrderUseCase', () => {
     await useCase.execute({
       customerId: 'c-1',
       restaurantId: 'r-1',
-      items: [{ productId: 'p-1', productName: 'Item', quantity: 1, price: 10 }],
+      items: [{ productId: 'p-1', productName: 'Item', quantity: 1, unitPrice: 10 }],
     });
 
     expect(publisher.publishAll).toHaveBeenCalledTimes(1);
