@@ -1,8 +1,10 @@
+import { Inject, Injectable } from '@nestjs/common';
 import type { OrderRepository } from '@domain/repositories/order.repository.interface';
 import type { GetOrderOutput } from './get-order.dto';
 
+@Injectable()
 export class GetOrderUseCase {
-  constructor(private readonly orderRepository: OrderRepository) {}
+  constructor(@Inject('OrderRepository') private readonly orderRepository: OrderRepository) {}
 
   async execute(orderId: string): Promise<GetOrderOutput | null> {
     const order = await this.orderRepository.findById(orderId);

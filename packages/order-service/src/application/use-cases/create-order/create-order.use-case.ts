@@ -1,3 +1,4 @@
+import { Inject, Injectable } from '@nestjs/common';
 import { Money } from '@app/shared';
 import type { DomainEvent } from '@app/shared';
 import { Order } from '@domain/aggregates/order.aggregate';
@@ -9,10 +10,11 @@ export interface EventPublisher {
   publishAll(events: ReadonlyArray<DomainEvent>): Promise<void>;
 }
 
+@Injectable()
 export class CreateOrderUseCase {
   constructor(
-    private readonly orderRepository: OrderRepository,
-    private readonly eventPublisher: EventPublisher,
+    @Inject('OrderRepository') private readonly orderRepository: OrderRepository,
+    @Inject('EventPublisher') private readonly eventPublisher: EventPublisher,
   ) {}
 
   async execute(input: CreateOrderInput): Promise<CreateOrderOutput> {
