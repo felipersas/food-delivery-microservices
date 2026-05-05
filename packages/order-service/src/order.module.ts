@@ -16,6 +16,11 @@ import { OrderEntity } from './infra/database/typeorm/entities/order.entity';
 import { OrderItemEntity } from './infra/database/typeorm/entities/order-item.entity';
 import configuration from './config/configuration';
 import { validationSchema } from './config/validation';
+import {
+  RABBITMQ_CONNECTION,
+  ORDER_REPOSITORY,
+  EVENT_PUBLISHER,
+} from './tokens';
 
 const usePostgres = process.env.DB_DRIVER === 'postgres';
 
@@ -48,7 +53,7 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
       useClass: SuccessResponseInterceptor,
     },
     {
-      provide: 'RabbitMQConnection',
+      provide: RABBITMQ_CONNECTION,
       useFactory: (configService: ConfigService) =>
         new RabbitMQConnection({
           url: configService.get<string>('rabbitmq.url')!,
@@ -57,13 +62,13 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
       inject: [ConfigService],
     },
     {
-      provide: 'OrderRepository',
+      provide: ORDER_REPOSITORY,
       useClass: usePostgres ? PostgresOrderRepository : InMemoryOrderRepository,
     },
     {
-      provide: 'EventPublisher',
+      provide: EVENT_PUBLISHER,
       useFactory: (conn: RabbitMQConnection) => new RabbitMQEventPublisher(conn),
-      inject: ['RabbitMQConnection'],
+      inject: [RABBITMQ_CONNECTION],
     },
     CreateOrderUseCase,
     GetOrderUseCase,

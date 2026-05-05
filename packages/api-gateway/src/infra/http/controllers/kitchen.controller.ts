@@ -9,13 +9,14 @@ import {
   GetKitchenQueueDto,
   CompleteKitchenItemDto,
 } from '../dto/kitchen.dto';
+import { KITCHEN_SERVICE_URL } from '../../../tokens';
 
 @ApiTags('kitchen')
 @Controller('kitchen')
 @UseInterceptors(LoggingInterceptor, TimeoutInterceptor)
 export class KitchenController {
   constructor(
-    @Inject('KITCHEN_SERVICE_URL') private readonly kitchenServiceUrl: string,
+    @Inject(KITCHEN_SERVICE_URL) private readonly kitchenServiceUrl: string,
     private readonly proxy: HttpProxyStrategy,
   ) {}
 

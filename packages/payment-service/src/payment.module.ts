@@ -14,6 +14,10 @@ import { AllExceptionsFilter, SuccessResponseInterceptor } from '@app/shared';
 import type { PaymentRepository } from './domain/repositories/payment.repository.interface';
 import configuration from './config/configuration';
 import { validationSchema } from './config/validation';
+import {
+  RABBITMQ_CONNECTION,
+  PAYMENT_REPOSITORY,
+} from './tokens';
 
 const usePostgres = process.env.DB_DRIVER === 'postgres';
 
@@ -46,16 +50,16 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
       useClass: SuccessResponseInterceptor,
     },
     {
-      provide: 'PaymentRepository',
+      provide: PAYMENT_REPOSITORY,
       useClass: usePostgres ? PostgresPaymentRepository : InMemoryPaymentRepository,
     },
     {
       provide: ProcessPaymentUseCase,
       useFactory: (repo: PaymentRepository) => new ProcessPaymentUseCase(repo),
-      inject: ['PaymentRepository'],
+      inject: [PAYMENT_REPOSITORY],
     },
     {
-      provide: 'RabbitMQConnection',
+      provide: RABBITMQ_CONNECTION,
       useFactory: (configService: ConfigService) =>
         new RabbitMQConnection({
           url: configService.get<string>('rabbitmq.url')!,

@@ -4,13 +4,14 @@ import type { RabbitMQConnection } from '@app/messaging';
 import { ProcessPaymentUseCase } from '@application/use-cases/process-payment/process-payment.use-case';
 import type { PaymentRepository } from '@domain/repositories/payment.repository.interface';
 import { v4 as uuidv4 } from 'uuid';
+import { RABBITMQ_CONNECTION, PAYMENT_REPOSITORY } from '../../../tokens';
 
 @Injectable()
 export class PaymentConsumer {
   constructor(
-    @Inject('RabbitMQConnection') private readonly connection: RabbitMQConnection,
+    @Inject(RABBITMQ_CONNECTION) private readonly connection: RabbitMQConnection,
     private readonly processPayment: ProcessPaymentUseCase,
-    @Inject('PaymentRepository') private readonly paymentRepository: PaymentRepository,
+    @Inject(PAYMENT_REPOSITORY) private readonly paymentRepository: PaymentRepository,
   ) {}
 
   async start(): Promise<void> {

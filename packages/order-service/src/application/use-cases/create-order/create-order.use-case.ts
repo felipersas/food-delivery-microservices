@@ -1,20 +1,17 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Money } from '@app/shared';
-import type { DomainEvent } from '@app/shared';
 import { Order } from '@domain/aggregates/order.aggregate';
 import { OrderItem } from '@domain/value-objects/order-item.vo';
 import type { OrderRepository } from '@domain/repositories/order.repository.interface';
 import type { CreateOrderInput, CreateOrderOutput } from './create-order.dto';
-
-export interface EventPublisher {
-  publishAll(events: ReadonlyArray<DomainEvent>): Promise<void>;
-}
+import type { EventPublisher } from '@infra/messaging/rabbitmq/order-event.publisher';
+import { ORDER_REPOSITORY, EVENT_PUBLISHER } from '../../../tokens';
 
 @Injectable()
 export class CreateOrderUseCase {
   constructor(
-    @Inject('OrderRepository') private readonly orderRepository: OrderRepository,
-    @Inject('EventPublisher') private readonly eventPublisher: EventPublisher,
+    @Inject(ORDER_REPOSITORY) private readonly orderRepository: OrderRepository,
+    @Inject(EVENT_PUBLISHER) private readonly eventPublisher: EventPublisher,
   ) {}
 
   async execute(input: CreateOrderInput): Promise<CreateOrderOutput> {

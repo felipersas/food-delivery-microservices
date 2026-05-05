@@ -21,6 +21,13 @@ import { AllExceptionsFilter, SuccessResponseInterceptor } from '@app/shared';
 import type { KitchenTicketRepository } from './domain/repositories/kitchen-ticket.repository.interface';
 import configuration from './config/configuration';
 import { validationSchema } from './config/validation';
+import {
+  RABBITMQ_CONNECTION,
+  KITCHEN_QUEUE,
+  KITCHEN_TICKET_REPOSITORY,
+  KITCHEN_WORKER_SERVICE,
+  EVENT_PUBLISHER,
+} from './tokens';
 
 const usePostgres = process.env.DB_DRIVER === 'postgres';
 
@@ -53,7 +60,7 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
       useClass: SuccessResponseInterceptor,
     },
     {
-      provide: 'RabbitMQConnection',
+      provide: RABBITMQ_CONNECTION,
       useFactory: (configService: ConfigService) =>
         new RabbitMQConnection({
           url: configService.get<string>('rabbitmq.url')!,
@@ -62,7 +69,7 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
       inject: [ConfigService],
     },
     {
-      provide: 'KitchenQueue',
+      provide: KITCHEN_QUEUE,
       useFactory: (configService: ConfigService) =>
         new KitchenQueue({
           host: configService.get<string>('redis.host')!,
@@ -71,11 +78,11 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
       inject: [ConfigService],
     },
     {
-      provide: 'KitchenTicketRepository',
+      provide: KITCHEN_TICKET_REPOSITORY,
       useClass: usePostgres ? PostgresKitchenTicketRepository : InMemoryKitchenTicketRepository,
     },
     {
-      provide: 'KitchenWorkerService',
+      provide: KITCHEN_WORKER_SERVICE,
       useFactory: (
         useCase: ProcessKitchenTicketUseCase,
         configService: ConfigService,
@@ -91,29 +98,29 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
       provide: ProcessKitchenTicketUseCase,
       useFactory: (repo: KitchenTicketRepository, publisher: any) =>
         new ProcessKitchenTicketUseCase(repo, publisher),
-      inject: ['KitchenTicketRepository', 'EventPublisher'],
+      inject: [KITCHEN_TICKET_REPOSITORY, EVENT_PUBLISHER],
     },
     {
-      provide: 'EventPublisher',
+      provide: EVENT_PUBLISHER,
       useFactory: (rabbit: RabbitMQConnection) => new RabbitMQEventPublisher(rabbit),
-      inject: ['RabbitMQConnection'],
+      inject: [RABBITMQ_CONNECTION],
     },
     {
       provide: CreateKitchenTicketUseCase,
       useFactory: (repo: KitchenTicketRepository, publisher: any) =>
         new CreateKitchenTicketUseCase(repo, publisher),
-      inject: ['KitchenTicketRepository', 'EventPublisher'],
+      inject: [KITCHEN_TICKET_REPOSITORY, EVENT_PUBLISHER],
     },
     {
       provide: GetKitchenTicketUseCase,
       useFactory: (repo: KitchenTicketRepository) => new GetKitchenTicketUseCase(repo),
-      inject: ['KitchenTicketRepository'],
+      inject: [KITCHEN_TICKET_REPOSITORY],
     },
     {
       provide: UpdateKitchenTicketStatusUseCase,
       useFactory: (repo: KitchenTicketRepository, publisher: any) =>
         new UpdateKitchenTicketStatusUseCase(repo, publisher),
-      inject: ['KitchenTicketRepository', 'EventPublisher'],
+      inject: [KITCHEN_TICKET_REPOSITORY, EVENT_PUBLISHER],
     },
     KitchenConsumer,
   ],

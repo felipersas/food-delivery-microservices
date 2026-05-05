@@ -4,13 +4,14 @@ import { HttpProxyStrategy } from '../../strategies/http-proxy.strategy';
 import { LoggingInterceptor } from '../../interceptors/logging.interceptor';
 import { TimeoutInterceptor } from '../../interceptors/timeout.interceptor';
 import { CreatePaymentDto, GetPaymentByIdDto } from '../dto/payments.dto';
+import { PAYMENT_SERVICE_URL } from '../../../tokens';
 
 @ApiTags('payments')
 @Controller('payments')
 @UseInterceptors(LoggingInterceptor, TimeoutInterceptor)
 export class PaymentsController {
   constructor(
-    @Inject('PAYMENT_SERVICE_URL') private readonly paymentServiceUrl: string,
+    @Inject(PAYMENT_SERVICE_URL) private readonly paymentServiceUrl: string,
     private readonly proxy: HttpProxyStrategy,
   ) {}
 

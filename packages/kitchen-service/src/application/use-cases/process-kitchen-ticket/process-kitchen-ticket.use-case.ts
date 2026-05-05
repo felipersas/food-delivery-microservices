@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import type { KitchenTicketRepository } from '@domain/repositories/kitchen-ticket.repository.interface';
 import { KitchenTicket } from '@domain/aggregates/kitchen-ticket.aggregate';
 import type { KitchenJobData } from '@application/dto/kitchen-job.dto';
 import type { EventPublisher } from '@infra/messaging/rabbitmq/kitchen-event.publisher';
+import { EVENT_PUBLISHER } from '../../../tokens';
 
 /**
  * Use case for async processing of kitchen tickets via BullMQ worker
@@ -18,7 +19,7 @@ import type { EventPublisher } from '@infra/messaging/rabbitmq/kitchen-event.pub
 export class ProcessKitchenTicketUseCase {
   constructor(
     private readonly kitchenTicketRepository: KitchenTicketRepository,
-    private readonly eventPublisher: EventPublisher,
+    @Inject(EVENT_PUBLISHER) private readonly eventPublisher: EventPublisher,
   ) {}
 
   async execute(

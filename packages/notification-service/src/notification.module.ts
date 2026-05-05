@@ -5,6 +5,7 @@ import { NotificationConsumer } from './infra/messaging/rabbitmq/notification.co
 import { RabbitMQConnection } from '@app/messaging';
 import configuration from './config/configuration';
 import { validationSchema } from './config/validation';
+import { RABBITMQ_CONNECTION } from './tokens';
 
 @Module({
   controllers: [HealthController],
@@ -17,7 +18,7 @@ import { validationSchema } from './config/validation';
   ],
   providers: [
     {
-      provide: 'RabbitMQConnection',
+      provide: RABBITMQ_CONNECTION,
       useFactory: (configService: ConfigService) =>
         new RabbitMQConnection({
           url: configService.get<string>('rabbitmq.url')!,

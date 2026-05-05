@@ -1,3 +1,4 @@
+import { Injectable, Inject } from '@nestjs/common';
 import type { DomainEvent } from '@app/shared';
 import { KitchenTicket } from '@domain/aggregates/kitchen-ticket.aggregate';
 import type { KitchenTicketRepository } from '@domain/repositories/kitchen-ticket.repository.interface';
@@ -5,15 +6,14 @@ import type {
   CreateKitchenTicketInput,
   CreateKitchenTicketOutput,
 } from '@application/dto/create-kitchen-ticket.dto';
+import type { EventPublisher } from '@infra/messaging/rabbitmq/kitchen-event.publisher';
+import { EVENT_PUBLISHER } from '../../../tokens';
 
-export interface EventPublisher {
-  publishAll(events: ReadonlyArray<DomainEvent>): Promise<void>;
-}
-
+@Injectable()
 export class CreateKitchenTicketUseCase {
   constructor(
     private readonly kitchenTicketRepository: KitchenTicketRepository,
-    private readonly eventPublisher: EventPublisher,
+    @Inject(EVENT_PUBLISHER) private readonly eventPublisher: EventPublisher,
   ) {}
 
   async execute(

@@ -1,10 +1,11 @@
 import { Injectable, Inject } from '@nestjs/common';
 import type { DomainEvent } from '@app/shared';
 import type { RabbitMQConnection } from '@app/messaging';
+import { RABBITMQ_CONNECTION } from '../../../tokens';
 
 @Injectable()
 export class NotificationConsumer {
-  constructor(@Inject('RabbitMQConnection') private readonly connection: RabbitMQConnection) {}
+  constructor(@Inject(RABBITMQ_CONNECTION) private readonly connection: RabbitMQConnection) {}
 
   async start(): Promise<void> {
     await this.connection.subscribe(

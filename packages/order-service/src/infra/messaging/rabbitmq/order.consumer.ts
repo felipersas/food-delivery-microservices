@@ -2,12 +2,13 @@ import { Injectable, Inject } from '@nestjs/common';
 import type { DomainEvent } from '@app/shared';
 import type { RabbitMQConnection } from '@app/messaging';
 import type { OrderRepository } from '@domain/repositories/order.repository.interface';
+import { RABBITMQ_CONNECTION, ORDER_REPOSITORY } from '../../../tokens';
 
 @Injectable()
 export class OrderConsumer {
   constructor(
-    @Inject('RabbitMQConnection') private readonly connection: RabbitMQConnection,
-    @Inject('OrderRepository') private readonly orderRepository: OrderRepository,
+    @Inject(RABBITMQ_CONNECTION) private readonly connection: RabbitMQConnection,
+    @Inject(ORDER_REPOSITORY) private readonly orderRepository: OrderRepository,
   ) {}
 
   async start(): Promise<void> {

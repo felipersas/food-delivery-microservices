@@ -1,13 +1,16 @@
+import { Injectable, Inject } from '@nestjs/common';
 import { InvalidStateException } from '@app/shared';
 import { KitchenTicketStatus } from '@domain/aggregates/kitchen-ticket.aggregate';
 import type { KitchenTicketRepository } from '@domain/repositories/kitchen-ticket.repository.interface';
 import type { UpdateKitchenTicketOutput } from '@application/dto/update-kitchen-ticket.dto';
 import type { EventPublisher } from '@infra/messaging/rabbitmq/kitchen-event.publisher';
+import { EVENT_PUBLISHER } from '../../../tokens';
 
+@Injectable()
 export class UpdateKitchenTicketStatusUseCase {
   constructor(
     private readonly kitchenTicketRepository: KitchenTicketRepository,
-    private readonly eventPublisher: EventPublisher,
+    @Inject(EVENT_PUBLISHER) private readonly eventPublisher: EventPublisher,
   ) {}
 
   async execute(

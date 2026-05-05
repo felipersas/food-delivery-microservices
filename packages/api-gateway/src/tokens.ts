@@ -1,0 +1,8 @@
+/**
+ * Dependency injection tokens for API Gateway
+ */
+export const ORDER_SERVICE_URL = 'ORDER_SERVICE_URL';
+export const KITCHEN_SERVICE_URL = 'KITCHEN_SERVICE_URL';
+export const PAYMENT_SERVICE_URL = 'PAYMENT_SERVICE_URL';
+export const NOTIFICATION_SERVICE_URL = 'NOTIFICATION_SERVICE_URL';
+export const ANALYTICS_SERVICE_URL = 'ANALYTICS_SERVICE_URL';

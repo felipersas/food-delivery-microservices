@@ -4,13 +4,14 @@ import { HttpProxyStrategy } from '../../strategies/http-proxy.strategy';
 import { LoggingInterceptor } from '../../interceptors/logging.interceptor';
 import { TimeoutInterceptor } from '../../interceptors/timeout.interceptor';
 import { CreateOrderDto, GetOrderByIdDto, GetOrdersByCustomerDto } from '../dto/orders.dto';
+import { ORDER_SERVICE_URL } from '../../../tokens';
 
 @ApiTags('orders')
 @Controller('orders')
 @UseInterceptors(LoggingInterceptor, TimeoutInterceptor)
 export class OrdersController {
   constructor(
-    @Inject('ORDER_SERVICE_URL') private readonly orderServiceUrl: string,
+    @Inject(ORDER_SERVICE_URL) private readonly orderServiceUrl: string,
     private readonly proxy: HttpProxyStrategy,
   ) {}
 
