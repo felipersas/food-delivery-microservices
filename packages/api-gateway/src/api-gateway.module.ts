@@ -7,6 +7,7 @@ import { HttpProxyStrategy } from './infra/strategies/http-proxy.strategy';
 import { HealthController } from './infra/http/controllers/health.controller';
 import { OrdersController } from './infra/http/controllers/orders.controller';
 import { KitchenController } from './infra/http/controllers/kitchen.controller';
+import { PaymentsController } from './infra/http/controllers/payments.controller';
 
 const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL ?? 'http://localhost:3001';
 const KITCHEN_SERVICE_URL = process.env.KITCHEN_SERVICE_URL ?? 'http://localhost:3002';
@@ -19,7 +20,7 @@ const KITCHEN_SERVICE_URL = process.env.KITCHEN_SERVICE_URL ?? 'http://localhost
       load: [configuration],
     }),
   ],
-  controllers: [HealthController, OrdersController, KitchenController],
+  controllers: [HealthController, OrdersController, KitchenController, PaymentsController],
   providers: [
     HttpProxyStrategy,
     { provide: 'ORDER_SERVICE_URL', useValue: ORDER_SERVICE_URL },
