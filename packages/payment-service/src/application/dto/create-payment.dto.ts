@@ -47,7 +47,11 @@ export class PaymentResponse {
   @ApiProperty({ description: 'Order ID', example: '123e4567-e89b-12d3-a456-426614174000' })
   orderId!: string;
 
-  @ApiProperty({ description: 'Payment status', example: 'CONFIRMED', enum: ['PENDING', 'CONFIRMED', 'REJECTED'] })
+  @ApiProperty({
+    description: 'Payment status',
+    example: 'CONFIRMED',
+    enum: ['PENDING', 'CONFIRMED', 'REJECTED', 'PARTIALLY_REFUNDED', 'FULLY_REFUNDED'],
+  })
   status!: string;
 
   @ApiProperty({ description: 'Payment amount in BRL', example: 91.80 })

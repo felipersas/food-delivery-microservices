@@ -48,6 +48,7 @@ export class PaymentController {
       paymentId: id,
       amount: input.amount,
       reason: input.reason,
+      refundId: input.refundId,
     });
     return result;
   }
