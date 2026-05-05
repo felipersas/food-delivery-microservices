@@ -20,7 +20,7 @@ import { RabbitMQConnection } from '@app/messaging';
 import { AllExceptionsFilter, SuccessResponseInterceptor } from '@app/shared';
 import { CustomerEntity } from './infra/database/typeorm/entities/customer.entity';
 import configuration from './config/configuration';
-import validationSchema from './config/validation';
+import { validationSchema } from './config/validation';
 import {
   RABBITMQ_CONNECTION,
   CUSTOMER_REPOSITORY,

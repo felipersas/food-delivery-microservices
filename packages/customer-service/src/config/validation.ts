@@ -1,35 +1,10 @@
-export default () => ({
-  port: {
-    type: 'number',
-    min: 1024,
-    max: 65535,
-    default: 3006,
-  },
-  dbDriver: {
-    type: 'string',
-    enum: ['postgres', 'memory'],
-    optional: true,
-  },
-  databaseUrl: {
-    type: 'string',
-    optional: true,
-  },
-  nodeEnv: {
-    type: 'string',
-    enum: ['development', 'production', 'test'],
-    default: 'development',
-  },
-  rabbitmq: {
-    type: 'object',
-    properties: {
-      url: {
-        type: 'string',
-        default: 'amqp://guest:guest@localhost:5672',
-      },
-      exchange: {
-        type: 'string',
-        default: 'food-ordering',
-      },
-    },
-  },
+import * as Joi from 'joi';
+
+export const validationSchema = Joi.object({
+  NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
+  CUSTOMER_PORT: Joi.number().default(3006),
+  DB_DRIVER: Joi.string().valid('postgres', 'memory', '').allow(''),
+  CUSTOMER_DATABASE_URL: Joi.string(),
+  RABBITMQ_URL: Joi.string().default('amqp://guest:guest@localhost:5672'),
+  RABBITMQ_EXCHANGE: Joi.string().default('food-ordering'),
 });
