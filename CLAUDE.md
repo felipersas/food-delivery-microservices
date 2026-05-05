@@ -155,6 +155,28 @@ Copy `.env.example` to `.env`. Key variables:
 
 ## Development Notes
 
+### Test-Driven Development
+
+**MANDATORY**: Run tests after EVERY code change to ensure functionality remains intact.
+
+```bash
+# Run all tests after making changes
+bun test
+
+# For service-specific changes, run targeted tests
+bun run test:order         # After order service changes
+bun run test:kitchen       # After kitchen service changes
+bun run test:payment       # After payment service changes
+```
+
+**Why test after every change?**
+- Catches regressions immediately
+- Validates integration points between services
+- Ensures domain logic remains correct
+- Prevents cascading failures in event-driven architecture
+
+**Test failure is a blocker**: Do not proceed with further changes until tests pass. If tests fail, fix the issue before adding new features.
+
 ### Documentation Lookup - Context7 MCP
 
 **IMPORTANT**: When you need documentation for ANY framework, library, SDK, API, CLI tool, or cloud service (including NestJS), ALWAYS use the **Context7 MCP server** first:
