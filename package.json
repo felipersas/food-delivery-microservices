@@ -3,7 +3,9 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "test": "bun test",
     "test:e2e": "bun test test/e2e",
@@ -19,6 +21,7 @@
     "dev:payment": "bun --cwd packages/payment-service src/main.ts",
     "dev:notification": "bun --cwd packages/notification-service src/main.ts",
     "dev:analytics": "bun --cwd packages/analytics-service src/main.ts",
+    "dev:gateway": "bun --cwd packages/api-gateway src/main.ts",
     "dev:infra": "docker compose up -d",
     "dev:infra:down": "docker compose down",
     "lint": "eslint \"packages/*/src/**/*.ts\" --fix",
