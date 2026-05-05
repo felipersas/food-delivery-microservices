@@ -10,7 +10,6 @@ export interface KitchenJobData {
 
 export interface KitchenProcessingResult {
   ticket: KitchenTicket;
-  readyEvent: DomainEvent;
 }
 
 export class KitchenProcessor {
@@ -28,23 +27,10 @@ export class KitchenProcessor {
 
     ticket.markReady();
 
-    const readyEvent: DomainEvent = {
-      eventId: uuidv4(),
-      eventType: 'order.ready',
-      occurredAt: new Date().toISOString(),
-      aggregateId: ticket.getId(),
-      aggregateType: 'KitchenTicket',
-      data: {
-        orderId: data.orderId,
-        kitchenTicketId: ticket.getId(),
-        readyAt: new Date().toISOString(),
-      },
-    };
-
-    return { ticket, readyEvent };
+    return { ticket };
   }
 
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

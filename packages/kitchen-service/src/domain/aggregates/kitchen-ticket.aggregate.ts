@@ -55,7 +55,9 @@ export class KitchenTicket extends AggregateRoot<string> {
 
   startPreparing(): void {
     if (this.status !== KitchenTicketStatus.WAITING) {
-      throw new InvalidStateException(`Cannot start preparing from ${this.status}`);
+      throw new InvalidStateException(
+        `Cannot start preparing from ${this.status}`,
+      );
     }
     this.status = KitchenTicketStatus.PREPARING;
     this.incrementVersion();
@@ -67,6 +69,18 @@ export class KitchenTicket extends AggregateRoot<string> {
     }
     this.status = KitchenTicketStatus.READY;
     this.incrementVersion();
+    this.addDomainEvent({
+      eventId: uuidv4(),
+      eventType: 'order.ready',
+      occurredAt: new Date().toISOString(),
+      aggregateId: this.getId(),
+      aggregateType: 'KitchenTicket',
+      data: {
+        orderId: this.orderId,
+        kitchenTicketId: this.getId(),
+        readyAt: new Date().toISOString(),
+      },
+    });
   }
 
   getStatus(): KitchenTicketStatus {

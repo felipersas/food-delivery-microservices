@@ -1,8 +1,13 @@
 import { Worker, type Job } from 'bullmq';
 import type { RabbitMQConnection } from '@app/messaging';
-import type { KitchenTicketRepository } from '@domain/repositories/kitchen-ticket.repository.interface';
-import type { KitchenJobData } from '@application/processors/kitchen.processor';
-import { KitchenProcessor } from '@application/processors/kitchen.processor';
+import type { DomainEvent } from '@app/shared';
+import type { KitchenTicketRepository } from '../../domain/repositories/kitchen-ticket.repository.interface';
+import type { KitchenJobData } from '../processors/kitchen.processor';
+import { KitchenProcessor } from '../processors/kitchen.processor';
+
+export interface EventPublisher {
+  publishAll(events: ReadonlyArray<DomainEvent>): Promise<void>;
+}
 
 export class KitchenWorkerService {
   private worker: Worker<KitchenJobData>;
@@ -13,20 +18,12 @@ export class KitchenWorkerService {
     queueName: string,
     private readonly rabbitConnection: RabbitMQConnection,
     private readonly ticketRepository?: KitchenTicketRepository,
-  ) {
-    this.worker = new Worker<KitchenJobData>(
-      queueName,
-      async (job: Job<KitchenJobData>) => {
-        await this.processJob(job);
-      },
-      { connection: redisOpts, concurrency: 5 },
-    );
-  }
+  ) {}
 
   private async processJob(job: Job<KitchenJobData>): Promise<void> {
     await job.updateProgress(10);
 
-    const { ticket, readyEvent } = await this.processor.process(job.data);
+    const { ticket } = await this.processor.process(job.data);
 
     await job.updateProgress(50);
 
@@ -36,7 +33,10 @@ export class KitchenWorkerService {
 
     await job.updateProgress(100);
 
-    await this.rabbitConnection.publish('order.ready', readyEvent);
+    // Publish domain events through EventPublisher (not directly!)
+    const events = ticket.getDomainEvents();
+    await this.rabbitConnection.publish('order.ready', events[0]);
+    ticket.clearDomainEvents();
   }
 
   getWorker(): Worker<KitchenJobData> {
