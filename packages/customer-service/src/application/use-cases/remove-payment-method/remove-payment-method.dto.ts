@@ -14,7 +14,10 @@ export class RemovePaymentMethodDto {
 
 export type RemovePaymentMethodInput = RemovePaymentMethodDto;
 
-export interface RemovePaymentMethodOutput {
-  customerId: string;
-  remainingPaymentMethods: number;
+export class RemovePaymentMethodOutput {
+  @ApiProperty({ description: 'Customer ID', example: '123e4567-e89b-12d3-a456-426614174000' })
+  customerId!: string;
+
+  @ApiProperty({ description: 'Remaining number of payment methods', example: 1 })
+  remainingPaymentMethods!: number;
 }

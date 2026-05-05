@@ -38,7 +38,10 @@ export class AddCustomerAddressDto {
 
 export type AddCustomerAddressInput = { customerId: string } & AddCustomerAddressDto;
 
-export interface AddCustomerAddressOutput {
-  customerId: string;
-  addressCount: number;
+export class AddCustomerAddressOutput {
+  @ApiProperty({ description: 'Customer ID', example: '123e4567-e89b-12d3-a456-426614174000' })
+  customerId!: string;
+
+  @ApiProperty({ description: 'Total number of addresses after adding', example: 2 })
+  addressCount!: number;
 }

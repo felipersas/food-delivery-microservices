@@ -14,7 +14,10 @@ export class RemoveCustomerAddressDto {
 
 export type RemoveCustomerAddressInput = RemoveCustomerAddressDto;
 
-export interface RemoveCustomerAddressOutput {
-  customerId: string;
-  remainingAddresses: number;
+export class RemoveCustomerAddressOutput {
+  @ApiProperty({ description: 'Customer ID', example: '123e4567-e89b-12d3-a456-426614174000' })
+  customerId!: string;
+
+  @ApiProperty({ description: 'Remaining number of addresses', example: 2 })
+  remainingAddresses!: number;
 }

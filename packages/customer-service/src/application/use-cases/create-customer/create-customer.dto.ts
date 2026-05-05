@@ -2,17 +2,17 @@ import { IsString, IsNotEmpty, MinLength, IsEmail, Matches } from 'class-validat
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateCustomerDto {
-  @ApiProperty({ description: 'Customer full name', example: 'John Doe' })
+  @ApiProperty({ description: 'Customer full name', example: 'João Silva' })
   @IsString()
   @IsNotEmpty()
   @MinLength(3)
   name!: string;
 
-  @ApiProperty({ description: 'Customer email address', example: 'john.doe@example.com' })
+  @ApiProperty({ description: 'Customer email address', example: 'joao.silva@example.com' })
   @IsEmail()
   email!: string;
 
-  @ApiProperty({ description: 'Phone number with country code', example: '+5511999999999' })
+  @ApiProperty({ description: 'Phone number with country code', example: '+55119999887766' })
   @IsString()
   @IsNotEmpty()
   @Matches(/^\+?\d{10,15}$/)
@@ -21,7 +21,14 @@ export class CreateCustomerDto {
 
 export type CreateCustomerInput = CreateCustomerDto;
 
-export interface CreateCustomerOutput {
-  customerId: string;
-  status: string;
+export class CreateCustomerOutput {
+  @ApiProperty({ description: 'Customer ID', example: '123e4567-e89b-12d3-a456-426614174000' })
+  customerId!: string;
+
+  @ApiProperty({
+    description: 'Customer status',
+    example: 'ACTIVE',
+    enum: ['ACTIVE', 'INACTIVE', 'SUSPENDED'],
+  })
+  status!: string;
 }

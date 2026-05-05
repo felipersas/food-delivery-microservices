@@ -30,9 +30,16 @@ export class SavePaymentMethodDto {
 
 export type SavePaymentMethodInput = { customerId: string } & SavePaymentMethodDto;
 
-export interface SavePaymentMethodOutput {
-  customerId: string;
-  paymentMethodCount: number;
-  brand: string;
-  last4: string;
+export class SavePaymentMethodOutput {
+  @ApiProperty({ description: 'Customer ID', example: '123e4567-e89b-12d3-a456-426614174000' })
+  customerId!: string;
+
+  @ApiProperty({ description: 'Total number of payment methods after saving', example: 2 })
+  paymentMethodCount!: number;
+
+  @ApiProperty({ description: 'Card brand', example: 'visa' })
+  brand!: string;
+
+  @ApiProperty({ description: 'Last 4 digits', example: '4242' })
+  last4!: string;
 }
