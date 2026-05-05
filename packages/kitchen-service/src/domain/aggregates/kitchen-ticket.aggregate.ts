@@ -9,6 +9,7 @@ export enum KitchenTicketStatus {
 
 export class KitchenTicket extends AggregateRoot<string> {
   private orderId: string;
+  private restaurantId: string;
   private items: Array<{
     productId: string;
     productName: string;
@@ -19,16 +20,19 @@ export class KitchenTicket extends AggregateRoot<string> {
   constructor(props: {
     id?: string;
     orderId: string;
+    restaurantId: string;
     items: Array<{ productId: string; productName: string; quantity: number }>;
   }) {
     super(props.id ?? uuidv4());
     this.orderId = props.orderId;
+    this.restaurantId = props.restaurantId;
     this.items = props.items;
     this.status = KitchenTicketStatus.WAITING;
   }
 
   static createFromOrder(data: {
     orderId: string;
+    restaurantId: string;
     items: Array<{ productId: string; productName: string; quantity: number }>;
   }): KitchenTicket {
     return new KitchenTicket(data);
@@ -37,6 +41,7 @@ export class KitchenTicket extends AggregateRoot<string> {
   static reconstitute(props: {
     id: string;
     orderId: string;
+    restaurantId: string;
     items: Array<{ productId: string; productName: string; quantity: number }>;
     status: KitchenTicketStatus;
     version: number;
@@ -44,6 +49,7 @@ export class KitchenTicket extends AggregateRoot<string> {
     const ticket = new KitchenTicket({
       id: props.id,
       orderId: props.orderId,
+      restaurantId: props.restaurantId,
       items: props.items,
     });
     (ticket as any).status = props.status;
@@ -89,6 +95,10 @@ export class KitchenTicket extends AggregateRoot<string> {
 
   getOrderId(): string {
     return this.orderId;
+  }
+
+  getRestaurantId(): string {
+    return this.restaurantId;
   }
 
   getItems(): Array<{

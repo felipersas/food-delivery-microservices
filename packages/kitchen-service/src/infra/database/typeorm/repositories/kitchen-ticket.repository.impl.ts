@@ -39,10 +39,20 @@ export class PostgresKitchenTicketRepository
     await repo.delete(id);
   }
 
+  async findByRestaurantId(restaurantId: string): Promise<KitchenTicket[]> {
+    const repo = this.dataSource.getRepository(KitchenTicketEntity);
+    const entities = await repo.find({
+      where: { restaurantId },
+      order: { createdAt: 'ASC' },
+    });
+    return entities.map((entity) => this.toDomain(entity));
+  }
+
   private toDomain(entity: KitchenTicketEntity): KitchenTicket {
     return KitchenTicket.reconstitute({
       id: entity.id,
       orderId: entity.orderId,
+      restaurantId: entity.restaurantId,
       items: entity.items.map((item) => ({
         productId: item.productId,
         productName: item.productName,
@@ -57,6 +67,7 @@ export class PostgresKitchenTicketRepository
     const entity = new KitchenTicketEntity();
     entity.id = ticket.getId();
     entity.orderId = ticket.getOrderId();
+    entity.restaurantId = ticket.getRestaurantId();
     entity.status = ticket.getStatus();
     entity.version = ticket.getVersion();
     entity.items = ticket.getItems().map((item) => {

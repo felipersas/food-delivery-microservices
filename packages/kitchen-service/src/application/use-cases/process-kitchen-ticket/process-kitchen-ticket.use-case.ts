@@ -28,6 +28,7 @@ export class ProcessKitchenTicketUseCase {
     // 1. Create ticket from order
     const ticket = KitchenTicket.createFromOrder({
       orderId: data.orderId,
+      restaurantId: data.restaurantId,
       items: data.items,
     });
 

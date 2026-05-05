@@ -16,6 +16,9 @@ export class KitchenTicketEntity {
   @Column({ name: 'order_id' })
   orderId!: string;
 
+  @Column({ name: 'restaurant_id' })
+  restaurantId!: string;
+
   @Column({ type: 'enum', enum: ['WAITING', 'PREPARING', 'READY'] })
   status!: string;
 
