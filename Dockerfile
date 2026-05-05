@@ -1,16 +1,37 @@
-FROM oven/bun:alpine AS base
-WORKDIR /usr/src/app
+# Multi-stage Dockerfile for NestJS/Bun microservices
+FROM oven/bun:1.3-alpine AS base
+WORKDIR /app
+
+# Install dependencies
+FROM base AS install
 COPY package.json bun.lockb ./
+COPY packages/shared packages/shared
+COPY packages/messaging packages/messaging
+RUN bun install --frozen-lockfile --production=false
 
-FROM base AS dev_deps
-RUN bun install --frozen-lockfile
+# Production dependencies
+FROM base AS prod-install
+COPY package.json bun.lockb ./
+COPY packages/shared packages/shared
+COPY packages/messaging packages/messaging
+RUN bun install --frozen-lockfile --production=true
 
-FROM base AS build
-COPY --from=dev_deps /usr/src/app/node_modules ./node_modules
+# Development stage (with all dependencies)
+FROM base AS dev
+COPY --from=install /app/node_modules ./node_modules
 COPY . .
-RUN bun run build
 
-FROM base AS release 
-COPY --from=build /usr/src/app/dist ./dist
-EXPOSE ${PORT}
-CMD ["bun", "start:prod"]
+# Production stage for specific service
+FROM base AS prod
+ARG SERVICE_NAME
+COPY --from=prod-install /app/node_modules ./node_modules
+COPY packages/shared packages/shared
+COPY packages/messaging packages/messaging
+COPY packages/${SERVICE_NAME} packages/${SERVICE_NAME}
+
+ENV NODE_ENV=production
+ENV PORT=3000
+
+EXPOSE 3000
+
+CMD ["bun", "packages/${SERVICE_NAME}/src/main.ts"]
