@@ -2,6 +2,11 @@ import { Module, type OnModuleInit } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HealthController } from './infra/http/health.controller';
+import { KitchenController } from './infra/http/kitchen.controller';
+import { CreateKitchenTicketUseCase } from './application/use-cases/create-kitchen-ticket';
+import { GetKitchenTicketUseCase } from './application/use-cases/get-kitchen-ticket';
+import { UpdateKitchenTicketStatusUseCase } from './application/use-cases/update-kitchen-ticket-status';
+import { RabbitMQEventPublisher } from './infra/messaging/rabbitmq/kitchen-event.publisher';
 import { KitchenProcessor } from './application/processors/kitchen.processor';
 import { KitchenWorkerService } from './application/workers/kitchen.worker';
 import { KitchenConsumer } from './infra/messaging/rabbitmq/kitchen.consumer';
@@ -18,7 +23,7 @@ import { validationSchema } from './config/validation';
 const usePostgres = process.env.DB_DRIVER === 'postgres';
 
 @Module({
-  controllers: [HealthController],
+  controllers: [HealthController, KitchenController],
   imports: [
     ConfigModule.forRoot({
       load: [configuration],
@@ -75,14 +80,33 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
         ),
       inject: ['RabbitMQConnection', 'KitchenTicketRepository', ConfigService],
     },
+    {
+      provide: 'EventPublisher',
+      useFactory: (rabbit: RabbitMQConnection) => new RabbitMQEventPublisher(rabbit),
+      inject: ['RabbitMQConnection'],
+    },
+    {
+      provide: CreateKitchenTicketUseCase,
+      useFactory: (repo: KitchenTicketRepository, publisher: any) =>
+        new CreateKitchenTicketUseCase(repo, publisher),
+      inject: ['KitchenTicketRepository', 'EventPublisher'],
+    },
+    {
+      provide: GetKitchenTicketUseCase,
+      useFactory: (repo: KitchenTicketRepository) => new GetKitchenTicketUseCase(repo),
+      inject: ['KitchenTicketRepository'],
+    },
+    {
+      provide: UpdateKitchenTicketStatusUseCase,
+      useFactory: (repo: KitchenTicketRepository, publisher: any) =>
+        new UpdateKitchenTicketStatusUseCase(repo, publisher),
+      inject: ['KitchenTicketRepository', 'EventPublisher'],
+    },
     KitchenConsumer,
   ],
 })
 export class KitchenModule implements OnModuleInit {
-  constructor(
-    private readonly consumer: KitchenConsumer,
-    private readonly _workerService: KitchenWorkerService,
-  ) {}
+  constructor(private readonly consumer: KitchenConsumer) {}
 
   async onModuleInit() {
     await this.consumer.start();
