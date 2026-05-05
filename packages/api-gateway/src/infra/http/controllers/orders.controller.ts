@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Param, Headers, UseInterceptors, Inject } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import type { HttpProxyStrategy } from '../../strategies/http-proxy.strategy';
+import { HttpProxyStrategy } from '../../strategies/http-proxy.strategy';
 import { LoggingInterceptor } from '../../interceptors/logging.interceptor';
 import { TimeoutInterceptor } from '../../interceptors/timeout.interceptor';
 import { CreateOrderDto, GetOrderByIdDto, GetOrdersByCustomerDto } from '../dto/orders.dto';
