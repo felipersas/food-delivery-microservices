@@ -1,11 +1,13 @@
 import { Module, type OnModuleInit } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { HealthController } from './infra/http/health.controller';
 import { AnalyticsConsumer } from './infra/messaging/rabbitmq/analytics.consumer';
 import { RabbitMQConnection } from '@app/messaging';
 import configuration from './config/configuration';
 import { validationSchema } from './config/validation';
 
 @Module({
+  controllers: [HealthController],
   imports: [
     ConfigModule.forRoot({
       load: [configuration],

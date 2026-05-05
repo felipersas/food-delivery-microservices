@@ -2,6 +2,7 @@ import { Module, type OnModuleInit } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrderController } from './infra/http/order.controller';
+import { HealthController } from './infra/http/health.controller';
 import { CreateOrderUseCase } from './application/use-cases/create-order/create-order.use-case';
 import { GetOrderUseCase } from './application/use-cases/get-order/get-order.use-case';
 import { InMemoryOrderRepository } from './infra/database/memory/order.repository';
@@ -34,7 +35,7 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
         ]
       : []),
   ],
-  controllers: [OrderController],
+  controllers: [OrderController, HealthController],
   providers: [
     {
       provide: 'RabbitMQConnection',

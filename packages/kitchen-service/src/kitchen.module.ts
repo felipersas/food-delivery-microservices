@@ -1,6 +1,7 @@
 import { Module, type OnModuleInit } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { HealthController } from './infra/http/health.controller';
 import { KitchenProcessor } from './application/processors/kitchen.processor';
 import { KitchenWorkerService } from './application/workers/kitchen.worker';
 import { KitchenConsumer } from './infra/messaging/rabbitmq/kitchen.consumer';
@@ -17,6 +18,7 @@ import { validationSchema } from './config/validation';
 const usePostgres = process.env.DB_DRIVER === 'postgres';
 
 @Module({
+  controllers: [HealthController],
   imports: [
     ConfigModule.forRoot({
       load: [configuration],
