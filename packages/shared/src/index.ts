@@ -14,3 +14,7 @@ export type { OrderConfirmedEvent, OrderConfirmedData } from './events/order-con
 export type { PaymentConfirmedEvent, PaymentConfirmedData } from './events/payment-confirmed.event';
 export type { PaymentRejectedEvent, PaymentRejectedData } from './events/payment-rejected.event';
 export type { OrderReadyEvent, OrderReadyData } from './events/order-ready.event';
+
+// OpenAPI
+export { createOpenAPIConfig, commonResponses } from './openapi/openapi.config';
+export { scalarHtml } from './openapi/scalar.config';

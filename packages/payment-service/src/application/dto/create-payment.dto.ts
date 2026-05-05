@@ -1,23 +1,47 @@
-import { IsString, IsNumber, IsIn, IsNotEmpty, Min } from 'class-validator';
+import { IsString, IsNumber, IsIn, Min, IsUUID, IsNotEmpty } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreatePaymentDto {
-  @IsString()
+  @ApiProperty({ description: 'Order ID', example: '123e4567-e89b-12d3-a456-426614174000' })
+  @IsUUID()
   @IsNotEmpty()
   orderId!: string;
 
+  @ApiProperty({ description: 'Payment amount in BRL', example: 91.80, minimum: 0.01 })
   @IsNumber()
   @Min(0.01)
   amount!: number;
 
+  @ApiProperty({
+    description: 'Payment method',
+    example: 'CREDIT_CARD',
+    enum: ['CREDIT_CARD', 'DEBIT_CARD', 'PIX', 'CASH'],
+  })
   @IsString()
-  @IsIn(['CREDIT_CARD', 'DEBIT_CARD', 'PIX'])
+  @IsIn(['CREDIT_CARD', 'DEBIT_CARD', 'PIX', 'CASH'])
+  @IsNotEmpty()
   method!: string;
 }
 
-export interface PaymentResponse {
-  paymentId: string;
-  orderId: string;
-  status: string;
-  amount: number;
-  method: string;
+export class GetPaymentByIdDto {
+  @ApiProperty({ description: 'Payment ID', example: '123e4567-e89b-12d3-a456-426614174000' })
+  @IsUUID()
+  id!: string;
+}
+
+export class PaymentResponse {
+  @ApiProperty({ description: 'Payment ID', example: '123e4567-e89b-12d3-a456-426614174000' })
+  paymentId!: string;
+
+  @ApiProperty({ description: 'Order ID', example: '123e4567-e89b-12d3-a456-426614174000' })
+  orderId!: string;
+
+  @ApiProperty({ description: 'Payment status', example: 'CONFIRMED', enum: ['PENDING', 'CONFIRMED', 'REJECTED'] })
+  status!: string;
+
+  @ApiProperty({ description: 'Payment amount in BRL', example: 91.80 })
+  amount!: number;
+
+  @ApiProperty({ description: 'Payment method', example: 'CREDIT_CARD', enum: ['CREDIT_CARD', 'DEBIT_CARD', 'PIX', 'CASH'] })
+  method!: string;
 }

@@ -118,6 +118,35 @@ Controllers proxy requests to microservice ports with DTO validation:
 
 **Validation Strategy**: First line of defense at gateway, complete validation at microservices.
 
+### API Documentation (OpenAPI + Scalar)
+
+All services provide interactive API documentation using OpenAPI 3.0 specification with two UI options:
+
+**Swagger UI** - Traditional interactive documentation:
+- Order Service: http://localhost:3001/api/docs
+- Kitchen Service: http://localhost:3002/api/docs
+- Payment Service: http://localhost:3003/api/docs
+- API Gateway: http://localhost:3000/api/docs
+
+**Scalar UI** - Modern, fast API documentation:
+- Order Service: http://localhost:3001/api
+- Kitchen Service: http://localhost:3002/api
+- Payment Service: http://localhost:3003/api
+- API Gateway: http://localhost:3000/api
+
+**OpenAPI JSON** - Machine-readable spec:
+- Order Service: http://localhost:3001/api/docs-json
+- Kitchen Service: http://localhost:3002/api/docs-json
+- Payment Service: http://localhost:3003/api/docs-json
+- API Gateway: http://localhost:3000/api/docs-json
+
+**Documentation Features:**
+- Complete request/response schemas with examples
+- Enum values and validation constraints visible
+- Try endpoints directly from the UI
+- Bearer auth configuration for protected routes
+- Tagged endpoints by domain (orders, payments, kitchen, health)
+
 ### Environment Variables
 Copy `.env.example` to `.env`. Key variables:
 - `RABBITMQ_URL`, `RABBITMQ_EXCHANGE`

@@ -25,6 +25,7 @@
     "format": "prettier --write \"packages/*/src/**/*.ts\" \"packages/*/test/**/*.ts\""
   },
   "devDependencies": {
+    "@nestjs/swagger": "^11.4.2",
     "@types/bun": "^1.1.13",
     "@types/joi": "^17.2.3",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
