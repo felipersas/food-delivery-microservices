@@ -34,10 +34,6 @@ export class OrderConsumer {
             order.cancel();
             break;
           case 'order.ready':
-            if (order.getStatus() === 'PENDING') {
-              order.confirm();
-            }
-            order.startPreparing();
             order.markReady();
             break;
         }
