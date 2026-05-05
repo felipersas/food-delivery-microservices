@@ -1,6 +1,7 @@
 import { AggregateRoot, Money } from '@app/shared';
 import { OrderStatus, OrderStatusEnum } from '@domain/value-objects/order-status.vo';
 import { OrderItem } from '@domain/value-objects/order-item.vo';
+import { OrderDomainException } from '@infra/http/exceptions/order.exception';
 import { v4 as uuidv4 } from 'uuid';
 
 export class Order extends AggregateRoot<string> {
@@ -52,7 +53,16 @@ export class Order extends AggregateRoot<string> {
     restaurantId: string;
     items: OrderItem[];
   }): Order {
+    if (props.items.length === 0) {
+      throw new OrderDomainException('Order must have at least one item');
+    }
+
     const order = new Order(props);
+
+    // Validate total amount is positive
+    if (order.totalAmount.amount <= 0) {
+      throw new OrderDomainException(`Order total must be greater than zero, got: ${order.totalAmount.amount}`);
+    }
 
     order.addDomainEvent({
       eventId: uuidv4(),
@@ -132,7 +142,7 @@ export class Order extends AggregateRoot<string> {
 
   private transitionTo(newStatus: OrderStatus): void {
     if (!this.status.canTransitionTo(newStatus)) {
-      throw new Error(
+      throw new OrderDomainException(
         `Cannot transition from ${this.status.value} to ${newStatus.value}`,
       );
     }
@@ -141,12 +151,18 @@ export class Order extends AggregateRoot<string> {
   }
 
   private calculateTotal(): Money {
-    return this.items.reduce(
-      (total, item) => {
+    const total = this.items.reduce(
+      (sum, item) => {
         const itemTotal = Money.BRL(item.unitPrice.amount * item.quantity);
-        return total.add(itemTotal);
+        return sum.add(itemTotal);
       },
       Money.BRL(0),
     );
+
+    if (total.amount <= 0) {
+      throw new OrderDomainException('Order total must be greater than zero');
+    }
+
+    return total;
   }
 }

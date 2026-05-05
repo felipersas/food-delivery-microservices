@@ -24,7 +24,7 @@ export class CreateOrderUseCase {
           productId: item.productId,
           productName: item.productName,
           quantity: item.quantity,
-          unitPrice: Money.BRL(item.price),
+          unitPrice: Money.BRL(item.unitPrice),
         }),
     );
 

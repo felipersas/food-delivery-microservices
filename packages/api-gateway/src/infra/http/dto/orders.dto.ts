@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsNumber,
   IsNotEmpty,
+  ArrayMinSize,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -27,10 +28,10 @@ export class CreateOrderItemDto {
   @Min(1)
   quantity!: number;
 
-  @ApiProperty({ description: 'Unit price in BRL', example: 45.90, minimum: 0 })
+  @ApiProperty({ description: 'Unit price in BRL', example: 45.90, minimum: 0.01 })
   @IsNumber()
-  @Min(0)
-  price!: number;
+  @Min(0.01)
+  unitPrice!: number;
 }
 
 export class CreateOrderDto {
@@ -44,8 +45,13 @@ export class CreateOrderDto {
   @IsNotEmpty()
   restaurantId!: string;
 
-  @ApiProperty({ description: 'Order items', type: [CreateOrderItemDto] })
+  @ApiProperty({
+    description: 'Order items (total will be calculated automatically)',
+    type: [CreateOrderItemDto],
+    minItems: 1,
+  })
   @IsArray()
+  @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => CreateOrderItemDto)
   items!: CreateOrderItemDto[];
