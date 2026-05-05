@@ -52,8 +52,8 @@ describe('Kitchen BullMQ Worker (Integration)', () => {
       ],
     });
 
-    // Wait for BullMQ worker to process and publish
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    // Wait for BullMQ worker to process and publish (max 30s delay + buffer)
+    await new Promise((resolve) => setTimeout(resolve, 35000));
 
     expect(receivedEvents.length).toBeGreaterThanOrEqual(1);
     const event = receivedEvents.find((e) => e.eventType === 'order.ready');

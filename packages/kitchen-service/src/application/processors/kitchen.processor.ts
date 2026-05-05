@@ -14,13 +14,18 @@ export interface KitchenProcessingResult {
 }
 
 export class KitchenProcessor {
-  process(data: KitchenJobData): KitchenProcessingResult {
+  async process(data: KitchenJobData): Promise<KitchenProcessingResult> {
     const ticket = KitchenTicket.createFromOrder({
       orderId: data.orderId,
       items: data.items,
     });
 
     ticket.startPreparing();
+
+    // Random delay 1-30 seconds to simulate food preparation
+    const delaySeconds = Math.floor(Math.random() * 29) + 1;
+    await this.sleep(delaySeconds * 1000);
+
     ticket.markReady();
 
     const readyEvent: DomainEvent = {
@@ -37,5 +42,9 @@ export class KitchenProcessor {
     };
 
     return { ticket, readyEvent };
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }

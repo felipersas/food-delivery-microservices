@@ -26,7 +26,7 @@ export class KitchenWorkerService {
   private async processJob(job: Job<KitchenJobData>): Promise<void> {
     await job.updateProgress(10);
 
-    const { ticket, readyEvent } = this.processor.process(job.data);
+    const { ticket, readyEvent } = await this.processor.process(job.data);
 
     await job.updateProgress(50);
 
