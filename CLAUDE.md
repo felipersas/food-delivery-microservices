@@ -28,12 +28,19 @@ cd packages/api-gateway && bun run build
 
 # Testing
 bun test                   # All tests (root)
+bun run test:e2e           # End-to-end flow tests
 bun run test:order         # Order service tests
 bun run test:kitchen       # Kitchen service tests
 bun run test:payment       # Payment service tests
 bun run test:notification  # Notification service tests
 bun run test:analytics     # Analytics service tests
 bun run test:shared        # Shared package tests
+
+# Production Deployment
+./scripts/deploy.sh        # Build and start all services
+./scripts/status.sh        # Check health status
+./scripts/logs.sh          # Stream logs (all or specific service)
+./scripts/stop.sh          # Stop all services
 
 # Linting & Formatting
 bun run lint               # ESLint with --fix
@@ -56,6 +63,33 @@ bun run format             # Prettier
 - **Events via RabbitMQ**: All services publish/subscribe through `food-ordering` exchange
 - **REST via API Gateway**: Single entry point (port 3000) proxies to service ports
 - **Job Queue**: Kitchen service uses BullMQ with Redis for async processing
+- **Validation**: API Gateway validates basic structure, microservices validate business rules
+
+### Order Flow (Event-Driven)
+
+```
+1. Client → API Gateway → Order Service
+   POST /orders → creates Order aggregate
+
+2. Order Service emits: order.created
+   └─→ Payment Service listens
+   └─→ Analytics Service listens
+
+3. Payment Service processes payment
+   └─→ Emits: payment.confirmed ✅ OR payment.rejected ❌
+
+4. Kitchen Service listens to payment.confirmed ONLY
+   └─→ Creates BullMQ job (async, 1-30s food preparation)
+   └─→ Emits: order.ready
+
+5. Notification Service listens to all events
+   └─→ Sends confirmations (email/SMS)
+
+6. Order Service listens to payment.confirmed, order.ready
+   └─→ Updates order status
+```
+
+**Critical Business Rule**: Kitchen only starts preparing AFTER payment confirmation.
 
 ### Domain-Driven Design Structure
 Each service follows clean architecture layers:
@@ -75,10 +109,14 @@ Each service follows clean architecture layers:
 - Separate databases per service: `orders`, `kitchen`, `payments` (ports 5432, 5434, 5433)
 
 ### API Gateway Routing
-Controllers proxy requests to microservice ports:
-- `GET /orders/*` → `http://localhost:3001`
-- `GET /kitchen/*` → `http://localhost:3002`
+Controllers proxy requests to microservice ports with DTO validation:
+- `POST /orders` → `http://localhost:3001/orders` (validates CreateOrderDto)
+- `POST /payments` → `http://localhost:3003/payments` (validates CreatePaymentDto)
+- `GET /kitchen/tickets` → `http://localhost:3002/kitchen/tickets` (validates query params)
 - Uses `HttpProxyStrategy` with `httpx` fetch for requests
+- ValidationPipe enabled with `whitelist: true`, `transform: true`
+
+**Validation Strategy**: First line of defense at gateway, complete validation at microservices.
 
 ### Environment Variables
 Copy `.env.example` to `.env`. Key variables:
