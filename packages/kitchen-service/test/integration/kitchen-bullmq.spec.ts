@@ -45,6 +45,7 @@ describe('Kitchen BullMQ Worker (Integration)', () => {
   it('should process kitchen job via BullMQ and publish order.ready', async () => {
     await kitchenQueue.addJob({
       orderId: 'order-789',
+      restaurantId: 'restaurant-1',
       items: [
         { productId: 'p-1', productName: 'Burger', quantity: 2 },
         { productId: 'p-2', productName: 'Fries', quantity: 1 },

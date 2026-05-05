@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export interface KitchenJobData {
   orderId: string;
+  restaurantId: string;
   items: Array<{ productId: string; productName: string; quantity: number }>;
 }
 
