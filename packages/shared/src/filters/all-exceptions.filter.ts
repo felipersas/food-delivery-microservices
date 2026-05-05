@@ -5,7 +5,6 @@ import {
   Logger,
 } from '@nestjs/common';
 import type { ExceptionFilter, ArgumentsHost } from '@nestjs/common';
-import { HttpAdapterHost } from '@nestjs/core';
 
 /**
  * Global exception filter that catches all exceptions.
@@ -30,11 +29,8 @@ import { HttpAdapterHost } from '@nestjs/core';
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
 
-  constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
-
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
-    const { httpAdapter } = this.httpAdapterHost;
 
     const response = ctx.getResponse();
     const request = ctx.getRequest();
@@ -64,7 +60,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const responseBody = {
       statusCode: status,
       timestamp: new Date().toISOString(),
-      path: httpAdapter.getRequestUrl(request),
+      path: request.url,
       ...(typeof message === 'object' ? message : { message }),
     };
 
@@ -73,7 +69,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       this.warn(responseBody, request);
     }
 
-    httpAdapter.reply(response, responseBody, status);
+    response.status(status).json(responseBody);
   }
 
   private error(exception: unknown, request: any): void {
