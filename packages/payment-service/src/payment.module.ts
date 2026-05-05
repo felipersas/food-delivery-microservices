@@ -5,18 +5,22 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { HealthController } from './infra/http/health.controller';
 import { PaymentController } from './infra/http/payment.controller';
 import { ProcessPaymentUseCase } from './application/use-cases/process-payment/process-payment.use-case';
+import { RefundPaymentUseCase } from './application/use-cases/refund-payment/refund-payment.use-case';
 import { PaymentConsumer } from './infra/messaging/rabbitmq/payment.consumer';
+import { RabbitMQEventPublisher } from './infra/messaging/rabbitmq/payment-event.publisher';
 import { InMemoryPaymentRepository } from './infra/database/memory/payment.repository';
 import { PostgresPaymentRepository } from './infra/database/typeorm/repositories/payment.repository.impl';
 import { PaymentEntity } from './infra/database/typeorm/entities/payment.entity';
 import { RabbitMQConnection } from '@app/messaging';
 import { AllExceptionsFilter, SuccessResponseInterceptor } from '@app/shared';
+import type { EventPublisher } from './infra/messaging/rabbitmq/payment-event.publisher';
 import type { PaymentRepository } from './domain/repositories/payment.repository.interface';
 import configuration from './config/configuration';
 import { validationSchema } from './config/validation';
 import {
   RABBITMQ_CONNECTION,
   PAYMENT_REPOSITORY,
+  EVENT_PUBLISHER,
 } from './tokens';
 
 const usePostgres = process.env.DB_DRIVER === 'postgres';
@@ -57,6 +61,17 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
       provide: ProcessPaymentUseCase,
       useFactory: (repo: PaymentRepository) => new ProcessPaymentUseCase(repo),
       inject: [PAYMENT_REPOSITORY],
+    },
+    {
+      provide: RefundPaymentUseCase,
+      useFactory: (repo: PaymentRepository, publisher: EventPublisher) =>
+        new RefundPaymentUseCase(repo, publisher),
+      inject: [PAYMENT_REPOSITORY, EVENT_PUBLISHER],
+    },
+    {
+      provide: EVENT_PUBLISHER,
+      useFactory: (connection: RabbitMQConnection) => new RabbitMQEventPublisher(connection),
+      inject: [RABBITMQ_CONNECTION],
     },
     {
       provide: RABBITMQ_CONNECTION,

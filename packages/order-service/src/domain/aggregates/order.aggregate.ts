@@ -9,12 +9,16 @@ export class Order extends AggregateRoot<string> {
   private items: OrderItem[];
   private status: OrderStatus;
   private totalAmount: Money;
+  private paymentMethodIndex?: number;
+  private paymentMethodType?: 'CREDIT_CARD' | 'DEBIT_CARD' | 'PIX' | 'CASH';
 
   constructor(props: {
     id?: string;
     customerId: string;
     restaurantId: string;
     items: OrderItem[];
+    paymentMethodIndex?: number;
+    paymentMethodType?: 'CREDIT_CARD' | 'DEBIT_CARD' | 'PIX' | 'CASH';
   }) {
     super(props.id ?? uuidv4());
     this.customerId = props.customerId;
@@ -22,6 +26,8 @@ export class Order extends AggregateRoot<string> {
     this.items = props.items;
     this.status = OrderStatus.pending();
     this.totalAmount = this.calculateTotal();
+    this.paymentMethodIndex = props.paymentMethodIndex;
+    this.paymentMethodType = props.paymentMethodType;
   }
 
   static reconstitute(props: {
@@ -32,12 +38,16 @@ export class Order extends AggregateRoot<string> {
     status: OrderStatusEnum;
     totalAmount: Money;
     version: number;
+    paymentMethodIndex?: number;
+    paymentMethodType?: 'CREDIT_CARD' | 'DEBIT_CARD' | 'PIX' | 'CASH';
   }): Order {
     const order = new Order({
       id: props.id,
       customerId: props.customerId,
       restaurantId: props.restaurantId,
       items: props.items,
+      paymentMethodIndex: props.paymentMethodIndex,
+      paymentMethodType: props.paymentMethodType,
     });
     (order as any).status = new OrderStatus(props.status);
     (order as any).totalAmount = props.totalAmount;
@@ -51,6 +61,8 @@ export class Order extends AggregateRoot<string> {
     customerId: string;
     restaurantId: string;
     items: OrderItem[];
+    paymentMethodIndex?: number;
+    paymentMethodType?: 'CREDIT_CARD' | 'DEBIT_CARD' | 'PIX' | 'CASH';
   }): Order {
     if (props.items.length === 0) {
       throw new DomainException('Order must have at least one item');
@@ -80,6 +92,8 @@ export class Order extends AggregateRoot<string> {
           price: item.unitPrice.amount,
         })),
         totalAmount: order.totalAmount.amount,
+        paymentMethodIndex: order.paymentMethodIndex,
+        paymentMethodType: order.paymentMethodType,
       },
     });
 
@@ -155,6 +169,14 @@ export class Order extends AggregateRoot<string> {
 
   getTotalAmount(): Money {
     return this.totalAmount;
+  }
+
+  getPaymentMethodIndex(): number | undefined {
+    return this.paymentMethodIndex;
+  }
+
+  getPaymentMethodType(): string | undefined {
+    return this.paymentMethodType;
   }
 
   private transitionTo(newStatus: OrderStatus): void {

@@ -11,6 +11,9 @@ export class ProcessPaymentUseCase {
       orderId: input.orderId,
       amount: Money.BRL(input.amount),
       method: input.method as PaymentMethod,
+      paymentMethodToken: input.paymentMethodToken,
+      paymentMethodBrand: input.paymentMethodBrand,
+      customerId: input.customerId,
     });
 
     // Simulate payment processing — random rejection for realism

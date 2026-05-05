@@ -53,7 +53,7 @@ export class PostgresOrderRepository implements OrderRepository {
           productId: item.productId,
           productName: item.productName,
           quantity: item.quantity,
-          unitPrice: Money.BRL(Number(item.unitPrice)),
+          unitPrice: Money.BRLFromCents(item.unitPriceCents),
         }),
     );
 
@@ -63,8 +63,10 @@ export class PostgresOrderRepository implements OrderRepository {
       restaurantId: entity.restaurantId,
       items,
       status: entity.status as OrderStatusEnum,
-      totalAmount: Money.BRL(Number(entity.totalAmount)),
+      totalAmount: Money.BRLFromCents(entity.totalAmountCents),
       version: entity.version,
+      paymentMethodIndex: entity.paymentMethodIndex ?? undefined,
+      paymentMethodType: entity.paymentMethodType as 'CREDIT_CARD' | 'DEBIT_CARD' | 'PIX' | 'CASH' | undefined,
     });
   }
 
@@ -74,8 +76,10 @@ export class PostgresOrderRepository implements OrderRepository {
     entity.customerId = order.getCustomerId();
     entity.restaurantId = order.getRestaurantId();
     entity.status = order.getStatus();
-    entity.totalAmount = order.getTotalAmount().amount;
+    entity.totalAmountCents = order.getTotalAmount().cents;
     entity.version = order.getVersion();
+    entity.paymentMethodIndex = order.getPaymentMethodIndex();
+    entity.paymentMethodType = order.getPaymentMethodType();
     entity.items = order.getItems().map((item) => {
       const itemEntity = new OrderItemEntity();
       itemEntity.id = uuidv4();
@@ -83,7 +87,7 @@ export class PostgresOrderRepository implements OrderRepository {
       itemEntity.productId = item.productId;
       itemEntity.productName = item.productName;
       itemEntity.quantity = item.quantity;
-      itemEntity.unitPrice = item.unitPrice.amount;
+      itemEntity.unitPriceCents = item.unitPrice.cents;
       return itemEntity;
     });
     return entity;

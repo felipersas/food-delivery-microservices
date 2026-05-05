@@ -23,8 +23,8 @@ export class OrderItemEntity {
   @Column()
   quantity!: number;
 
-  @Column({ name: 'unit_price', type: 'decimal', precision: 10, scale: 2 })
-  unitPrice!: number;
+  @Column({ name: 'unit_price_cents', type: 'integer', nullable: true, default: 0 })
+  unitPriceCents!: number;
 
   @ManyToOne('OrderEntity', 'items')
   @JoinColumn({ name: 'order_id' })

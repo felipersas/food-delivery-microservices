@@ -257,6 +257,13 @@ export class Customer extends AggregateRoot<string> {
     this.incrementVersion();
   }
 
+  recordRefund(amount: number): void {
+    // Subtract refunded amount from total spent
+    // Ensure totalSpent doesn't go negative
+    this.totalSpent = Math.max(0, this.totalSpent - amount);
+    this.incrementVersion();
+  }
+
   activate(): void {
     this.transitionTo(CustomerStatus.active());
     this.markAsUpdated();

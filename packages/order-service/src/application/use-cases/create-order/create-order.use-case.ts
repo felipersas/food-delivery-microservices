@@ -29,6 +29,8 @@ export class CreateOrderUseCase {
       customerId: input.customerId,
       restaurantId: input.restaurantId,
       items,
+      paymentMethodIndex: input.paymentMethodIndex,
+      paymentMethodType: input.paymentMethodType as 'CREDIT_CARD' | 'DEBIT_CARD' | 'PIX' | 'CASH' | undefined,
     });
 
     await this.orderRepository.save(order);

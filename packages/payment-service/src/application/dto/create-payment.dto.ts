@@ -1,5 +1,5 @@
-import { IsString, IsNumber, IsIn, Min, IsUUID, IsNotEmpty } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsNumber, IsIn, Min, IsUUID, IsNotEmpty, IsOptional } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreatePaymentDto {
   @ApiProperty({ description: 'Order ID', example: '123e4567-e89b-12d3-a456-426614174000' })
@@ -21,6 +21,17 @@ export class CreatePaymentDto {
   @IsIn(['CREDIT_CARD', 'DEBIT_CARD', 'PIX', 'CASH'])
   @IsNotEmpty()
   method!: string;
+
+  @ApiPropertyOptional({ description: 'Customer ID (for using saved payment methods)', example: '123e4567-e89b-12d3-a456-426614174000' })
+  @IsOptional()
+  @IsUUID()
+  customerId?: string;
+
+  @ApiPropertyOptional({ description: 'Index of saved payment method from customer profile', example: 0, minimum: 0 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  paymentMethodIndex?: number;
 }
 
 export class GetPaymentByIdDto {

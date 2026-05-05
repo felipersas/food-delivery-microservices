@@ -29,10 +29,14 @@ export class PostgresPaymentRepository implements PaymentRepository {
     return Payment.reconstitute({
       id: entity.id,
       orderId: entity.orderId,
-      amount: Money.BRL(Number(entity.amount)),
+      amount: Money.BRLFromCents(entity.amountCents),
       method: entity.method as PaymentMethod,
       status: entity.status as PaymentStatus,
       version: entity.version,
+      paymentMethodToken: entity.paymentMethodToken ?? undefined,
+      paymentMethodBrand: entity.paymentMethodBrand ?? undefined,
+      customerId: entity.customerId ?? undefined,
+      refundedAmount: Money.BRLFromCents(entity.refundedAmountCents ?? 0),
     });
   }
 
@@ -40,10 +44,14 @@ export class PostgresPaymentRepository implements PaymentRepository {
     const entity = new PaymentEntity();
     entity.id = payment.getId();
     entity.orderId = payment.getOrderId();
-    entity.amount = payment.getAmount().amount;
+    entity.amountCents = payment.getAmount().cents;
     entity.method = payment.getMethod();
     entity.status = payment.getStatus();
     entity.version = payment.getVersion();
+    entity.customerId = payment.getCustomerId();
+    entity.paymentMethodToken = payment.getPaymentMethodToken();
+    entity.paymentMethodBrand = payment.getPaymentMethodBrand();
+    entity.refundedAmountCents = payment.getRefundedAmount().cents;
     return entity;
   }
 }

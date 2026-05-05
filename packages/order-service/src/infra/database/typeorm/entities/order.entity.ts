@@ -22,8 +22,19 @@ export class OrderEntity {
   @Column({ type: 'enum', enum: ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED', 'CANCELLED'] })
   status!: string;
 
-  @Column({ name: 'total_amount', type: 'decimal', precision: 10, scale: 2 })
-  totalAmount!: number;
+  @Column({ name: 'total_amount_cents', type: 'integer', default: 0 })
+  totalAmountCents!: number;
+
+  @Column({ name: 'payment_method_index', nullable: true })
+  paymentMethodIndex?: number;
+
+  @Column({
+    name: 'payment_method_type',
+    type: 'enum',
+    enum: ['CREDIT_CARD', 'DEBIT_CARD', 'PIX', 'CASH'],
+    nullable: true,
+  })
+  paymentMethodType?: string;
 
   @Column({ default: 0 })
   version!: number;

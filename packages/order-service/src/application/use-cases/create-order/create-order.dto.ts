@@ -1,6 +1,6 @@
-import { IsString, IsNumber, IsArray, ValidateNested, Min, IsUUID } from 'class-validator';
+import { IsString, IsNumber, IsArray, ValidateNested, Min, IsUUID, IsOptional, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateOrderItemDto {
   @ApiProperty({ description: 'Product ID', example: '123e4567-e89b-12d3-a456-426614174000' })
@@ -40,6 +40,26 @@ export class CreateOrderDto {
   @ValidateNested({ each: true })
   @Type(() => CreateOrderItemDto)
   items!: CreateOrderItemDto[];
+
+  @ApiPropertyOptional({
+    description: 'Index of saved payment method from customer profile',
+    example: 0,
+    minimum: 0,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  paymentMethodIndex?: number;
+
+  @ApiPropertyOptional({
+    description: 'Payment method type (for new payment methods)',
+    example: 'CREDIT_CARD',
+    enum: ['CREDIT_CARD', 'DEBIT_CARD', 'PIX', 'CASH'],
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(['CREDIT_CARD', 'DEBIT_CARD', 'PIX', 'CASH'])
+  paymentMethodType?: string;
 }
 
 export type CreateOrderInput = CreateOrderDto;
