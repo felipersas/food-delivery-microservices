@@ -1,0 +1,32 @@
+{
+  "name": "@app/api-gateway",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "NODE_ENV=development bun run src/main.ts",
+    "start:dev": "NODE_ENV=development bun run --watch src/main.ts",
+    "start:prod": "NODE_ENV=production bun run dist/main.js",
+    "build": "bun run ../../scripts/build.ts api-gateway",
+    "test": "bun test",
+    "test:e2e": "bun test test/e2e",
+    "test:cov": "bun test --coverage"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/core": "^10.4.15",
+    "@nestjs/config": "^4.0.0",
+    "@nestjs/microservices": "^10.4.15",
+    "@nestjs/platform-express": "^10.4.15",
+    "@app/shared": "workspace:*",
+    "@app/messaging": "workspace:*",
+    "joi": "^17.13.3",
+    "class-validator": "^0.14.1",
+    "class-transformer": "^0.5.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.15",
+    "typescript": "^5.8.3"
+  }
+}
