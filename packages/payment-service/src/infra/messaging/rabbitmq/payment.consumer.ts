@@ -37,6 +37,8 @@ export class PaymentConsumer {
             paymentId: result.paymentId,
             amount: data.totalAmount,
             method: 'PIX',
+            restaurantId: data.restaurantId,
+            items: data.items,
           },
         };
 
