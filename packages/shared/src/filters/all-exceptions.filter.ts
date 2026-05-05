@@ -71,7 +71,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
           statusCode: status,
           timestamp: new Date().toISOString(),
           path: request.url,
-          message: (exception as Error).message || httpException.toString(),
+          message: (exception as { message?: string }).message || httpException.toString(),
         };
       }
     } else {
