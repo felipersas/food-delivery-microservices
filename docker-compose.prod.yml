@@ -1,0 +1,273 @@
+version: '3.8'
+
+services:
+  # Infrastructure
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+    networks:
+      - food-ordering
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+    networks:
+      - food-ordering
+
+  postgres-order:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: orders
+    volumes:
+      - pgdata_order:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+    networks:
+      - food-ordering
+
+  postgres-payment:
+    image: postgres:16-alpine
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: payments
+    volumes:
+      - pgdata_payment:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+    networks:
+      - food-ordering
+
+  postgres-kitchen:
+    image: postgres:16-alpine
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: kitchen
+    volumes:
+      - pgdata_kitchen:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+    networks:
+      - food-ordering
+
+  # Microservices
+  order-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: prod
+      args:
+        SERVICE_NAME: order-service
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DB_DRIVER: postgres
+      ORDER_DATABASE_URL: postgresql://postgres:postgres@postgres-order:5432/orders
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_EXCHANGE: food-ordering
+    depends_on:
+      postgres-order:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - food-ordering
+    restart: unless-stopped
+
+  kitchen-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: prod
+      args:
+        SERVICE_NAME: kitchen-service
+    ports:
+      - "3002:3002"
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      DB_DRIVER: postgres
+      KITCHEN_DATABASE_URL: postgresql://postgres:postgres@postgres-kitchen:5434/kitchen
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_EXCHANGE: food-ordering
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      postgres-kitchen:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - food-ordering
+    restart: unless-stopped
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: prod
+      args:
+        SERVICE_NAME: payment-service
+    ports:
+      - "3003:3003"
+    environment:
+      NODE_ENV: production
+      PORT: 3003
+      DB_DRIVER: postgres
+      PAYMENT_DATABASE_URL: postgresql://postgres:postgres@postgres-payment:5433/payments
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_EXCHANGE: food-ordering
+    depends_on:
+      postgres-payment:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3003/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - food-ordering
+    restart: unless-stopped
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: prod
+      args:
+        SERVICE_NAME: notification-service
+    environment:
+      NODE_ENV: production
+      PORT: 3004
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_EXCHANGE: food-ordering
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3004/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - food-ordering
+    restart: unless-stopped
+
+  analytics-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: prod
+      args:
+        SERVICE_NAME: analytics-service
+    environment:
+      NODE_ENV: production
+      PORT: 3005
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_EXCHANGE: food-ordering
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3005/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - food-ordering
+    restart: unless-stopped
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      ORDER_SERVICE_URL: http://order-service:3001
+      KITCHEN_SERVICE_URL: http://kitchen-service:3002
+      PAYMENT_SERVICE_URL: http://payment-service:3003
+      NOTIFICATION_SERVICE_URL: http://notification-service:3004
+      ANALYTICS_SERVICE_URL: http://analytics-service:3005
+    depends_on:
+      order-service:
+        condition: service_healthy
+      kitchen-service:
+        condition: service_healthy
+      payment-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+      analytics-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - food-ordering
+    restart: unless-stopped
+
+networks:
+  food-ordering:
+    driver: bridge
+
+volumes:
+  pgdata_order:
+  pgdata_payment:
+  pgdata_kitchen:
