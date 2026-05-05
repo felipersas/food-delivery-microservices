@@ -38,9 +38,19 @@ export class AllExceptionsFilter implements ExceptionFilter {
     let status: HttpStatus;
     let responseBody: any;
 
-    if (exception instanceof HttpException) {
-      status = exception.getStatus();
-      const exceptionResponse = exception.getResponse();
+    // Check if exception behaves like HttpException (has getStatus and getResponse methods)
+    const isHttpException =
+      exception &&
+      typeof exception === 'object' &&
+      'getStatus' in exception &&
+      typeof exception.getStatus === 'function' &&
+      'getResponse' in exception &&
+      typeof exception.getResponse === 'function';
+
+    if (isHttpException) {
+      const httpException = exception as HttpException;
+      status = httpException.getStatus();
+      const exceptionResponse = httpException.getResponse();
 
       if (typeof exceptionResponse === 'string') {
         responseBody = {
