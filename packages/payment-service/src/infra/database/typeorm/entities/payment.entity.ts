@@ -38,6 +38,9 @@ export class PaymentEntity {
   @Column({ name: 'refunded_amount_cents', type: 'integer', default: 0 })
   refundedAmountCents!: number;
 
+  @Column({ name: 'processed_refund_ids', type: 'text', array: true, default: [] })
+  processedRefundIds!: string[];
+
   @Column({ default: 0 })
   version!: number;
 

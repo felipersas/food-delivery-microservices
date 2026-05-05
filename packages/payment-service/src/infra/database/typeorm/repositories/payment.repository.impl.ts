@@ -37,6 +37,7 @@ export class PostgresPaymentRepository implements PaymentRepository {
       paymentMethodBrand: entity.paymentMethodBrand ?? undefined,
       customerId: entity.customerId ?? undefined,
       refundedAmount: Money.BRLFromCents(entity.refundedAmountCents ?? 0),
+      processedRefundIds: entity.processedRefundIds ?? [],
     });
   }
 
@@ -52,6 +53,7 @@ export class PostgresPaymentRepository implements PaymentRepository {
     entity.paymentMethodToken = payment.getPaymentMethodToken();
     entity.paymentMethodBrand = payment.getPaymentMethodBrand();
     entity.refundedAmountCents = payment.getRefundedAmount().cents;
+    entity.processedRefundIds = payment.getProcessedRefundIds();
     return entity;
   }
 }

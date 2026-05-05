@@ -122,5 +122,24 @@ describe('Payment Aggregate', () => {
       payment.refund(Money.BRL(35), 'remaining refund');
       expect(payment.getRefundableAmount().amount).toBe(0);
     });
+
+    it('should handle idempotent refunds with same refundId', () => {
+      const payment = makePayment();
+      payment.confirm();
+
+      const refundId = 'refund-123';
+      payment.refund(Money.BRL(20), 'first attempt', refundId);
+      expect(payment.getRefundedAmount().amount).toBe(20);
+      expect(payment.getStatus()).toBe(PaymentStatus.PARTIALLY_REFUNDED);
+
+      // Second call with same refundId should be idempotent (no-op)
+      payment.refund(Money.BRL(10), 'duplicate attempt', refundId);
+      expect(payment.getRefundedAmount().amount).toBe(20); // Still 20, not 30
+      expect(payment.getStatus()).toBe(PaymentStatus.PARTIALLY_REFUNDED);
+
+      // Different refundId should process new refund
+      payment.refund(Money.BRL(10), 'second refund', 'refund-456');
+      expect(payment.getRefundedAmount().amount).toBe(30);
+    });
   });
 });

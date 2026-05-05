@@ -1,4 +1,4 @@
-import { IsNumber, IsUUID, IsString, IsNotEmpty, Min } from 'class-validator';
+import { IsNumber, IsUUID, IsString, IsNotEmpty, Min, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RefundPaymentDto {
@@ -16,12 +16,22 @@ export class RefundPaymentDto {
   @IsString()
   @IsNotEmpty()
   reason!: string;
+
+  @ApiProperty({
+    description: 'Optional refund ID for idempotency. If provided, duplicate requests with the same ID will be ignored.',
+    example: 'refund-123',
+    required: false,
+  })
+  @IsUUID()
+  @IsOptional()
+  refundId?: string;
 }
 
 export interface RefundPaymentInput {
   paymentId: string;
   amount: number;
   reason: string;
+  refundId?: string;
 }
 
 export interface RefundPaymentOutput {

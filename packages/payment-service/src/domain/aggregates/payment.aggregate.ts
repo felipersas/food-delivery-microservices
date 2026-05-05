@@ -25,6 +25,7 @@ export class Payment extends AggregateRoot<string> {
   private paymentMethodBrand?: string; // visa, mastercard, etc.
   private customerId?: string;
   private refundedAmount: Money;
+  private processedRefundIds: Set<string>;
 
   constructor(props: {
     id?: string;
@@ -35,6 +36,7 @@ export class Payment extends AggregateRoot<string> {
     paymentMethodBrand?: string;
     customerId?: string;
     refundedAmount?: Money;
+    processedRefundIds?: string[];
   }) {
     super(props.id ?? uuidv4());
     this.orderId = props.orderId;
@@ -45,6 +47,7 @@ export class Payment extends AggregateRoot<string> {
     this.paymentMethodBrand = props.paymentMethodBrand;
     this.customerId = props.customerId;
     this.refundedAmount = props.refundedAmount ?? Money.BRL(0);
+    this.processedRefundIds = new Set(props.processedRefundIds ?? []);
   }
 
   static reconstitute(props: {
@@ -58,6 +61,7 @@ export class Payment extends AggregateRoot<string> {
     paymentMethodBrand?: string;
     customerId?: string;
     refundedAmount?: Money;
+    processedRefundIds?: string[];
   }): Payment {
     const payment = new Payment({
       id: props.id,
@@ -68,6 +72,7 @@ export class Payment extends AggregateRoot<string> {
       paymentMethodBrand: props.paymentMethodBrand,
       customerId: props.customerId,
       refundedAmount: props.refundedAmount,
+      processedRefundIds: props.processedRefundIds,
     });
     (payment as any).status = props.status;
     for (let i = 0; i < props.version; i++) {
@@ -92,9 +97,16 @@ export class Payment extends AggregateRoot<string> {
     this.incrementVersion();
   }
 
-  refund(amount: Money, reason: string): void {
+  refund(amount: Money, reason: string, refundId?: string): void {
     if (this.status !== PaymentStatus.CONFIRMED && this.status !== PaymentStatus.PARTIALLY_REFUNDED) {
       throw new InvalidStateException(`Cannot refund payment in ${this.status} status`);
+    }
+
+    // Idempotency: Check if this refund was already processed
+    const effectiveRefundId = refundId ?? uuidv4();
+    if (this.processedRefundIds.has(effectiveRefundId)) {
+      // Idempotent: refund already processed, return without error
+      return;
     }
 
     const refundableAmount = this.getRefundableAmount();
@@ -105,6 +117,7 @@ export class Payment extends AggregateRoot<string> {
     }
 
     this.refundedAmount = this.refundedAmount.add(amount);
+    this.processedRefundIds.add(effectiveRefundId);
 
     // Update status based on remaining refundable amount
     const newRefundableAmount = this.getRefundableAmount();
@@ -127,7 +140,7 @@ export class Payment extends AggregateRoot<string> {
         orderId: this.orderId,
         customerId: this.customerId,
         refundedAmount: amount.amount,
-        refundId: uuidv4(),
+        refundId: effectiveRefundId,
         reason,
       },
     });
@@ -167,5 +180,9 @@ export class Payment extends AggregateRoot<string> {
 
   getCustomerId(): string | undefined {
     return this.customerId;
+  }
+
+  getProcessedRefundIds(): string[] {
+    return Array.from(this.processedRefundIds);
   }
 }

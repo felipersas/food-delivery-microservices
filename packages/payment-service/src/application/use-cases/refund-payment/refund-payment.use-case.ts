@@ -20,7 +20,7 @@ export class RefundPaymentUseCase {
     }
 
     const refundAmount = Money.BRL(input.amount);
-    payment.refund(refundAmount, input.reason);
+    payment.refund(refundAmount, input.reason, input.refundId);
 
     await this.paymentRepository.save(payment);
 
