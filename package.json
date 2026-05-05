@@ -6,6 +6,7 @@
   "workspaces": ["packages/*"],
   "scripts": {
     "test": "bun test",
+    "test:e2e": "bun test test/e2e",
     "test:shared": "bun test --cwd packages/shared",
     "test:order": "bun test --cwd packages/order-service",
     "test:kitchen": "bun test --cwd packages/kitchen-service test/unit",
