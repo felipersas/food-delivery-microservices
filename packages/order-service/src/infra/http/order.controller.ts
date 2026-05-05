@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, NotFoundException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBadRequestResponse, ApiNotFoundResponse } from '@nestjs/swagger';
 import { CreateOrderUseCase } from '@application/use-cases/create-order/create-order.use-case';
 import { GetOrderUseCase } from '@application/use-cases/get-order/get-order.use-case';
@@ -28,7 +28,7 @@ export class OrderController {
   async get(@Param('id') id: string) {
     const order = await this.getOrderUseCase.execute(id);
     if (!order) {
-      return { error: 'Order not found' };
+      throw new NotFoundException(`Order ${id} not found`);
     }
     return order;
   }

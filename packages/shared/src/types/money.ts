@@ -1,4 +1,5 @@
 import { ValueObject } from '../domain/value-object';
+import { ValidationException } from '../exceptions/domain.exception';
 
 export interface MoneyProps {
   amount: number;
@@ -43,7 +44,7 @@ export class Money extends ValueObject<MoneyProps> {
 
   private assertSameCurrency(other: Money): void {
     if (this.props.currency !== other.currency) {
-      throw new Error(`Currency mismatch: ${this.props.currency} vs ${other.currency}`);
+      throw new ValidationException(`Currency mismatch: ${this.props.currency} vs ${other.currency}`);
     }
   }
 }

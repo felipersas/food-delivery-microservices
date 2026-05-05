@@ -1,4 +1,4 @@
-import { AggregateRoot } from '@app/shared';
+import { AggregateRoot, InvalidStateException } from '@app/shared';
 import { v4 as uuidv4 } from 'uuid';
 
 export enum KitchenTicketStatus {
@@ -55,7 +55,7 @@ export class KitchenTicket extends AggregateRoot<string> {
 
   startPreparing(): void {
     if (this.status !== KitchenTicketStatus.WAITING) {
-      throw new Error(`Cannot start preparing from ${this.status}`);
+      throw new InvalidStateException(`Cannot start preparing from ${this.status}`);
     }
     this.status = KitchenTicketStatus.PREPARING;
     this.incrementVersion();
@@ -63,7 +63,7 @@ export class KitchenTicket extends AggregateRoot<string> {
 
   markReady(): void {
     if (this.status !== KitchenTicketStatus.PREPARING) {
-      throw new Error(`Cannot mark ready from ${this.status}`);
+      throw new InvalidStateException(`Cannot mark ready from ${this.status}`);
     }
     this.status = KitchenTicketStatus.READY;
     this.incrementVersion();

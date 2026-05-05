@@ -18,3 +18,14 @@ export type { OrderReadyEvent, OrderReadyData } from './events/order-ready.event
 // OpenAPI
 export { createOpenAPIConfig, commonResponses } from './openapi/openapi.config';
 export { scalarHtml } from './openapi/scalar.config';
+
+// Exceptions
+export {
+  DomainException,
+  InvalidStateException,
+  ValidationException,
+  ResourceNotFoundException,
+} from './exceptions/domain.exception';
+
+// Filters
+export { AllExceptionsFilter } from './filters/all-exceptions.filter';

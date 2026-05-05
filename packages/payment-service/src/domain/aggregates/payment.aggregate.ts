@@ -1,4 +1,4 @@
-import { AggregateRoot, Money } from '@app/shared';
+import { AggregateRoot, Money, InvalidStateException } from '@app/shared';
 import { v4 as uuidv4 } from 'uuid';
 
 export enum PaymentStatus {
@@ -55,7 +55,7 @@ export class Payment extends AggregateRoot<string> {
 
   confirm(): void {
     if (this.status !== PaymentStatus.PENDING) {
-      throw new Error(`Cannot confirm payment in ${this.status} status`);
+      throw new InvalidStateException(`Cannot confirm payment in ${this.status} status`);
     }
     this.status = PaymentStatus.CONFIRMED;
     this.incrementVersion();
@@ -63,7 +63,7 @@ export class Payment extends AggregateRoot<string> {
 
   reject(_reason: string): void {
     if (this.status !== PaymentStatus.PENDING) {
-      throw new Error(`Cannot reject payment in ${this.status} status`);
+      throw new InvalidStateException(`Cannot reject payment in ${this.status} status`);
     }
     this.status = PaymentStatus.REJECTED;
     this.incrementVersion();

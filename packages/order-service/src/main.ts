@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { OrderModule } from './order.module';
@@ -8,7 +8,22 @@ import { scalarHtml } from '@app/shared';
 
 async function bootstrap() {
   const app = await NestFactory.create(OrderModule);
-  app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      exceptionFactory: (errors) => {
+        const messages = errors.map((err) => ({
+          field: err.property,
+          constraints: Object.values(err.constraints || {}),
+        }));
+        return new BadRequestException({
+          message: 'Validation failed',
+          errors: messages,
+        });
+      },
+    }),
+  );
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('port') ?? 3001;

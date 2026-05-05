@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, HttpCode, HttpStatus, NotFoundException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBadRequestResponse, ApiNotFoundResponse } from '@nestjs/swagger';
 import { CreateKitchenTicketUseCase } from '../../application/use-cases/create-kitchen-ticket';
 import { GetKitchenTicketUseCase } from '../../application/use-cases/get-kitchen-ticket';
@@ -34,7 +34,7 @@ export class KitchenController {
   async get(@Param('id') id: string) {
     const ticket = await this.getKitchenTicketUseCase.execute(id);
     if (!ticket) {
-      return { error: 'Kitchen ticket not found' };
+      throw new NotFoundException(`Kitchen ticket ${id} not found`);
     }
     return ticket;
   }
@@ -46,7 +46,7 @@ export class KitchenController {
   async updateStatus(@Param('id') id: string, @Body('status') status: KitchenTicketStatus) {
     const result = await this.updateKitchenTicketStatusUseCase.execute(id, status);
     if (!result) {
-      return { error: 'Kitchen ticket not found' };
+      throw new NotFoundException(`Kitchen ticket ${id} not found`);
     }
     return result;
   }
