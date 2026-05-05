@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Param, Headers, UseInterceptors, Inject, Query } from '@nestjs/common';
-import type { HttpProxyStrategy } from '../../strategies/http-proxy.strategy';
-import { LoggingInterceptor } from '../../interceptors/logging.interceptor';
-import { TimeoutInterceptor } from '../../interceptors/timeout.interceptor';
+import type { HttpProxyStrategy } from '@infra/strategies/http-proxy.strategy';
+import { LoggingInterceptor } from '@infra/interceptors/logging.interceptor';
+import { TimeoutInterceptor } from '@infra/interceptors/timeout.interceptor';
 
 @Controller('orders')
 @UseInterceptors(LoggingInterceptor, TimeoutInterceptor)
