@@ -29,6 +29,10 @@ export default () => ({
       url: process.env.ANALYTICS_SERVICE_URL ?? 'http://localhost:3005',
       timeout: parseInt(process.env.ANALYTICS_SERVICE_TIMEOUT ?? '5000', 10),
     },
+    customer: {
+      url: process.env.CUSTOMER_SERVICE_URL ?? 'http://localhost:3006',
+      timeout: parseInt(process.env.CUSTOMER_SERVICE_TIMEOUT ?? '5000', 10),
+    },
   },
   jwt: {
     secret: process.env.JWT_SECRET ?? 'secret-change-in-production',
