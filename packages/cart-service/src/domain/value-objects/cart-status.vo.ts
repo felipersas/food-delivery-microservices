@@ -6,9 +6,9 @@ export enum CartStatusEnum {
   ABANDONED = 'abandoned',
 }
 
-export class CartStatus extends ValueObject<{ value: CartStatusEnum }> {
-  private constructor(value: CartStatusEnum) {
-    super({ value });
+export class CartStatus extends ValueObject<CartStatusEnum> {
+  private constructor(props: CartStatusEnum) {
+    super(props);
   }
 
   static fromString(value: string): CartStatus {
@@ -30,8 +30,8 @@ export class CartStatus extends ValueObject<{ value: CartStatusEnum }> {
     return new CartStatus(CartStatusEnum.ABANDONED);
   }
 
-  get enumValue(): CartStatusEnum {
-    return this.props.value;
+  get value(): CartStatusEnum {
+    return this.props;
   }
 
   canTransitionTo(newStatus: CartStatus): boolean {
@@ -40,13 +40,13 @@ export class CartStatus extends ValueObject<{ value: CartStatusEnum }> {
       [CartStatusEnum.CHECKED_OUT]: [],
       [CartStatusEnum.ABANDONED]: [],
     };
-    return transitions[this.enumValue]?.includes(newStatus.enumValue) ?? false;
+    return transitions[this.value]?.includes(newStatus.value) ?? false;
   }
 
   transitionTo(newStatus: CartStatus): void {
     if (!this.canTransitionTo(newStatus)) {
       throw new InvalidStateException(
-        `Cannot transition from ${this.enumValue} to ${newStatus.enumValue}`,
+        `Cannot transition from ${this.value} to ${newStatus.value}`,
       );
     }
   }

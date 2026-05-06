@@ -107,7 +107,7 @@ export class Cart extends AggregateRoot<string> {
   }
 
   addItem(item: CartItem): void {
-    if (this.status.enumValue !== CartStatusEnum.ACTIVE) {
+    if (this.status.value !== CartStatusEnum.ACTIVE) {
       throw new InvalidStateException('Cannot add items to a non-active cart');
     }
 
@@ -151,7 +151,7 @@ export class Cart extends AggregateRoot<string> {
   }
 
   removeItem(productId: string): void {
-    if (this.status.enumValue !== CartStatusEnum.ACTIVE) {
+    if (this.status.value !== CartStatusEnum.ACTIVE) {
       throw new InvalidStateException('Cannot remove items from a non-active cart');
     }
 
@@ -184,7 +184,7 @@ export class Cart extends AggregateRoot<string> {
   }
 
   updateItemQuantity(productId: string, quantity: number): void {
-    if (this.status.enumValue !== CartStatusEnum.ACTIVE) {
+    if (this.status.value !== CartStatusEnum.ACTIVE) {
       throw new InvalidStateException('Cannot update items in a non-active cart');
     }
 
@@ -222,7 +222,7 @@ export class Cart extends AggregateRoot<string> {
   }
 
   clear(): void {
-    if (this.status.enumValue !== CartStatusEnum.ACTIVE) {
+    if (this.status.value !== CartStatusEnum.ACTIVE) {
       throw new InvalidStateException('Cannot clear a non-active cart');
     }
 
@@ -318,7 +318,7 @@ export class Cart extends AggregateRoot<string> {
   }
 
   getStatus(): CartStatusEnum {
-    return this.status.enumValue;
+    return this.status.value;
   }
 
   getCreatedAt(): Date {
@@ -338,7 +338,7 @@ export class Cart extends AggregateRoot<string> {
   }
 
   isActive(): boolean {
-    return this.status.enumValue === CartStatusEnum.ACTIVE;
+    return this.status.value === CartStatusEnum.ACTIVE;
   }
 
   private calculateTotal(): Money {
