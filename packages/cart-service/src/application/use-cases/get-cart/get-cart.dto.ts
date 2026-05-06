@@ -15,6 +15,8 @@ export interface CartItemOutput {
   quantity: number;
   unitPriceCents: number;
   totalCents: number;
+  priceChanged?: boolean;
+  originalPriceCents?: number;
 }
 
 export interface GetCartOutput {

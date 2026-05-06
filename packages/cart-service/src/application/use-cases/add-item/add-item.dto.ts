@@ -27,4 +27,5 @@ export interface AddItemOutput {
   cartId: string;
   productId: string;
   quantity: number;
+  priceCents: number;
 }

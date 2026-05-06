@@ -24,6 +24,7 @@ export type {
   PaymentRefundCompletedData,
   PaymentRefundFailedData,
 } from './events/payment-refund-events';
+export type { PriceUpdatedEvent } from './events/price-updated.event';
 
 // OpenAPI
 export { createOpenAPIConfig, commonResponses } from './openapi/openapi.config';

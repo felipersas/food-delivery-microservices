@@ -1,20 +1,29 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Cart } from '../../../domain/aggregates/cart.aggregate';
 import { CartItem } from '../../../domain/value-objects/cart-item.vo';
-import { Money } from '@app/shared';
+import { Money, DomainException } from '@app/shared';
 import type { CartRepository } from '../../../domain/repositories/cart.repository.interface';
 import type { EventPublisher } from '../../../infra/messaging/rabbitmq/cart-event.publisher';
+import type { PriceCacheService } from '../../services/price-cache.service';
 import type { AddItemInput, AddItemOutput } from './add-item.dto';
-import { CART_REPOSITORY, EVENT_PUBLISHER } from '../../../tokens';
+import { CART_REPOSITORY, EVENT_PUBLISHER, PRICE_CACHE_SERVICE } from '../../../tokens';
 
 @Injectable()
 export class AddItemUseCase {
   constructor(
     @Inject(CART_REPOSITORY) private readonly cartRepository: CartRepository,
     @Inject(EVENT_PUBLISHER) private readonly eventPublisher: EventPublisher,
+    @Inject(PRICE_CACHE_SERVICE) private readonly priceCacheService: PriceCacheService,
   ) {}
 
   async execute(input: AddItemInput): Promise<AddItemOutput> {
+    // Fetch current price and availability via Redis cache
+    const { price, available, name } = await this.priceCacheService.getItemPrice(input.productId);
+
+    if (!available) {
+      throw new DomainException(`Menu item "${name}" is not available`);
+    }
+
     let cart = await this.cartRepository.findActiveByCustomerId(input.customerId);
 
     if (!cart) {
@@ -23,9 +32,9 @@ export class AddItemUseCase {
 
     const cartItem = CartItem.create({
       productId: input.productId,
-      productName: '', // Will be populated by fetching from Restaurant Service
+      productName: name,
       quantity: input.quantity,
-      unitPrice: Money.BRL(0), // Will be populated by fetching from Restaurant Service
+      unitPrice: price,  // Current price from cache
       restaurantId: input.restaurantId,
     });
 
@@ -39,6 +48,7 @@ export class AddItemUseCase {
       cartId: cart.getId(),
       productId: input.productId,
       quantity: input.quantity,
+      priceCents: price.cents,
     };
   }
 }
