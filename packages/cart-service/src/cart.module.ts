@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
@@ -86,4 +86,14 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
     PriceChangeConsumer,
   ],
 })
-export class CartModule {}
+export class CartModule implements OnModuleInit {
+  constructor(
+    private readonly cartConsumer: CartConsumer,
+    private readonly priceChangeConsumer: PriceChangeConsumer,
+  ) {}
+
+  async onModuleInit() {
+    await this.cartConsumer.start();
+    await this.priceChangeConsumer.start();
+  }
+}

@@ -1,4 +1,3 @@
-import type { OnModuleInit } from '@nestjs/common';
 import { Inject, Injectable } from '@nestjs/common';
 import type { RabbitMQConnection } from '@app/messaging';
 import type { PriceCacheService } from '../../../application/services/price-cache.service';
@@ -9,13 +8,13 @@ const PRICE_UPDATED_QUEUE = 'cart:price-updated';
 const PRICE_UPDATED_ROUTING_KEY = 'price.updated';
 
 @Injectable()
-export class PriceChangeConsumer implements OnModuleInit {
+export class PriceChangeConsumer {
   constructor(
     @Inject(RABBITMQ_CONNECTION) private readonly connection: RabbitMQConnection,
     @Inject(PRICE_CACHE_SERVICE) private readonly priceCacheService: PriceCacheService,
   ) {}
 
-  async onModuleInit() {
+  async start(): Promise<void> {
     await this.connection.subscribe(
       PRICE_UPDATED_QUEUE,
       [PRICE_UPDATED_ROUTING_KEY],
