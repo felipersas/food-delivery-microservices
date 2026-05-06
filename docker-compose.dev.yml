@@ -12,8 +12,10 @@ networks:
 services:
   api-gateway:
     build:
-      context: ./packages/api-gateway
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: api-gateway
     ports:
       - "3000:3000"
     environment:
@@ -38,8 +40,10 @@ services:
 
   order-service:
     build:
-      context: ./packages/order-service
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: order-service
     ports:
       - "3001:3001"
     environment:
@@ -62,8 +66,10 @@ services:
 
   kitchen-service:
     build:
-      context: ./packages/kitchen-service
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: kitchen-service
     ports:
       - "3002:3002"
     environment:
@@ -90,8 +96,10 @@ services:
 
   payment-service:
     build:
-      context: ./packages/payment-service
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: payment-service
     ports:
       - "3003:3003"
     environment:
@@ -114,8 +122,10 @@ services:
 
   notification-service:
     build:
-      context: ./packages/notification-service
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: notification-service
     ports:
       - "3004:3004"
     environment:
@@ -134,8 +144,10 @@ services:
 
   analytics-service:
     build:
-      context: ./packages/analytics-service
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: analytics-service
     ports:
       - "3005:3005"
     environment:
@@ -154,8 +166,10 @@ services:
 
   customer-service:
     build:
-      context: ./packages/customer-service
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: customer-service
     ports:
       - "3006:3006"
     environment:
@@ -178,8 +192,10 @@ services:
 
   restaurant-service:
     build:
-      context: ./packages/restaurant-service
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: restaurant-service
     ports:
       - "3007:3007"
     environment:
@@ -202,8 +218,10 @@ services:
 
   auth-service:
     build:
-      context: ./packages/auth-service
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: auth-service
     ports:
       - "3008:3008"
     environment:

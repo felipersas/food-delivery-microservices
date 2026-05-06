@@ -12,7 +12,10 @@ networks:
 services:
   api-gateway:
     build:
-      context: ./packages/api-gateway
+      context: .
+    dockerfile: Dockerfile
+    args:
+      SERVICE_NAME:packages/api-gateway
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
@@ -41,7 +44,10 @@ services:
 
   order-service:
     build:
-      context: ./packages/order-service
+      context: .
+    dockerfile: Dockerfile
+    args:
+      SERVICE_NAME:packages/order-service
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
@@ -68,7 +74,10 @@ services:
 
   kitchen-service:
     build:
-      context: ./packages/kitchen-service
+      context: .
+    dockerfile: Dockerfile
+    args:
+      SERVICE_NAME:packages/kitchen-service
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
@@ -99,7 +108,10 @@ services:
 
   payment-service:
     build:
-      context: ./packages/payment-service
+      context: .
+    dockerfile: Dockerfile
+    args:
+      SERVICE_NAME:packages/payment-service
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
@@ -126,7 +138,10 @@ services:
 
   notification-service:
     build:
-      context: ./packages/notification-service
+      context: .
+    dockerfile: Dockerfile
+    args:
+      SERVICE_NAME:packages/notification-service
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
@@ -149,7 +164,10 @@ services:
 
   analytics-service:
     build:
-      context: ./packages/analytics-service
+      context: .
+    dockerfile: Dockerfile
+    args:
+      SERVICE_NAME:packages/analytics-service
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
@@ -172,7 +190,10 @@ services:
 
   customer-service:
     build:
-      context: ./packages/customer-service
+      context: .
+    dockerfile: Dockerfile
+    args:
+      SERVICE_NAME:packages/customer-service
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
@@ -199,7 +220,10 @@ services:
 
   restaurant-service:
     build:
-      context: ./packages/restaurant-service
+      context: .
+    dockerfile: Dockerfile
+    args:
+      SERVICE_NAME:packages/restaurant-service
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
@@ -226,7 +250,10 @@ services:
 
   auth-service:
     build:
-      context: ./packages/auth-service
+      context: .
+    dockerfile: Dockerfile
+    args:
+      SERVICE_NAME:packages/auth-service
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
