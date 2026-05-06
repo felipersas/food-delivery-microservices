@@ -55,9 +55,9 @@ graph TB
 
     Kitchen -->|BullMQ Jobs| Redis
 
-    style Gateway fill:#e1f5ff
-    style RabbitMQ fill:#fff4e1
-    style Redis fill:#ffe1f5
+    style Gateway fill:#0288d1,color:#fff,stroke:#01579b,strokeWidth:2px
+    style RabbitMQ fill:#f57c00,color:#fff,stroke:#e65100,strokeWidth:2px
+    style Redis fill:#c2185b,color:#fff,stroke:#880e4f,strokeWidth:2px
 ```
 
 ## Architecture Decisions
