@@ -4,6 +4,7 @@ export { ValueObject } from './domain/value-object';
 export { AggregateRoot } from './domain/aggregate-root';
 export type { DomainEvent } from './domain/domain-event';
 export type { Repository } from './domain/repository.interface';
+export { UserContext, type UserContextProps } from './domain/user-context.vo';
 
 // Types
 export { Money } from './types/money';
@@ -44,3 +45,9 @@ export { SuccessResponseInterceptor } from './interceptors/success-response.inte
 
 // Interfaces
 export type { SuccessResponse, ResponseMeta, PaginationMeta, PaginatedResponse } from './interfaces/response.interface';
+
+// HTTP - Auth components
+export { CurrentUser } from './infra/http/current-user.decorator';
+export { Roles, ROLES_KEY } from './infra/http/decorators/roles.decorator';
+export { RolesGuard } from './infra/http/guards/roles.guard';
+export { UserContextMiddleware } from './infra/http/middleware/user-context.middleware';
