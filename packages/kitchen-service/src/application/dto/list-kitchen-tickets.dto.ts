@@ -3,13 +3,12 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { KitchenTicketStatus } from '../../domain/aggregates/kitchen-ticket.aggregate';
 
 export class ListKitchenTicketsDto {
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'Filter by restaurant ID',
     example: '223e4567-e89b-12d3-a456-426614174001',
   })
-  @IsOptional()
   @IsUUID()
-  restaurantId?: string;
+  restaurantId!: string;
 
   @ApiPropertyOptional({
     description: 'Filter by status',
@@ -22,7 +21,7 @@ export class ListKitchenTicketsDto {
 }
 
 export interface ListKitchenTicketsInput {
-  restaurantId?: string;
+  restaurantId: string;
   status?: KitchenTicketStatus;
 }
 

@@ -17,7 +17,7 @@ export class ListKitchenTicketsUseCase {
     input: ListKitchenTicketsInput,
   ): Promise<ListKitchenTicketsOutput> {
     const tickets = await this.kitchenTicketRepository.findByRestaurantId(
-      input.restaurantId ?? '',
+      input.restaurantId,
     );
 
     return tickets

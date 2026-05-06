@@ -30,7 +30,7 @@ export class KitchenController {
   @Get('tickets/queue')
   @ApiOperation({ summary: 'List kitchen queue', description: 'List kitchen tickets by queue status' })
   @ApiResponse({ status: 200, description: 'List of tickets in queue', type: [KitchenTicketOutput] })
-  async listQueue(@Query('restaurantId') restaurantId?: string) {
+  async listQueue(@Query('restaurantId') restaurantId: string) {
     return this.listKitchenTicketsUseCase.execute({
       restaurantId,
       status: KitchenTicketStatus.WAITING,
