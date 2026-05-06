@@ -246,12 +246,23 @@ chore(deps): upgrade nestjs to 10.0.0
 
 ## Local Skills - Project Patterns
 
-This project has local skills in `.claude/skills/` that enforce DDD patterns and code conventions:
+This project has local skills in `.claude/skills/` that enforce DDD patterns and code conventions.
+
+### Skill Structure (NEW)
+
+Skills follow a **directory-based format**:
+```
+.claude/skills/
+├── skill-name/
+│   └── SKILL.md
+└── README.md
+```
 
 ### Available Skills
 - **service-scaffolder** - Generate new microservice structure
 - **code-patterns** - Enforce project code patterns and conventions
 - **domain-planner** - Plan domain models following DDD strategic patterns
+- **skill-creation-guide** - Guide for creating new skills following project standards
 
 These skills are automatically loaded. See `.claude/skills/README.md` for details.
 
