@@ -1,16 +1,16 @@
 # Food Delivery Microservices
 
-Sistema distribuído para processamento de pedidos de delivery, implementado com arquitetura de microsserviços, Domain-Driven Design (DDD) e Event-Driven Architecture (EDA).
+Distributed food delivery processing system implemented with microservices architecture, Domain-Driven Design (DDD), and Event-Driven Architecture (EDA).
 
-## Visão Geral
+## Overview
 
-Este projeto implementa um sistema completo de food delivery, focado em demonstrar práticas de arquitetura de microsserviços, orquestração de eventos e design orientado ao domínio. A comunicação entre serviços é assíncrona, baseada em eventos de domínio publicados em um message broker.
+This project implements a complete food delivery system, focused on demonstrating microservices architecture practices, event orchestration, and domain-oriented design. Communication between services is asynchronous, based on domain events published through a message broker.
 
-### Arquitetura do Sistema
+### System Architecture
 
 ```mermaid
 graph TB
-    Client[Cliente Mobile/Web]
+    Client[Client Mobile/Web]
 
     subgraph "API Layer"
         Gateway[API Gateway<br/>Port: 3000]
@@ -60,41 +60,41 @@ graph TB
     style Redis fill:#ffe1f5
 ```
 
-## Decisões de Arquitetura
+## Architecture Decisions
 
-### Comunicação Assíncrona
+### Asynchronous Communication
 
-A escolha por Event-Driven Architecture permite:
+The choice for Event-Driven Architecture enables:
 
-- **Desacoplamento temporal**: Serviços não precisam estar disponíveis simultaneamente
-- **Escalabilidade independente**: Cada serviço pode escalar conforme demanda
-- **Tolerância a falhas**: Mensagens persistem até processamento
+- **Temporal decoupling**: Services don't need to be available simultaneously
+- **Independent scalability**: Each service scales according to demand
+- **Fault tolerance**: Messages persist until processed
 
 ### Database per Service
 
-Cada microsserviço mantém seu próprio banco de dados:
+Each microservice maintains its own database:
 
-| Serviço | Database | Porta |
-|---------|----------|-------|
+| Service | Database | Port |
+|---------|----------|------|
 | Order | orders | 5432 |
 | Payment | payments | 5433 |
 | Kitchen | kitchen | 5434 |
 | Customer | customers | 5436 |
 
-Essa separação garante independência de deploy e evolução do schema.
+This separation ensures deployment independence and schema evolution.
 
-### Orquestração vs Coreografia
+### Orchestration vs Choreography
 
-O sistema utiliza um modelo híbrido:
+The system uses a hybrid model:
 
-- **Coreografia**: Eventos de domínio propagam estado através do RabbitMQ
-- **Orquestração**: Order Service atua como orquestrador do fluxo de pedido
+- **Choreography**: Domain events propagate state through RabbitMQ
+- **Orchestration**: Order Service acts as the order flow orchestrator
 
-## Fluxo de Pedidos
+## Order Flow
 
 ```mermaid
 sequenceDiagram
-    actor C as Cliente
+    actor C as Customer
     participant GW as API Gateway
     participant OS as Order Service
     participant PS as Payment Service
@@ -109,16 +109,16 @@ sequenceDiagram
 
     RMQ->>PS: order.created
     PS->>PS: ProcessPayment()
-    alt Pagamento Aprovado
+    alt Payment Approved
         PS->>RMQ: payment.confirmed
-    else Pagamento Recusado
+    else Payment Rejected
         PS->>RMQ: payment.rejected
     end
 
     RMQ->>KS: payment.confirmed
     KS->>KS: CreateKitchenTicket()
     KS->>KS: Enqueue BullMQ Job
-    Note over KS: 1-30s: Preparo assíncrono
+    Note over KS: 1-30s: Async preparation
     KS->>RMQ: order.ready
 
     RMQ->>OS: order.ready
@@ -129,7 +129,7 @@ sequenceDiagram
     NS->>NS: SendNotifications()
 ```
 
-## Máquina de Estados do Pedido
+## Order State Machine
 
 ```mermaid
 stateDiagram-v2
@@ -147,57 +147,57 @@ stateDiagram-v2
     DELIVERED --> [*]
 
     note right of PENDING
-        Aguardando pagamento
+        Awaiting payment
     end note
 
     note right of PREPARING
-        Em preparação na cozinha
+        Being prepared at kitchen
     end note
 
     note right of READY
-        Pronto para entrega
+        Ready for delivery
     end note
 ```
 
-## Stack Tecnológico
+## Tech Stack
 
-| Camada | Tecnologia | Justificativa |
-|--------|------------|---------------|
-| Runtime | Bun 1.0+ | Performance superior ao Node.js, nativo para TypeScript |
-| Framework | NestJS | Arquitetura modular, injeção de dependências, DTOs |
-| Message Broker | RabbitMQ | Confirmação de entrega, routing flexível, DLQ |
-| Job Queue | BullMQ + Redis | Processamento assíncrono com retentativa |
-| ORM | TypeORM | Abstração de database, suporte a PostgreSQL |
-| Database | PostgreSQL 16 | ACID, consistência forte por serviço |
-| Documentação | OpenAPI 3.0 | Contrato de API, auto-documentação |
+| Layer | Technology | Rationale |
+|-------|------------|-----------|
+| Runtime | Bun 1.0+ | Superior performance to Node.js, native TypeScript |
+| Framework | NestJS | Modular architecture, DI, DTOs |
+| Message Broker | RabbitMQ | Delivery confirmation, flexible routing, DLQ |
+| Job Queue | BullMQ + Redis | Async processing with retry |
+| ORM | TypeORM | Database abstraction, PostgreSQL support |
+| Database | PostgreSQL 16 | ACID, strong consistency per service |
+| Documentation | OpenAPI 3.0 | API contract, auto-documentation |
 
 ## Domain-Driven Design
 
-Cada serviço segue a estrutura de camadas do DDD:
+Each service follows DDD layer structure:
 
 ```
 src/
-├── domain/                    # Camada de Domínio (Core)
-│   ├── aggregates/           # AggregateRoots (consistencia)
-│   ├── value-objects/        # VOs imutáveis (tipos)
+├── domain/                    # Domain Layer (Core)
+│   ├── aggregates/           # AggregateRoots (consistency)
+│   ├── value-objects/        # Immutable VOs (types)
 │   ├── events/               # Domain Events
-│   └── repositories/         # Interfaces de repos
+│   └── repositories/         # Repository interfaces
 │
-├── application/               # Camada de Aplicação
-│   ├── use-cases/           # Casos de uso (orchestration)
+├── application/               # Application Layer
+│   ├── use-cases/           # Use cases (orchestration)
 │   └── dto/                 # Data Transfer Objects
 │
-└── infra/                     # Camada de Infraestrutura
+└── infra/                     # Infrastructure Layer
     ├── database/
-    │   ├── typeorm/        # Implementações TypeORM
-    │   └── memory/         # Repositórios em memória (testes)
-    ├── http/               # Controllers, validação
+    │   ├── typeorm/        # TypeORM implementations
+    │   └── memory/         # In-memory repos (tests)
+    ├── http/               # Controllers, validation
     └── messaging/          # Consumers, publishers
 ```
 
 ### Aggregate Roots
 
-Aggregates garantem consistência transacional:
+Aggregates guarantee transactional consistency:
 
 ```typescript
 // Order Aggregate
@@ -214,7 +214,7 @@ class Order extends AggregateRoot<string> {
 
 ### Domain Events
 
-Eventos capturam mudanças de estado de negócio:
+Events capture business state changes:
 
 ```typescript
 interface DomainEvent {
@@ -227,43 +227,43 @@ interface DomainEvent {
 }
 ```
 
-## Eventos Publicados
+## Published Events
 
-| Evento | Publicado Por | Consumido Por | Payload |
-|--------|--------------|---------------|---------|
+| Event | Published By | Consumed By | Payload |
+|-------|--------------|-------------|---------|
 | `order.created` | Order Service | Payment, Kitchen, Analytics | orderId, items, totalAmountCents |
 | `payment.confirmed` | Payment Service | Order, Kitchen, Notification | orderId, paymentId |
 | `payment.rejected` | Payment Service | Order, Notification | orderId, reason |
 | `order.ready` | Kitchen Service | Order, Notification | orderId, kitchenTicketId |
 | `order.completed` | Order Service | Analytics, Notification | orderId, deliveredAt |
 
-## Setup do Ambiente
+## Environment Setup
 
-### Pré-requisitos
+### Prerequisites
 
 ```bash
 # Bun runtime
 curl -fsSL https://bun.sh/install | bash
 
-# Docker (infraestrutura)
+# Docker (infrastructure)
 # https://docs.docker.com/get-docker/
 ```
 
-### Instalação
+### Installation
 
 ```bash
-# Clone o repositório
+# Clone repository
 git clone <repository-url>
 cd food-delivery-microservices
 
-# Instalação de dependências
+# Install dependencies
 bun install
 
-# Iniciar infraestrutura
+# Start infrastructure
 bun run dev:infra
 ```
 
-### Variáveis de Ambiente
+### Environment Variables
 
 ```bash
 # .env
@@ -280,15 +280,15 @@ CUSTOMER_DATABASE_URL=postgresql://postgres:postgres@localhost:5436/customers
 REDIS_URL=redis://localhost:6379
 ```
 
-## Execução
+## Running
 
-### Desenvolvimento
+### Development
 
 ```bash
-# Todos os serviços
+# All services
 bun run dev
 
-# Serviço individual
+# Individual service
 bun run dev:order
 bun run dev:kitchen
 bun run dev:payment
@@ -300,13 +300,13 @@ bun run dev:gateway
 bun --watch run dev:order
 ```
 
-### Testes
+### Testing
 
 ```bash
-# Unitários
+# Unit tests
 bun test
 
-# Por serviço
+# Per service
 bun run test:shared      # Domain primitives
 bun run test:order       # Order domain
 bun run test:kitchen     # Kitchen domain
@@ -315,62 +315,62 @@ bun run test:payment     # Payment domain
 
 ## API Documentation
 
-| Serviço | Swagger UI | Scalar |
+| Service | Swagger UI | Scalar |
 |---------|------------|--------|
 | API Gateway | http://localhost:3000/api/docs | http://localhost:3000/api |
 | Order Service | http://localhost:3002/api/docs | http://localhost:3002/api |
 | Kitchen Service | http://localhost:3003/api/docs | http://localhost:3003/api |
 | Payment Service | http://localhost:3004/api/docs | http://localhost:3004/api |
 
-## Padrões Implementados
+## Implemented Patterns
 
-- **Aggregate Pattern**: Consistência transacional por agregado
-- **Event Sourcing (Parcial)**: Domain Events para notificações
-- **CQRS**: Separação leitura/escrita em controllers
-- **Outbox Pattern**: Publicação de eventos após commit
-- **Retry Pattern**: BullMQ com backoff exponencial
-- **Circuit Breaker**: (Futuro) resiliência em integrações externas
+- **Aggregate Pattern**: Transactional consistency per aggregate
+- **Event Sourcing (Partial)**: Domain Events for notifications
+- **CQRS**: Read/write separation in controllers
+- **Outbox Pattern**: Event publishing after commit
+- **Retry Pattern**: BullMQ with exponential backoff
+- **Circuit Breaker**: (Future) resilience in external integrations
 
-## Trade-offs e Limitações
+## Trade-offs and Limitations
 
-### Decisões Técnicas
+### Technical Decisions
 
-| Decisão | Benefício | Trade-off |
-|---------|-----------|-----------|
-| Database per Service | Independência | Queries distribuídas |
-| Event-driven | Desacoplamento | Complexidade de debug |
-| Bun runtime | Performance | Ecossistema menor |
-| In-memory repos (testes) | Velocidade | Diferença de comportamento |
+| Decision | Benefit | Trade-off |
+|----------|---------|-----------|
+| Database per Service | Independence | Distributed queries |
+| Event-driven | Decoupling | Debug complexity |
+| Bun runtime | Performance | Smaller ecosystem |
+| In-memory repos (tests) | Speed | Behavior difference |
 
-### Limitações Atuais
+### Current Limitations
 
-- Não implementado: Saga pattern para compensação
-- Não implementado: Distributed tracing
-- Não implementado: Event store para replay
-- UI/Simulador de cliente não incluso
+- Not implemented: Saga pattern for compensation
+- Not implemented: Distributed tracing
+- Not implemented: Event store for replay
+- Client UI/simulator not included
 
-## Deploy em Produção
+## Production Deployment
 
 ```bash
-# Build da aplicação
+# Build application
 ./scripts/deploy.sh
 
-# Verificação de saúde
+# Health check
 ./scripts/status.sh
 
-# Logs agregados
+# Aggregated logs
 ./scripts/logs.sh
 
 # Shutdown
 ./scripts/stop.sh
 ```
 
-## Estrutura do Monorepo
+## Monorepo Structure
 
 ```
 food-delivery-microservices/
 ├── packages/
-│   ├── shared/                    # Dominio compartilhado
+│   ├── shared/                    # Shared domain
 │   │   └── src/domain/
 │   │       ├── entity.ts
 │   │       ├── value-object.ts
@@ -393,14 +393,14 @@ food-delivery-microservices/
 └── scripts/
 ```
 
-## Licença
+## License
 
 MIT
 
-## Autor
+## Author
 
 Felipe Marques
 
 ---
 
-Projeto de estudo demonstrando arquitetura de microsserviços com NestJS, Bun e Event-Driven Architecture.
+Study project demonstrating microservices architecture with NestJS, Bun, and Event-Driven Architecture.
