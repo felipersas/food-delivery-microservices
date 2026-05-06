@@ -1,9 +1,22 @@
-import { Controller, Post, Get, Body, Param, Headers, UseInterceptors, Inject } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  Headers,
+  UseInterceptors,
+  Inject,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { HttpProxyStrategy } from '../../strategies/http-proxy.strategy';
 import { LoggingInterceptor } from '../../interceptors/logging.interceptor';
 import { TimeoutInterceptor } from '../../interceptors/timeout.interceptor';
-import { CreatePaymentDto, GetPaymentByIdDto, RefundPaymentDto } from '../dto/payments.dto';
+import {
+  CreatePaymentDto,
+  GetPaymentByIdDto,
+  RefundPaymentDto,
+} from '../dto/payments.dto';
 import { PAYMENT_SERVICE_URL } from '../../../tokens';
 
 @ApiTags('payments')
@@ -15,30 +28,38 @@ export class PaymentsController {
     private readonly proxy: HttpProxyStrategy,
   ) {}
 
-  @Post()
-  @ApiOperation({ summary: 'Create payment (proxy)', description: 'Proxies payment creation to Payment Service' })
-  @ApiBearerAuth()
-  async create(@Body() body: CreatePaymentDto, @Headers('authorization') auth?: string) {
-    return this.proxy.post(`${this.paymentServiceUrl}/payments`, body, {
-      headers: auth ? { authorization: auth } : undefined,
-    });
-  }
-
   @Get(':id')
-  @ApiOperation({ summary: 'Get payment by ID (proxy)', description: 'Proxies payment retrieval to Payment Service' })
+  @ApiOperation({
+    summary: 'Get payment by ID (proxy)',
+    description: 'Proxies payment retrieval to Payment Service',
+  })
   @ApiBearerAuth()
-  async get(@Param() params: GetPaymentByIdDto, @Headers('authorization') auth?: string) {
+  async get(
+    @Param() params: GetPaymentByIdDto,
+    @Headers('authorization') auth?: string,
+  ) {
     return this.proxy.get(`${this.paymentServiceUrl}/payments/${params.id}`, {
       headers: auth ? { authorization: auth } : undefined,
     });
   }
 
   @Post('refund/:id')
-  @ApiOperation({ summary: 'Refund payment (proxy)', description: 'Proxies payment refund to Payment Service' })
+  @ApiOperation({
+    summary: 'Refund payment (proxy)',
+    description: 'Proxies payment refund to Payment Service',
+  })
   @ApiBearerAuth()
-  async refund(@Param('id') id: string, @Body() body: RefundPaymentDto, @Headers('authorization') auth?: string) {
-    return this.proxy.post(`${this.paymentServiceUrl}/payments/refund/${id}`, body, {
-      headers: auth ? { authorization: auth } : undefined,
-    });
+  async refund(
+    @Param('id') id: string,
+    @Body() body: RefundPaymentDto,
+    @Headers('authorization') auth?: string,
+  ) {
+    return this.proxy.post(
+      `${this.paymentServiceUrl}/payments/refund/${id}`,
+      body,
+      {
+        headers: auth ? { authorization: auth } : undefined,
+      },
+    );
   }
 }
