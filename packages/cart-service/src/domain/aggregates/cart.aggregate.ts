@@ -46,6 +46,10 @@ export class Cart extends AggregateRoot<string> {
   }
 
   static create(customerId: string): Cart {
+    if (!customerId || customerId.trim() === '') {
+      throw new DomainException('Customer ID is required');
+    }
+
     const cart = new Cart({
       customerId,
       restaurantId: null,
@@ -94,10 +98,13 @@ export class Cart extends AggregateRoot<string> {
       customerId: props.customerId,
       restaurantId: props.restaurantId,
       items,
-      status: CartStatus.fromString(props.status),
+      status: CartStatus.active(),
       createdAt: props.createdAt,
       updatedAt: props.updatedAt,
     });
+
+    // Set actual status after construction (reconstitution pattern)
+    (cart as any).status = CartStatus.fromString(props.status);
 
     for (let i = 0; i < props.version; i++) {
       cart.incrementVersion();
