@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Cart } from '../../../domain/aggregates/cart.aggregate';
 import { CartItem } from '../../../domain/value-objects/cart-item.vo';
-import { Money, DomainException } from '@app/shared';
+import { DomainException } from '@app/shared';
 import type { CartRepository } from '../../../domain/repositories/cart.repository.interface';
 import type { EventPublisher } from '../../../infra/messaging/rabbitmq/cart-event.publisher';
 import type { PriceCacheService } from '../../services/price-cache.service';
