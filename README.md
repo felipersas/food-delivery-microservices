@@ -1,5 +1,7 @@
 # Food Delivery Microservices
 
+**[English version](./README.en.md)**
+
 Sistema distribuído para processamento de pedidos de delivery, implementado com arquitetura de microsserviços, Domain-Driven Design (DDD) e Event-Driven Architecture (EDA).
 
 ## Visão Geral
@@ -17,12 +19,14 @@ graph TB
     end
 
     subgraph "Services Layer"
-        Customer[Customer Service<br/>Port: 3001]
-        Order[Order Service<br/>Port: 3002]
-        Kitchen[Kitchen Service<br/>Port: 3003]
-        Payment[Payment Service<br/>Port: 3004]
-        Notification[Notification Service<br/>Port: 3005]
-        Analytics[Analytics Service<br/>Port: 3006]
+        Auth[Auth Service<br/>Port: 3008]
+        Customer[Customer Service<br/>Port: 3006]
+        Restaurant[Restaurant Service<br/>Port: 3007]
+        Order[Order Service<br/>Port: 3001]
+        Kitchen[Kitchen Service<br/>Port: 3002]
+        Payment[Payment Service<br/>Port: 3003]
+        Notification[Notification Service<br/>Port: 3004]
+        Analytics[Analytics Service<br/>Port: 3005]
     end
 
     subgraph "Infrastructure"
@@ -32,16 +36,22 @@ graph TB
         Postgres2[(PostgreSQL<br/>Kitchen)]
         Postgres3[(PostgreSQL<br/>Payments)]
         Postgres4[(PostgreSQL<br/>Customers)]
+        Postgres5[(PostgreSQL<br/>Restaurants)]
+        Postgres6[(PostgreSQL<br/>Auth)]
     end
 
     Client -->|HTTP/REST| Gateway
+    Gateway --> Auth
     Gateway --> Customer
+    Gateway --> Restaurant
     Gateway --> Order
 
     Order -->|Write| Postgres1
     Kitchen -->|Write| Postgres2
     Payment -->|Write| Postgres3
     Customer -->|Write| Postgres4
+    Restaurant -->|Write| Postgres5
+    Auth -->|Write| Postgres6
 
     Order -->|Publish/Subscribe| RabbitMQ
     Payment -->|Publish/Subscribe| RabbitMQ
@@ -80,6 +90,8 @@ Cada microsserviço mantém seu próprio banco de dados:
 | Payment | payments | 5433 |
 | Kitchen | kitchen | 5434 |
 | Customer | customers | 5436 |
+| Restaurant | restaurants | 5437 |
+| Auth | auth | 5438 |
 
 Essa separação garante independência de deploy e evolução do schema.
 
@@ -96,6 +108,7 @@ O sistema utiliza um modelo híbrido:
 sequenceDiagram
     actor C as Cliente
     participant GW as API Gateway
+    participant AU as Auth Service
     participant OS as Order Service
     participant PS as Payment Service
     participant KS as Kitchen Service
@@ -103,6 +116,8 @@ sequenceDiagram
     participant RMQ as RabbitMQ
 
     C->>GW: POST /orders
+    GW->>AU: Validate Token
+    AU->>GW: User Validated
     GW->>OS: CreateOrderRequest
     OS->>OS: Order.create()
     OS->>RMQ: order.created
@@ -236,6 +251,8 @@ interface DomainEvent {
 | `payment.rejected` | Payment Service | Order, Notification | orderId, reason |
 | `order.ready` | Kitchen Service | Order, Notification | orderId, kitchenTicketId |
 | `order.completed` | Order Service | Analytics, Notification | orderId, deliveredAt |
+| `user.registered` | Auth Service | Analytics, Notification | userId, email |
+| `restaurant.created` | Restaurant Service | Analytics | restaurantId |
 
 ## Setup do Ambiente
 
@@ -263,6 +280,21 @@ bun install
 bun run dev:infra
 ```
 
+### Docker Compose
+
+A infraestrutura Docker está organizada em camadas isoladas. Veja [DOCKER.md](./DOCKER.md) para detalhes completos.
+
+```bash
+# Desenvolvimento - Stack completa
+bun run docker:dev
+
+# Produção - Simulação
+bun run docker:prod
+
+# Apenas infraestrutura (RabbitMQ, Redis, DBs)
+bun run dev:infra
+```
+
 ### Variáveis de Ambiente
 
 ```bash
@@ -275,29 +307,52 @@ ORDER_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/orders
 PAYMENT_DATABASE_URL=postgresql://postgres:postgres@localhost:5433/payments
 KITCHEN_DATABASE_URL=postgresql://postgres:postgres@localhost:5434/kitchen
 CUSTOMER_DATABASE_URL=postgresql://postgres:postgres@localhost:5436/customers
+RESTAURANT_DATABASE_URL=postgresql://postgres:postgres@localhost:5437/restaurants
+AUTH_DATABASE_URL=postgresql://postgres:postgres@localhost:5438/auth
 
 # Redis
-REDIS_URL=redis://localhost:6379
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# Auth Service
+JWT_SECRET=dev-secret-change-in-production
+JWT_EXPIRES_IN=15m
+REFRESH_TOKEN_EXPIRES_IN=7d
 ```
 
 ## Execução
 
-### Desenvolvimento
+### Desenvolvimento Local
 
 ```bash
-# Todos os serviços
-bun run dev
-
-# Serviço individual
+# Serviços rodando no host (com infra Docker)
+bun run dev:infra
+bun run dev:auth
+bun run dev:customer
+bun run dev:restaurant
 bun run dev:order
 bun run dev:kitchen
 bun run dev:payment
 bun run dev:notification
 bun run dev:analytics
-bun run dev:gateway
+sleep 3 && bun run dev:gateway
 
-# Hot reload
-bun --watch run dev:order
+# Ou todos de uma vez
+bun run dev
+```
+
+### Docker
+
+```bash
+# Stack completa (serviços em containers)
+bun run docker:dev
+
+# Produção simulada
+bun run docker:prod
+
+# Parar containers
+bun run docker:dev:down
+bun run docker:prod:down
 ```
 
 ### Testes
@@ -311,6 +366,8 @@ bun run test:shared      # Domain primitives
 bun run test:order       # Order domain
 bun run test:kitchen     # Kitchen domain
 bun run test:payment     # Payment domain
+bun run test:auth        # Auth domain
+bun run test:restaurant  # Restaurant domain
 ```
 
 ## API Documentation
@@ -318,9 +375,12 @@ bun run test:payment     # Payment domain
 | Serviço | Swagger UI | Scalar |
 |---------|------------|--------|
 | API Gateway | http://localhost:3000/api/docs | http://localhost:3000/api |
-| Order Service | http://localhost:3002/api/docs | http://localhost:3002/api |
-| Kitchen Service | http://localhost:3003/api/docs | http://localhost:3003/api |
-| Payment Service | http://localhost:3004/api/docs | http://localhost:3004/api |
+| Auth Service | http://localhost:3008/api/docs | http://localhost:3008/api |
+| Customer Service | http://localhost:3006/api/docs | http://localhost:3006/api |
+| Restaurant Service | http://localhost:3007/api/docs | http://localhost:3007/api |
+| Order Service | http://localhost:3001/api/docs | http://localhost:3001/api |
+| Kitchen Service | http://localhost:3002/api/docs | http://localhost:3002/api |
+| Payment Service | http://localhost:3003/api/docs | http://localhost:3003/api |
 
 ## Padrões Implementados
 
@@ -329,7 +389,8 @@ bun run test:payment     # Payment domain
 - **CQRS**: Separação leitura/escrita em controllers
 - **Outbox Pattern**: Publicação de eventos após commit
 - **Retry Pattern**: BullMQ com backoff exponencial
-- **Circuit Breaker**: (Futuro) resiliência em integrações externas
+- **JWT Authentication**: Access tokens (15min) + Refresh tokens (7 dias)
+- **Role-Based Access Control**: CUSTOMER, RESTAURANT, DELIVERY, ADMIN
 
 ## Trade-offs e Limitações
 
@@ -352,8 +413,8 @@ bun run test:payment     # Payment domain
 ## Deploy em Produção
 
 ```bash
-# Build da aplicação
-./scripts/deploy.sh
+# Stack completa em Docker
+bun run docker:prod
 
 # Verificação de saúde
 ./scripts/status.sh
@@ -362,7 +423,7 @@ bun run test:payment     # Payment domain
 ./scripts/logs.sh
 
 # Shutdown
-./scripts/stop.sh
+bun run docker:prod:down
 ```
 
 ## Estrutura do Monorepo
@@ -381,15 +442,22 @@ food-delivery-microservices/
 │   │   └── src/rabbitmq-connection.ts
 │   │
 │   ├── api-gateway/              # API Gateway
+│   ├── auth-service/             # Auth bounded context
+│   ├── customer-service/         # Customer bounded context
+│   ├── restaurant-service/       # Restaurant bounded context
 │   ├── order-service/            # Order bounded context
 │   ├── kitchen-service/          # Kitchen bounded context
 │   ├── payment-service/          # Payment bounded context
-│   ├── customer-service/         # Customer bounded context
 │   ├── notification-service/     # Notification consumers
 │   └── analytics-service/        # Analytics consumers
 │
-├── docker-compose.yml
-├── package.json                  # Root workspace
+├── docker-compose.infra.yml       # RabbitMQ, Redis
+├── docker-compose.db.yml          # PostgreSQL databases
+├── docker-compose.dev.yml         # Application services (dev)
+├── docker-compose.prod.yml        # Application services (prod)
+├── DOCKER.md                      # Docker documentation
+├── CLAUDE.md                      # Claude Code instructions
+├── package.json                   # Root workspace
 └── scripts/
 ```
 

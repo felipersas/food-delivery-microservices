@@ -13,15 +13,25 @@ Food delivery microservices architecture using NestJS with Bun runtime. Event-dr
 bun install
 
 # Infrastructure (RabbitMQ, Redis, PostgreSQL)
-bun run dev:infra          # Start: docker compose up
-bun run dev:infra:down     # Stop: docker compose down
+bun run dev:infra          # Start infra + DBs: docker compose -f infra.yml -f db.yml
+bun run dev:infra:down     # Stop: docker compose -f infra.yml -f db.yml down
 
-# Development — Run individual services
+# Docker (services in containers)
+bun run docker:dev         # Full stack: docker compose -f infra.yml -f db.yml -f dev.yml
+bun run docker:dev:down    # Stop all
+bun run docker:prod        # Production simulation
+bun run docker:prod:down   # Stop production
+
+# Development — Run individual services (on host)
+bun run dev:auth           # Auth Service (port 3008)
+bun run dev:customer       # Customer Service (port 3006)
+bun run dev:restaurant     # Restaurant Service (port 3007)
 bun run dev:order          # Order Service (port 3001)
 bun run dev:kitchen        # Kitchen Service (port 3002)
 bun run dev:payment        # Payment Service (port 3003)
 bun run dev:notification   # Notification Service (port 3004)
 bun run dev:analytics      # Analytics Service (port 3005)
+bun run dev:gateway        # API Gateway (port 3000)
 
 # Build API Gateway (only service with build step)
 cd packages/api-gateway && bun run build
@@ -29,6 +39,9 @@ cd packages/api-gateway && bun run build
 # Testing
 bun test                   # All tests (root)
 bun run test:e2e           # End-to-end flow tests
+bun run test:auth          # Auth service tests
+bun run test:customer      # Customer service tests
+bun run test:restaurant    # Restaurant service tests
 bun run test:order         # Order service tests
 bun run test:kitchen       # Kitchen service tests
 bun run test:payment       # Payment service tests
@@ -52,12 +65,23 @@ bun run format             # Prettier
 ### Monorepo Structure
 - `packages/shared` — Domain primitives (Entity, AggregateRoot, ValueObject, Money, event types)
 - `packages/messaging` — RabbitMQ connection wrapper (`RabbitMQConnection`)
+- `packages/auth-service` — Authentication & authorization (JWT, RBAC)
+- `packages/customer-service` — Customer domain management
+- `packages/restaurant-service` — Restaurant & menu management
 - `packages/order-service` — Order domain with REST API
 - `packages/kitchen-service` — Kitchen domain with BullMQ job queue
 - `packages/payment-service` — Payment domain
 - `packages/notification-service` — Notification consumer
 - `packages/analytics-service` — Analytics consumer
 - `packages/api-gateway` — HTTP proxy gateway routing to microservices
+
+### Docker Compose Structure
+- `docker-compose.infra.yml` — Infrastructure (RabbitMQ, Redis)
+- `docker-compose.db.yml` — Databases (6 PostgreSQL, internal network)
+- `docker-compose.dev.yml` — Application services (dev with exposed ports)
+- `docker-compose.prod.yml` — Application services (production config)
+
+See [DOCKER.md](./DOCKER.md) for detailed Docker documentation.
 
 ### Service Communication Pattern
 - **Events via RabbitMQ**: All services publish/subscribe through `food-ordering` exchange
@@ -68,24 +92,27 @@ bun run format             # Prettier
 ### Order Flow (Event-Driven)
 
 ```
-1. Client → API Gateway → Order Service
+1. Client → API Gateway → Auth Service
+   Validate JWT token → User authenticated
+
+2. Client → API Gateway → Order Service
    POST /orders → creates Order aggregate
 
-2. Order Service emits: order.created
+3. Order Service emits: order.created
    └─→ Payment Service listens
    └─→ Analytics Service listens
 
-3. Payment Service processes payment
+4. Payment Service processes payment
    └─→ Emits: payment.confirmed ✅ OR payment.rejected ❌
 
-4. Kitchen Service listens to payment.confirmed ONLY
+5. Kitchen Service listens to payment.confirmed ONLY
    └─→ Creates BullMQ job (async, 1-30s food preparation)
    └─→ Emits: order.ready
 
-5. Notification Service listens to all events
+6. Notification Service listens to all events
    └─→ Sends confirmations (email/SMS)
 
-6. Order Service listens to payment.confirmed, order.ready
+7. Order Service listens to payment.confirmed, order.ready
    └─→ Updates order status
 ```
 
@@ -106,13 +133,18 @@ Each service follows clean architecture layers:
 ### Database Configuration
 - Set `DB_DRIVER=postgres` to enable PostgreSQL, omit for in-memory repositories
 - Services use TypeORM with `synchronize: true` in development (auto-migration)
-- Separate databases per service: `orders`, `kitchen`, `payments` (ports 5432, 5434, 5433)
+- Separate databases per service (isolated on internal Docker network in production):
+  - `orders` (port 5432), `payments` (5433), `kitchen` (5434)
+  - `customers` (5436), `restaurants` (5437), `auth` (5438)
 
 ### API Gateway Routing
 Controllers proxy requests to microservice ports with DTO validation:
 - `POST /orders` → `http://localhost:3001/orders` (validates CreateOrderDto)
 - `POST /payments` → `http://localhost:3003/payments` (validates CreatePaymentDto)
 - `GET /kitchen/tickets` → `http://localhost:3002/kitchen/tickets` (validates query params)
+- `POST /auth/*` → `http://localhost:3008/auth/*` (login, register, refresh)
+- `GET /restaurants/*` → `http://localhost:3007/restaurants/*` (restaurant CRUD)
+- `GET /customers/*` → `http://localhost:3006/customers/*` (customer profiles)
 - Uses `HttpProxyStrategy` with `httpx` fetch for requests
 - ValidationPipe enabled with `whitelist: true`, `transform: true`
 
@@ -123,35 +155,45 @@ Controllers proxy requests to microservice ports with DTO validation:
 All services provide interactive API documentation using OpenAPI 3.0 specification with two UI options:
 
 **Swagger UI** - Traditional interactive documentation:
+- API Gateway: http://localhost:3000/api/docs
+- Auth Service: http://localhost:3008/api/docs
+- Customer Service: http://localhost:3006/api/docs
+- Restaurant Service: http://localhost:3007/api/docs
 - Order Service: http://localhost:3001/api/docs
 - Kitchen Service: http://localhost:3002/api/docs
 - Payment Service: http://localhost:3003/api/docs
-- API Gateway: http://localhost:3000/api/docs
 
 **Scalar UI** - Modern, fast API documentation:
+- API Gateway: http://localhost:3000/api
+- Auth Service: http://localhost:3008/api
+- Customer Service: http://localhost:3006/api
+- Restaurant Service: http://localhost:3007/api
 - Order Service: http://localhost:3001/api
 - Kitchen Service: http://localhost:3002/api
 - Payment Service: http://localhost:3003/api
-- API Gateway: http://localhost:3000/api
 
 **OpenAPI JSON** - Machine-readable spec:
+- API Gateway: http://localhost:3000/api/docs-json
+- Auth Service: http://localhost:3008/api/docs-json
+- Customer Service: http://localhost:3006/api/docs-json
+- Restaurant Service: http://localhost:3007/api/docs-json
 - Order Service: http://localhost:3001/api/docs-json
 - Kitchen Service: http://localhost:3002/api/docs-json
 - Payment Service: http://localhost:3003/api/docs-json
-- API Gateway: http://localhost:3000/api/docs-json
 
 **Documentation Features:**
 - Complete request/response schemas with examples
 - Enum values and validation constraints visible
 - Try endpoints directly from the UI
 - Bearer auth configuration for protected routes
-- Tagged endpoints by domain (orders, payments, kitchen, health)
+- Tagged endpoints by domain (auth, orders, payments, kitchen, restaurants, health)
 
 ### Environment Variables
 Copy `.env.example` to `.env`. Key variables:
 - `RABBITMQ_URL`, `RABBITMQ_EXCHANGE`
 - `DB_DRIVER` (postgres/omit for in-memory)
 - `{SERVICE}_PORT`, `{SERVICE}_DATABASE_URL`
+- `JWT_SECRET`, `JWT_EXPIRES_IN`, `REFRESH_TOKEN_EXPIRES_IN` (Auth Service)
 
 ## Development Notes
 
