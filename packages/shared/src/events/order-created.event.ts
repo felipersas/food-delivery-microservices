@@ -8,9 +8,11 @@ export interface OrderCreatedData {
     productId: string;
     productName: string;
     quantity: number;
-    price: number;
+    priceCents: number;
   }>;
-  totalAmount: number;
+  totalAmountCents: number;
+  paymentMethodIndex?: number;
+  paymentMethodType?: string;
 }
 
 export interface OrderCreatedEvent extends DomainEvent {

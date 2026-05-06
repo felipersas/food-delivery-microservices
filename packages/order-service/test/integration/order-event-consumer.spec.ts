@@ -75,7 +75,7 @@ describe('Order Consumer (Integration)', () => {
       occurredAt: new Date().toISOString(),
       aggregateId: 'payment-1',
       aggregateType: 'Payment',
-      data: { orderId: testOrderId, paymentId: 'payment-1', amount: 25, method: 'PIX' },
+      data: { orderId: testOrderId, paymentId: 'payment-1', amountCents: 2500, method: 'PIX' },
     };
 
     await publisherConnection.publish('payment.confirmed', event);
@@ -99,6 +99,7 @@ describe('Order Consumer (Integration)', () => {
       })],
     });
     testOrder.confirm();
+    testOrder.startPreparing(); // Add this step to follow proper state flow
     testOrder.clearDomainEvents();
     await repository.save(testOrder);
     const testOrderId = testOrder.getId();
@@ -145,7 +146,7 @@ describe('Order Consumer (Integration)', () => {
       data: {
         orderId: cancelOrderId,
         paymentId: 'payment-rejected-1',
-        amount: 30,
+        amountCents: 3000,
         method: 'PIX',
         reason: 'Insufficient funds',
       },

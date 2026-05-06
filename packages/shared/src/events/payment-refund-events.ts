@@ -3,7 +3,7 @@ import type { DomainEvent } from '../domain/domain-event';
 export interface PaymentRefundInitiatedData {
   paymentId: string;
   orderId: string;
-  amount: number;
+  amountCents: number;
   reason: string;
 }
 
@@ -11,7 +11,7 @@ export interface PaymentRefundCompletedData {
   paymentId: string;
   orderId: string;
   customerId?: string;
-  refundedAmount: number;
+  refundedAmountCents: number;
   refundId: string;
   reason: string;
 }

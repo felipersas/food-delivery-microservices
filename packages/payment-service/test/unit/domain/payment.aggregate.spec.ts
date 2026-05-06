@@ -105,7 +105,7 @@ describe('Payment Aggregate', () => {
       expect(refundEvent).toBeDefined();
       expect(data?.paymentId).toBe(payment.getId());
       expect(data?.orderId).toBe('order-1');
-      expect(data?.refundedAmount).toBe(25);
+      expect(data?.refundedAmountCents).toBe(2500); // 25 BRL = 2500 cents
       expect(data?.refundId).toBeDefined();
       expect(data?.reason).toBe('customer request');
     });

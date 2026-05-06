@@ -61,7 +61,7 @@ describe('Order Event Publishing (Integration)', () => {
     const event = receivedEvents.find((e) => e.eventType === 'order.created');
     expect(event).toBeDefined();
     expect(event!.aggregateId).toBe(result.orderId);
-    expect((event!.data as any).totalAmount).toBe(65);
+    expect((event!.data as any).totalAmountCents).toBe(6500); // 65 BRL = 6500 cents
     expect((event!.data as any).customerId).toBe('customer-1');
   });
 });

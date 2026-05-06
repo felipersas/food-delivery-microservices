@@ -16,7 +16,7 @@ export class AnalyticsHandler {
     switch (event.eventType) {
       case 'order.created':
         this.totalOrders++;
-        this.totalRevenue += (event.data as any).totalAmount ?? 0;
+        this.totalRevenue += ((event.data as any).totalAmountCents ?? 0) / 100; // Convert cents to decimal
         this.ordersByStatus['CREATED'] = (this.ordersByStatus['CREATED'] ?? 0) + 1;
         break;
       case 'payment.confirmed':

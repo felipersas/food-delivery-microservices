@@ -38,8 +38,8 @@ export class OrderConsumer {
             break;
         }
 
-        order.clearDomainEvents();
         await this.orderRepository.save(order);
+        order.clearDomainEvents();
       },
     );
   }

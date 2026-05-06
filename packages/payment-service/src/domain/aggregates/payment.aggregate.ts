@@ -139,7 +139,7 @@ export class Payment extends AggregateRoot<string> {
         paymentId: this.getId(),
         orderId: this.orderId,
         customerId: this.customerId,
-        refundedAmount: amount.amount,
+        refundedAmountCents: amount.cents,
         refundId: effectiveRefundId,
         reason,
       },

@@ -9,7 +9,7 @@ export interface OrderItem {
 export interface PaymentConfirmedData {
   orderId: string;
   paymentId: string;
-  amount: number;
+  amountCents: number;
   method: string;
   restaurantId: string;
   items: OrderItem[];

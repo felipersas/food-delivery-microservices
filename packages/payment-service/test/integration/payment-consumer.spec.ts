@@ -26,7 +26,6 @@ describe('Payment Consumer (Integration)', () => {
     const consumer = new PaymentConsumer(
       consumerConnection,
       new ProcessPaymentUseCase(paymentRepository),
-      paymentRepository,
     );
     await consumer.start();
 
@@ -55,9 +54,9 @@ describe('Payment Consumer (Integration)', () => {
         orderId: 'order-123',
         customerId: 'customer-1',
         restaurantId: 'restaurant-1',
-        totalAmount: 65,
+        totalAmountCents: 6500, // 65 BRL = 6500 cents
         items: [
-          { productId: 'p-1', productName: 'Burger', quantity: 2, price: 25 },
+          { productId: 'p-1', productName: 'Burger', quantity: 2, priceCents: 2500 }, // 25 BRL = 2500 cents
         ],
       },
     };
@@ -71,6 +70,6 @@ describe('Payment Consumer (Integration)', () => {
     const event = receivedEvents.find((e) => e.eventType === 'payment.confirmed');
     expect(event).toBeDefined();
     expect((event!.data as any).orderId).toBe('order-123');
-    expect((event!.data as any).amount).toBe(65);
+    expect((event!.data as any).amountCents).toBe(6500); // 65 BRL = 6500 cents
   });
 });

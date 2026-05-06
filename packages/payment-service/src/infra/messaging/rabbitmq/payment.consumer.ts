@@ -34,7 +34,7 @@ export class PaymentConsumer {
 
         const result = await this.processPayment.execute({
           orderId: data.orderId,
-          amount: data.totalAmount,
+          amount: data.totalAmountCents / 100, // Convert cents to decimal for use case
           method: paymentMethod,
           customerId,
           paymentMethodIndex,
@@ -49,7 +49,7 @@ export class PaymentConsumer {
           data: {
             orderId: data.orderId,
             paymentId: result.paymentId,
-            amount: data.totalAmount,
+            amountCents: data.totalAmountCents,
             method: paymentMethod,
             restaurantId: data.restaurantId,
             items: data.items,
