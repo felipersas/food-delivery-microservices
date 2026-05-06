@@ -1,5 +1,5 @@
-# Application Services - Production Environment
-# Sem portas expostas para debug, restart policies, health checks
+# Application Services - Development Environment
+# Override para desenvolvimento com portas expostas para debug
 
 include:
   - docker-compose.infra.yml
@@ -14,9 +14,10 @@ services:
     build:
       context: ./packages/api-gateway
       dockerfile: Dockerfile
-    restart: unless-stopped
+    ports:
+      - "3000:3000"
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       API_PORT: 3000
       ORDER_SERVICE_URL: http://order-service:3001
       KITCHEN_SERVICE_URL: http://kitchen-service:3002
@@ -32,20 +33,17 @@ services:
     networks:
       - food-delivery-app
       - food-delivery-infra
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   order-service:
     build:
       context: ./packages/order-service
       dockerfile: Dockerfile
-    restart: unless-stopped
+    ports:
+      - "3001:3001"
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       ORDER_PORT: 3001
       ORDER_DATABASE_URL: postgres://postgres:postgres@postgres-order:5432/orders
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
@@ -59,20 +57,17 @@ services:
       - food-delivery-app
       - food-delivery-db
       - food-delivery-infra
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   kitchen-service:
     build:
       context: ./packages/kitchen-service
       dockerfile: Dockerfile
-    restart: unless-stopped
+    ports:
+      - "3002:3002"
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       KITCHEN_PORT: 3002
       KITCHEN_DATABASE_URL: postgres://postgres:postgres@postgres-kitchen:5434/kitchen
       REDIS_HOST: redis
@@ -90,20 +85,17 @@ services:
       - food-delivery-app
       - food-delivery-db
       - food-delivery-infra
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3002/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   payment-service:
     build:
       context: ./packages/payment-service
       dockerfile: Dockerfile
-    restart: unless-stopped
+    ports:
+      - "3003:3003"
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       PAYMENT_PORT: 3003
       PAYMENT_DATABASE_URL: postgres://postgres:postgres@postgres-payment:5433/payments
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
@@ -117,20 +109,17 @@ services:
       - food-delivery-app
       - food-delivery-db
       - food-delivery-infra
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3003/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   notification-service:
     build:
       context: ./packages/notification-service
       dockerfile: Dockerfile
-    restart: unless-stopped
+    ports:
+      - "3004:3004"
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       NOTIFICATION_PORT: 3004
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
       RABBITMQ_EXCHANGE: food-ordering
@@ -140,20 +129,17 @@ services:
     networks:
       - food-delivery-app
       - food-delivery-infra
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3004/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   analytics-service:
     build:
       context: ./packages/analytics-service
       dockerfile: Dockerfile
-    restart: unless-stopped
+    ports:
+      - "3005:3005"
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       ANALYTICS_PORT: 3005
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
       RABBITMQ_EXCHANGE: food-ordering
@@ -163,20 +149,17 @@ services:
     networks:
       - food-delivery-app
       - food-delivery-infra
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3005/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   customer-service:
     build:
       context: ./packages/customer-service
       dockerfile: Dockerfile
-    restart: unless-stopped
+    ports:
+      - "3006:3006"
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       CUSTOMER_PORT: 3006
       CUSTOMER_DATABASE_URL: postgres://postgres:postgres@postgres-customer:5436/customers
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
@@ -190,20 +173,17 @@ services:
       - food-delivery-app
       - food-delivery-db
       - food-delivery-infra
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3006/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   restaurant-service:
     build:
       context: ./packages/restaurant-service
       dockerfile: Dockerfile
-    restart: unless-stopped
+    ports:
+      - "3007:3007"
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       RESTAURANT_PORT: 3007
       RESTAURANT_DATABASE_URL: postgres://postgres:postgres@postgres-restaurant:5437/restaurants
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
@@ -217,25 +197,22 @@ services:
       - food-delivery-app
       - food-delivery-db
       - food-delivery-infra
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3007/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   auth-service:
     build:
       context: ./packages/auth-service
       dockerfile: Dockerfile
-    restart: unless-stopped
+    ports:
+      - "3008:3008"
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       AUTH_PORT: 3008
       AUTH_DATABASE_URL: postgres://postgres:postgres@postgres-auth:5438/auth
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
       RABBITMQ_EXCHANGE: food-ordering
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: dev-secret-change-in-production
       JWT_EXPIRES_IN: 15m
       REFRESH_TOKEN_EXPIRES_IN: 7d
     depends_on:
@@ -247,9 +224,5 @@ services:
       - food-delivery-app
       - food-delivery-db
       - food-delivery-infra
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3008/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

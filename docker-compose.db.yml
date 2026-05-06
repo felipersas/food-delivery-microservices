@@ -1,93 +1,107 @@
+# Database Services - All Environments
+# Bancos de dados isolados em rede interna (sem exposição externa)
+
+networks:
+  food-delivery-db:
+    driver: bridge
+    internal: true  # Isolado - sem acesso externo
+
 services:
-  rabbitmq:
-    image: rabbitmq:3-management
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
-      interval: 5s
-      timeout: 10s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 10s
-      retries: 5
-
   postgres-order:
     image: postgres:16-alpine
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: orders
     volumes:
       - pgdata_order:/var/lib/postgresql/data
+    networks:
+      - food-delivery-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
 
   postgres-payment:
     image: postgres:16-alpine
-    ports:
-      - "5433:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: payments
     volumes:
       - pgdata_payment:/var/lib/postgresql/data
+    networks:
+      - food-delivery-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
 
   postgres-kitchen:
     image: postgres:16-alpine
-    ports:
-      - "5434:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: kitchen
     volumes:
       - pgdata_kitchen:/var/lib/postgresql/data
+    networks:
+      - food-delivery-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
 
   postgres-customer:
     image: postgres:16-alpine
-    ports:
-      - "5436:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: customers
     volumes:
       - pgdata_customer:/var/lib/postgresql/data
+    networks:
+      - food-delivery-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
 
   postgres-restaurant:
     image: postgres:16-alpine
-    ports:
-      - "5437:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: restaurants
     volumes:
       - pgdata_restaurant:/var/lib/postgresql/data
+    networks:
+      - food-delivery-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
 
   postgres-auth:
     image: postgres:16-alpine
-    ports:
-      - "5438:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: auth
     volumes:
       - pgdata_auth:/var/lib/postgresql/data
+    networks:
+      - food-delivery-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
 
 volumes:
   pgdata_order:
