@@ -29,6 +29,7 @@ services:
       CUSTOMER_SERVICE_URL: http://customer-service:3006
       RESTAURANT_SERVICE_URL: http://restaurant-service:3007
       AUTH_SERVICE_URL: http://auth-service:3008
+      CART_SERVICE_URL: http://cart-service:3009
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -235,6 +236,34 @@ services:
       REFRESH_TOKEN_EXPIRES_IN: 7d
     depends_on:
       postgres-auth:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - food-delivery-app
+      - food-delivery-db
+      - food-delivery-infra
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  cart-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: cart-service
+    ports:
+      - "3009:3009"
+    environment:
+      NODE_ENV: development
+      CART_PORT: 3009
+      CART_DATABASE_URL: postgres://postgres:postgres@postgres-cart:5439/carts
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_EXCHANGE: food-ordering
+      RESTAURANT_SERVICE_URL: http://restaurant-service:3007
+      ORDER_SERVICE_URL: http://order-service:3001
+    depends_on:
+      postgres-cart:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy

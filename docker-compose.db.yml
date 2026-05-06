@@ -103,6 +103,22 @@ services:
       timeout: 10s
       retries: 5
 
+  postgres-cart:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: carts
+    volumes:
+      - pgdata_cart:/var/lib/postgresql/data
+    networks:
+      - food-delivery-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
 volumes:
   pgdata_order:
   pgdata_payment:
@@ -110,3 +126,4 @@ volumes:
   pgdata_customer:
   pgdata_restaurant:
   pgdata_auth:
+  pgdata_cart:

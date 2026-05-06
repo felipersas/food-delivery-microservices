@@ -11,6 +11,7 @@ import { KitchenController } from './infra/http/controllers/kitchen.controller';
 import { PaymentsController } from './infra/http/controllers/payments.controller';
 import { CustomersController } from './infra/http/controllers/customers.controller';
 import { AuthController } from './infra/http/controllers/auth.controller';
+import { CartsController } from './infra/http/controllers/carts.controller';
 
 import { JwtValidator } from './infra/auth/jwt.validator';
 import { AuthProxyStrategy } from './infra/auth/auth-proxy.strategy';
@@ -22,7 +23,9 @@ import {
   NOTIFICATION_SERVICE_URL,
   ANALYTICS_SERVICE_URL,
   CUSTOMER_SERVICE_URL,
+  RESTAURANT_SERVICE_URL,
   AUTH_SERVICE_URL,
+  CART_SERVICE_URL,
 } from './tokens';
 
 const ORDER_SERVICE_URL_VALUE = process.env.ORDER_SERVICE_URL ?? 'http://localhost:3001';
@@ -32,6 +35,8 @@ const NOTIFICATION_SERVICE_URL_VALUE = process.env.NOTIFICATION_SERVICE_URL ?? '
 const ANALYTICS_SERVICE_URL_VALUE = process.env.ANALYTICS_SERVICE_URL ?? 'http://localhost:3005';
 const CUSTOMER_SERVICE_URL_VALUE = process.env.CUSTOMER_SERVICE_URL ?? 'http://localhost:3006';
 const AUTH_SERVICE_URL_VALUE = process.env.AUTH_SERVICE_URL ?? 'http://localhost:3008';
+const RESTAURANT_SERVICE_URL_VALUE = process.env.RESTAURANT_SERVICE_URL ?? 'http://localhost:3007';
+const CART_SERVICE_URL_VALUE = process.env.CART_SERVICE_URL ?? 'http://localhost:3009';
 
 @Module({
   imports: [
@@ -48,6 +53,7 @@ const AUTH_SERVICE_URL_VALUE = process.env.AUTH_SERVICE_URL ?? 'http://localhost
     PaymentsController,
     CustomersController,
     AuthController,
+    CartsController,
   ],
   providers: [
     HttpProxyStrategy,
@@ -63,7 +69,9 @@ const AUTH_SERVICE_URL_VALUE = process.env.AUTH_SERVICE_URL ?? 'http://localhost
     { provide: NOTIFICATION_SERVICE_URL, useValue: NOTIFICATION_SERVICE_URL_VALUE },
     { provide: ANALYTICS_SERVICE_URL, useValue: ANALYTICS_SERVICE_URL_VALUE },
     { provide: CUSTOMER_SERVICE_URL, useValue: CUSTOMER_SERVICE_URL_VALUE },
+    { provide: RESTAURANT_SERVICE_URL, useValue: RESTAURANT_SERVICE_URL_VALUE },
     { provide: AUTH_SERVICE_URL, useValue: AUTH_SERVICE_URL_VALUE },
+    { provide: CART_SERVICE_URL, useValue: CART_SERVICE_URL_VALUE },
   ],
   exports: [HttpProxyStrategy, AuthProxyStrategy],
 })

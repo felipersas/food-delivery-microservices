@@ -29,6 +29,7 @@ services:
       CUSTOMER_SERVICE_URL: http://customer-service:3006
       RESTAURANT_SERVICE_URL: http://restaurant-service:3007
       AUTH_SERVICE_URL: http://auth-service:3008
+      CART_SERVICE_URL: http://cart-service:3009
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -276,6 +277,38 @@ services:
       - food-delivery-infra
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3008/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  cart-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME:packages/cart-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      CART_PORT: 3009
+      CART_DATABASE_URL: postgres://postgres:postgres@postgres-cart:5439/carts
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_EXCHANGE: food-ordering
+      RESTAURANT_SERVICE_URL: http://restaurant-service:3007
+      ORDER_SERVICE_URL: http://order-service:3001
+    depends_on:
+      postgres-cart:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - food-delivery-app
+      - food-delivery-db
+      - food-delivery-infra
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3009/health"]
       interval: 30s
       timeout: 10s
       retries: 3
