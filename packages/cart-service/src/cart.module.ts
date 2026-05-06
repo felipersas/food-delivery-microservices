@@ -10,6 +10,8 @@ import { HealthController } from './infra/http/health.controller';
 import { CartConsumer } from './infra/messaging/rabbitmq/cart.consumer';
 import { PriceChangeConsumer } from './infra/messaging/rabbitmq/price.consumer';
 import { RedisModule } from './config/redis.config';
+import { RestaurantServiceClientModule } from './infra/trpc/restaurant-service.client.module';
+import { RestaurantServiceClient } from './infra/trpc/restaurant-service.client';
 import { PriceCacheService } from './application/services/price-cache.service';
 import { GetCartUseCase } from './application/use-cases/get-cart/get-cart.use-case';
 import { AddItemUseCase } from './application/use-cases/add-item/add-item.use-case';
@@ -24,6 +26,7 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
       isGlobal: true,
     }),
     RedisModule,
+    RestaurantServiceClientModule,
     ...(usePostgres ? [TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.CART_DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5439/carts',
@@ -62,6 +65,10 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
         return new RabbitMQEventPublisher(connection);
       },
       inject: ['RABBITMQ_CONNECTION'],
+    },
+    {
+      provide: 'RESTAURANT_SERVICE_CLIENT',
+      useClass: RestaurantServiceClient,
     },
     {
       provide: 'PRICE_CACHE_SERVICE',
