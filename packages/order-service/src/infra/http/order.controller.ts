@@ -1,11 +1,13 @@
-import { Controller, Post, Get, Body, Param, NotFoundException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBadRequestResponse, ApiNotFoundResponse, ApiBody } from '@nestjs/swagger';
+import { Controller, Post, Get, Body, Param, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBadRequestResponse, ApiNotFoundResponse, ApiBody, ApiBearerAuth, ApiForbiddenResponse } from '@nestjs/swagger';
 import { CreateOrderUseCase } from '@application/use-cases/create-order/create-order.use-case';
 import { GetOrderUseCase } from '@application/use-cases/get-order/get-order.use-case';
 import { CreateOrderDto } from '@application/use-cases/create-order/create-order.dto';
 import { GetOrderOutput } from '@application/use-cases/get-order/get-order.dto';
+import { UserContext, Roles, CurrentUser, UserRoleEnum } from '@app/shared';
 
 @ApiTags('orders')
+@ApiBearerAuth('JWT')
 @Controller('orders')
 export class OrderController {
   constructor(
@@ -18,19 +20,35 @@ export class OrderController {
   @ApiBody({ type: CreateOrderDto, description: 'Order data with customer ID, restaurant ID, and items' })
   @ApiResponse({ status: 201, description: 'Order created successfully', type: GetOrderOutput })
   @ApiBadRequestResponse({ description: 'Invalid request data' })
-  async create(@Body() input: CreateOrderDto) {
-    return this.createOrderUseCase.execute(input);
+  @Roles(UserRoleEnum.CUSTOMER, UserRoleEnum.ADMIN)
+  async create(@Body() input: CreateOrderDto, @CurrentUser() user: UserContext) {
+    // Override customerId with authenticated user (security)
+    const orderInput = { ...input, customerId: user.userId };
+    return this.createOrderUseCase.execute(orderInput);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get order by ID', description: 'Retrieves a specific order by its ID' })
   @ApiResponse({ status: 200, description: 'Order found', type: GetOrderOutput })
   @ApiNotFoundResponse({ description: 'Order not found' })
-  async get(@Param('id') id: string) {
+  @ApiForbiddenResponse({ description: 'Access denied - order belongs to another user' })
+  @Roles(UserRoleEnum.CUSTOMER, UserRoleEnum.ADMIN, UserRoleEnum.RESTAURANT)
+  async get(@Param('id') id: string, @CurrentUser() user: UserContext) {
     const order = await this.getOrderUseCase.execute(id);
     if (!order) {
       throw new NotFoundException(`Order ${id} not found`);
     }
+
+    // Ownership check: customers can only see their own orders
+    if (user.hasRole(UserRoleEnum.CUSTOMER) && order.customerId !== user.userId) {
+      throw new ForbiddenException('Access denied - order belongs to another user');
+    }
+
+    // Restaurants can only see orders for their restaurant
+    if (user.hasRole(UserRoleEnum.RESTAURANT) && order.restaurantId !== user.userId) {
+      throw new ForbiddenException('Access denied - order is for another restaurant');
+    }
+
     return order;
   }
 }
