@@ -243,3 +243,53 @@ refactor(payment): extract payment processor interface
 
 chore(deps): upgrade nestjs to 10.0.0
 ```
+
+## Local Skills - Project Patterns
+
+This project has local skills in `.claude/skills/` that enforce DDD patterns and code conventions:
+
+### Available Skills
+- **service-scaffolder** - Generate new microservice structure
+- **code-patterns** - Enforce project code patterns and conventions
+- **domain-planner** - Plan domain models following DDD strategic patterns
+
+These skills are automatically loaded. See `.claude/skills/README.md` for details.
+
+### When Adding New Services
+
+Before implementing, reference:
+1. **domain-planner** - Design aggregates, value objects, events
+2. **service-scaffolder** - Generate correct structure
+3. **code-patterns** - Ensure patterns are followed
+
+Example: "Use service-scaffolder patterns to create the restaurant service structure"
+
+### Key Patterns to Follow
+
+**Aggregates:**
+- Inherit from `AggregateRoot<string>`
+- Private fields only, getters for access
+- Factory methods: `static create()` and `static reconstitute()`
+- Emit domain events before state changes
+- Increment version on state transition
+
+**Value Objects:**
+- Inherit from `ValueObject<T>`
+- Immutable via `Object.freeze()`
+- Factory method: `static create()` with validation
+- Private constructor
+
+**Use Cases:**
+- Single `execute()` method
+- Input DTO → Domain → Output DTO flow
+- Transaction boundary: save + publish events
+
+**Events:**
+- Format: `aggregate.action` (past tense)
+- Payload: minimal data only
+- Published after transaction commit
+
+## Implementation Plans
+
+See `docs/planning/` for detailed implementation plans:
+- **restaurant-service.md** - Restaurant and menu management
