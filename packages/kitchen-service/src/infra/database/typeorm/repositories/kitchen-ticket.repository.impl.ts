@@ -60,6 +60,8 @@ export class PostgresKitchenTicketRepository
       })),
       status: entity.status as KitchenTicketStatus,
       version: entity.version,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
     });
   }
 

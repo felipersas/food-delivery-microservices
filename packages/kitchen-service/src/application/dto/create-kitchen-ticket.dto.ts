@@ -1,9 +1,19 @@
-import { IsString, IsArray, ValidateNested, Min, IsUUID, IsNumber } from 'class-validator';
+import {
+  IsString,
+  IsArray,
+  ValidateNested,
+  Min,
+  IsUUID,
+  IsNumber,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateKitchenTicketItemDto {
-  @ApiProperty({ description: 'Product ID', example: '123e4567-e89b-12d3-a456-426614174000' })
+  @ApiProperty({
+    description: 'Product ID',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
   @IsUUID()
   productId!: string;
 
@@ -18,11 +28,24 @@ export class CreateKitchenTicketItemDto {
 }
 
 export class CreateKitchenTicketDto {
-  @ApiProperty({ description: 'Order ID', example: '123e4567-e89b-12d3-a456-426614174000' })
+  @ApiProperty({
+    description: 'Order ID',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
   @IsUUID()
   orderId!: string;
 
-  @ApiProperty({ description: 'Kitchen ticket items', type: [CreateKitchenTicketItemDto] })
+  @ApiProperty({
+    description: 'Restaurant ID',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @IsUUID()
+  restaurantId!: string;
+
+  @ApiProperty({
+    description: 'Kitchen ticket items',
+    type: [CreateKitchenTicketItemDto],
+  })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateKitchenTicketItemDto)
@@ -30,7 +53,10 @@ export class CreateKitchenTicketDto {
 }
 
 export class KitchenTicketItemResponse {
-  @ApiProperty({ description: 'Product ID', example: '123e4567-e89b-12d3-a456-426614174000' })
+  @ApiProperty({
+    description: 'Product ID',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
   productId!: string;
 
   @ApiProperty({ description: 'Product name', example: 'Margherita Pizza' })
@@ -41,10 +67,16 @@ export class KitchenTicketItemResponse {
 }
 
 export class CreateKitchenTicketOutput {
-  @ApiProperty({ description: 'Ticket ID', example: '123e4567-e89b-12d3-a456-426614174000' })
+  @ApiProperty({
+    description: 'Ticket ID',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
   ticketId!: string;
 
-  @ApiProperty({ description: 'Order ID', example: '123e4567-e89b-12d3-a456-426614174000' })
+  @ApiProperty({
+    description: 'Order ID',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
   orderId!: string;
 
   @ApiProperty({
@@ -54,7 +86,10 @@ export class CreateKitchenTicketOutput {
   })
   status!: string;
 
-  @ApiProperty({ description: 'Ticket items', type: [KitchenTicketItemResponse] })
+  @ApiProperty({
+    description: 'Ticket items',
+    type: [KitchenTicketItemResponse],
+  })
   items!: KitchenTicketItemResponse[];
 }
 

@@ -8,6 +8,7 @@ import { CreateKitchenTicketUseCase } from './application/use-cases/create-kitch
 import { GetKitchenTicketUseCase } from './application/use-cases/get-kitchen-ticket';
 import { UpdateKitchenTicketStatusUseCase } from './application/use-cases/update-kitchen-ticket-status';
 import { ProcessKitchenTicketUseCase } from './application/use-cases/process-kitchen-ticket/process-kitchen-ticket.use-case';
+import { ListKitchenTicketsUseCase } from './application/use-cases/list-kitchen-tickets/list-kitchen-tickets.use-case';
 import { RabbitMQEventPublisher } from './infra/messaging/rabbitmq/kitchen-event.publisher';
 import { KitchenWorkerService } from './application/workers/kitchen.worker';
 import { KitchenConsumer } from './infra/messaging/rabbitmq/kitchen.consumer';
@@ -121,6 +122,11 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
       useFactory: (repo: KitchenTicketRepository, publisher: any) =>
         new UpdateKitchenTicketStatusUseCase(repo, publisher),
       inject: [KITCHEN_TICKET_REPOSITORY, EVENT_PUBLISHER],
+    },
+    {
+      provide: 'ListKitchenTicketsUseCase',
+      useFactory: (repo: KitchenTicketRepository) => new ListKitchenTicketsUseCase(repo),
+      inject: [KITCHEN_TICKET_REPOSITORY],
     },
     KitchenConsumer,
   ],

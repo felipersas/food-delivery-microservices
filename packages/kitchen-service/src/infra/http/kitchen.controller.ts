@@ -1,12 +1,14 @@
-import { Controller, Get, Post, Put, Body, Param, Query, HttpCode, HttpStatus, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Query, HttpCode, HttpStatus, NotFoundException, Inject } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBadRequestResponse, ApiNotFoundResponse, ApiBody, ApiParam } from '@nestjs/swagger';
 import { CreateKitchenTicketUseCase } from '../../application/use-cases/create-kitchen-ticket';
 import { GetKitchenTicketUseCase } from '../../application/use-cases/get-kitchen-ticket';
 import { UpdateKitchenTicketStatusUseCase } from '../../application/use-cases/update-kitchen-ticket-status';
+import { ListKitchenTicketsUseCase } from '../../application/use-cases/list-kitchen-tickets/list-kitchen-tickets.use-case';
 import { KitchenTicketStatus } from '../../domain/aggregates/kitchen-ticket.aggregate';
 import { CreateKitchenTicketDto, CreateKitchenTicketOutput } from '../../application/dto/create-kitchen-ticket.dto';
 import { GetKitchenTicketOutput as GetKitchenTicketDto } from '../../application/dto/get-kitchen-ticket.dto';
 import { UpdateKitchenTicketOutput } from '../../application/dto/update-kitchen-ticket.dto';
+import { ListKitchenTicketsDto, KitchenTicketOutput } from '../../application/dto/list-kitchen-tickets.dto';
 
 @ApiTags('kitchen')
 @Controller('kitchen')
@@ -15,24 +17,24 @@ export class KitchenController {
     private readonly createKitchenTicketUseCase: CreateKitchenTicketUseCase,
     private readonly getKitchenTicketUseCase: GetKitchenTicketUseCase,
     private readonly updateKitchenTicketStatusUseCase: UpdateKitchenTicketStatusUseCase,
+    @Inject('ListKitchenTicketsUseCase') private readonly listKitchenTicketsUseCase: ListKitchenTicketsUseCase,
   ) {}
 
   @Get('tickets')
-  @ApiOperation({ summary: 'List kitchen tickets', description: 'List all kitchen tickets, optionally filtered by restaurant' })
-  @ApiResponse({ status: 200, description: 'List of kitchen tickets', type: [GetKitchenTicketDto] })
-  async listTickets(@Query('restaurantId') restaurantId?: string) {
-    // TODO: Implement proper use case
-    // For now, return empty array - endpoint exists for API Gateway compatibility
-    return [];
+  @ApiOperation({ summary: 'List kitchen tickets', description: 'List all kitchen tickets, optionally filtered by restaurant and status' })
+  @ApiResponse({ status: 200, description: 'List of kitchen tickets', type: [KitchenTicketOutput] })
+  async listTickets(@Query() query: ListKitchenTicketsDto) {
+    return this.listKitchenTicketsUseCase.execute(query);
   }
 
   @Get('tickets/queue')
   @ApiOperation({ summary: 'List kitchen queue', description: 'List kitchen tickets by queue status' })
-  @ApiResponse({ status: 200, description: 'List of tickets in queue', type: [GetKitchenTicketDto] })
+  @ApiResponse({ status: 200, description: 'List of tickets in queue', type: [KitchenTicketOutput] })
   async listQueue(@Query('restaurantId') restaurantId?: string) {
-    // TODO: Implement proper use case
-    // For now, return empty array - endpoint exists for API Gateway compatibility
-    return [];
+    return this.listKitchenTicketsUseCase.execute({
+      restaurantId,
+      status: KitchenTicketStatus.WAITING,
+    });
   }
 
   @Post()

@@ -17,4 +17,10 @@ export class InMemoryKitchenTicketRepository
   async delete(id: string): Promise<void> {
     this.tickets.delete(id);
   }
+
+  async findByRestaurantId(restaurantId: string): Promise<KitchenTicket[]> {
+    return Array.from(this.tickets.values()).filter(
+      (ticket) => ticket.getRestaurantId() === restaurantId,
+    );
+  }
 }

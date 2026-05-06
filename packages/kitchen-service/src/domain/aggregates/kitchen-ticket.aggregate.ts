@@ -16,6 +16,8 @@ export class KitchenTicket extends AggregateRoot<string> {
     quantity: number;
   }>;
   private status: KitchenTicketStatus;
+  private createdAt: Date;
+  private updatedAt: Date;
 
   constructor(props: {
     id?: string;
@@ -28,6 +30,8 @@ export class KitchenTicket extends AggregateRoot<string> {
     this.restaurantId = props.restaurantId;
     this.items = props.items;
     this.status = KitchenTicketStatus.WAITING;
+    this.createdAt = new Date();
+    this.updatedAt = new Date();
   }
 
   static createFromOrder(data: {
@@ -45,6 +49,8 @@ export class KitchenTicket extends AggregateRoot<string> {
     items: Array<{ productId: string; productName: string; quantity: number }>;
     status: KitchenTicketStatus;
     version: number;
+    createdAt: Date;
+    updatedAt: Date;
   }): KitchenTicket {
     const ticket = new KitchenTicket({
       id: props.id,
@@ -53,6 +59,8 @@ export class KitchenTicket extends AggregateRoot<string> {
       items: props.items,
     });
     (ticket as any).status = props.status;
+    (ticket as any).createdAt = props.createdAt;
+    (ticket as any).updatedAt = props.updatedAt;
     for (let i = 0; i < props.version; i++) {
       ticket.incrementVersion();
     }
@@ -66,6 +74,7 @@ export class KitchenTicket extends AggregateRoot<string> {
       );
     }
     this.status = KitchenTicketStatus.PREPARING;
+    this.markAsUpdated();
     this.incrementVersion();
   }
 
@@ -74,6 +83,7 @@ export class KitchenTicket extends AggregateRoot<string> {
       throw new InvalidStateException(`Cannot mark ready from ${this.status}`);
     }
     this.status = KitchenTicketStatus.READY;
+    this.markAsUpdated();
     this.incrementVersion();
     this.addDomainEvent({
       eventId: uuidv4(),
@@ -107,5 +117,17 @@ export class KitchenTicket extends AggregateRoot<string> {
     quantity: number;
   }> {
     return [...this.items];
+  }
+
+  getCreatedAt(): Date {
+    return this.createdAt;
+  }
+
+  getUpdatedAt(): Date {
+    return this.updatedAt;
+  }
+
+  private markAsUpdated(): void {
+    this.updatedAt = new Date();
   }
 }
