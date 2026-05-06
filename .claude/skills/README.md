@@ -2,9 +2,22 @@
 
 Project-specific skills for enforcing DDD patterns, service scaffolding, and domain modeling.
 
+## New Structure Standard
+
+Skills now follow a **directory-based format**:
+
+```
+.claude/skills/
+├── skill-name/
+│   └── SKILL.md           # Skill instructions (required)
+├── another-skill/
+│   └── SKILL.md
+└── README.md             # This file
+```
+
 ## Available Skills
 
-### [service-scaffolder](./service-scaffolder.md)
+### [service-scaffolder](./service-scaffolder/SKILL.md)
 **Generate new microservice structure following project DDD patterns**
 
 Use when: Creating a new service from scratch
@@ -21,7 +34,7 @@ Covers:
 - Naming conventions
 - Required files checklist
 
-### [code-patterns](./code-patterns.md)
+### [code-patterns](./code-patterns/SKILL.md)
 **Enforce project code patterns and conventions**
 
 Use when: Writing code, reviewing code, refactoring
@@ -37,7 +50,7 @@ Covers:
 - Error handling
 - Anti-patterns to avoid
 
-### [domain-planner](./domain-planner.md)
+### [domain-planner](./domain-planner/SKILL.md)
 **Plan domain models following DDD strategic patterns**
 
 Use when: Designing new bounded contexts, aggregates
@@ -51,6 +64,18 @@ Covers:
 - Ubiquitous language
 - Service planning checklist
 
+### [skill-creation-guide](./skill-creation-guide/SKILL.md)
+**Guide and templates for creating efficient, reusable skills**
+
+Use when: Creating new skills for this or other projects
+
+Covers:
+- 5 Core Principles for effective skills
+- Directory-based structure format
+- SKILL.md template with frontmatter
+- Skill categories and examples
+- Advanced tips and maintenance
+
 ## Usage
 
 These skills are automatically loaded by Claude Code when working in this project. Reference them in conversations:
@@ -63,13 +88,19 @@ These skills are automatically loaded by Claude Code when working in this projec
 
 ## Adding New Skills
 
-1. Create file in `.claude/skills/`
-2. Add frontmatter with:
-   - `name`: skill identifier
-   - `description`: what it does
-   - `triggers`: keywords that invoke it
-   - `tags`: categorization
+1. Create directory: `.claude/skills/your-skill-name/`
+2. Create `SKILL.md` with frontmatter:
+   ```yaml
+   ---
+   name: your-skill-name
+   description: One-line description
+   triggers:
+     - "trigger phrase 1"
+     - "trigger phrase 2"
+   tags: [category, framework, topic]
+   ---
+   ```
+3. Write skill content following the template
+4. Update this README
 
-3. Update this README
-
-See [oh-my-claudecode](https://github.com/oh-my-claudecode/oh-my-claudecode) documentation for full skill format reference.
+See [skill-creation-guide](./skill-creation-guide/SKILL.md) for full templates and examples.

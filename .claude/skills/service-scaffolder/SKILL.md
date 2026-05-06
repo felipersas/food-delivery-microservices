@@ -319,7 +319,7 @@ export default () => ({
 // validation.ts
 export const validationSchema = Joi.object({
   {SERVICE_UPPER}_PORT: Joi.number().default(300X),
-  {SERVICE_UPPER}_DATABASE_URL: Joi.string().default('postgres://postgres:postgres@localhost:543X/{service}'),
+  {SERVICE_UPPER}_DATABASE_URL: Joi.string().default('postgres://postgres:postgres@localhost:543X/{service}');
 });
 ```
 
