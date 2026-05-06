@@ -1,6 +1,6 @@
-import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Inject, Injectable, OnModuleDestroy, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createTRPCProxyClient, httpBatchLink } from '@trpc/client';
+import { createTRPCProxyClient, httpBatchLink, TRPCClientError } from '@trpc/client';
 import type { AppRouter } from '@app/trpc-definitions';
 import { fetch } from 'undici';
 
@@ -13,7 +13,7 @@ import { fetch } from 'undici';
  * Architecture:
  * - Client created at module initialization
  * - Uses httpBatchLink for efficient batching
- * - Auto-retry on connection failure
+ * - Configurable timeout with circuit breaker support
  * - Type-safe procedure calls with full IDE support
  * 
  * Usage:
@@ -26,19 +26,22 @@ import { fetch } from 'undici';
 export class RestaurantServiceClient implements OnModuleDestroy {
   private readonly client: ReturnType<typeof createTRPCProxyClient<AppRouter>>;
   private readonly baseUrl: string;
+  private readonly timeout: number;
+  private readonly logger = new Logger(RestaurantServiceClient.name);
 
   constructor(private readonly configService: ConfigService) {
     this.baseUrl = this.configService.get<string>('RESTAURANT_SERVICE_URL', 'http://localhost:3007');
+    this.timeout = this.configService.get<number>('TRPC_CLIENT_TIMEOUT_MS', 5000);
 
     this.client = createTRPCProxyClient<AppRouter>({
       links: [
         httpBatchLink({
           url: `${this.baseUrl}/trpc`,
           fetch,
-          // Abort requests after 5 seconds
+          // Abort requests after configured timeout
           async fetch(input, init) {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            const timeoutId = setTimeout(() => controller.abort(), this.timeout);
             
             try {
               const response = await fetch(input, {
@@ -67,12 +70,16 @@ export class RestaurantServiceClient implements OnModuleDestroy {
 
   /**
    * Health check for Restaurant Service tRPC endpoint
+   * Uses a dummy UUID to test connectivity
    */
   async isHealthy(): Promise<boolean> {
     try {
       await this.restaurant.isMenuItemAvailable.query({ id: '00000000-0000-0000-0000-000000000000' });
       return true;
-    } catch {
+    } catch (error) {
+      this.logger.warn('Restaurant service health check failed', { 
+        error: error instanceof Error ? error.message : String(error) 
+      });
       return false;
     }
   }

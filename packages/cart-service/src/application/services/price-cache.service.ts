@@ -3,6 +3,7 @@ import type { OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Redis } from 'ioredis';
 import { Money, ResourceNotFoundException, DomainException } from '@app/shared';
+import { TRPCClientError } from '@trpc/client';
 import type { RestaurantServiceClient } from '../../infra/trpc/restaurant-service.client';
 import { RESTAURANT_SERVICE_CLIENT } from '../../../tokens';
 import { REDIS_CLIENT } from '../../config/redis.config';
@@ -77,6 +78,9 @@ export class PriceCacheService implements OnModuleDestroy {
   /**
    * Batch fetch prices for multiple items (optimization for cart view)
    * Uses Redis pipeline for efficient multi-get
+   * 
+   * NOTE: Currently fetches individually. For optimal performance,
+   * consider grouping by restaurantId and using getMenuItems batch endpoint.
    */
   async getItemPrices(itemIds: string[]): Promise<Map<string, { price: Money; available: boolean; name: string }>> {
     const result = new Map<string, { price: Money; available: boolean; name: string }>();
@@ -110,7 +114,8 @@ export class PriceCacheService implements OnModuleDestroy {
       }
     }
 
-    // Fetch missing items via tRPC (could be batched in future)
+    // Fetch missing items via tRPC
+    // TODO: Optimize by grouping by restaurantId and using getMenuItems batch endpoint
     if (missingIds.length > 0) {
       for (const id of missingIds) {
         const item = await this.fetchFromService(id);
@@ -184,11 +189,14 @@ export class PriceCacheService implements OnModuleDestroy {
         cachedAt: new Date().toISOString(),
       };
     } catch (error) {
-      // Handle tRPC errors
-      if (error instanceof Error && error.message.includes('NOT_FOUND')) {
-        throw new ResourceNotFoundException('MenuItem', itemId);
+      // Handle tRPC errors with proper error code checking
+      if (error instanceof TRPCClientError) {
+        if (error.code === 'NOT_FOUND' || error.code === 'BAD_REQUEST') {
+          throw new ResourceNotFoundException('MenuItem', itemId);
+        }
+        throw new DomainException(`Restaurant Service error: ${error.message}`, { cause: error });
       }
-      throw new DomainException('Failed to fetch menu item from Restaurant Service');
+      throw new DomainException('Failed to fetch menu item from Restaurant Service', { cause: error });
     }
   }
 
@@ -210,7 +218,7 @@ export class PriceCacheService implements OnModuleDestroy {
         cachedAt: now,
       }));
     } catch (error) {
-      throw new DomainException('Failed to fetch menu items from Restaurant Service');
+      throw new DomainException('Failed to fetch menu items from Restaurant Service', { cause: error });
     }
   }
 }

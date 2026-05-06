@@ -1,9 +1,9 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import type { CreateTRPCContext } from '@app/trpc-definitions';
 import { publicProcedure } from '@app/trpc-definitions';
 import type { GetMenuItemUseCase } from '../../application/use-cases/get-menu-item/get-menu-item.use-case';
-import type { GetMenuItemsUseCase } from '../../application/use-cases/get-menu-items/get-menu-items.use-case';
-import { GET_MENU_ITEM_USE_CASE, GET_MENU_ITEMS_USE_CASE } from '../../tokens';
+import type { ListMenuItemsUseCase } from '../../application/use-cases/list-menu-items/list-menu-items.use-case';
+import { GET_MENU_ITEM_USE_CASE, LIST_MENU_ITEMS_USE_CASE } from '../../../tokens';
 
 /**
  * tRPC Server Implementation for Restaurant Service
@@ -26,7 +26,7 @@ import { GET_MENU_ITEM_USE_CASE, GET_MENU_ITEMS_USE_CASE } from '../../tokens';
 export class RestaurantTrpcServer {
   constructor(
     @Inject(GET_MENU_ITEM_USE_CASE) private readonly getMenuItemUseCase: GetMenuItemUseCase,
-    @Inject(GET_MENU_ITEMS_USE_CASE) private readonly getMenuItemsUseCase: GetMenuItemsUseCase,
+    @Inject(LIST_MENU_ITEMS_USE_CASE) private readonly listMenuItemsUseCase: ListMenuItemsUseCase,
   ) {}
 
   /**
@@ -65,14 +65,15 @@ export class RestaurantTrpcServer {
 
   /**
    * Get all menu items for a restaurant
-   * Procedure implementation delegates to GetMenuItemsUseCase
+   * Procedure implementation delegates to ListMenuItemsUseCase
    */
   getMenuItems = publicProcedure.query(async ({ input }) => {
-    const menuItems = await this.getMenuItemsUseCase.execute({
+    const result = await this.listMenuItemsUseCase.execute({
       restaurantId: input.restaurantId,
+      available: true, // Only fetch available items for cart service
     });
 
-    return menuItems.items.map((item) => ({
+    return result.items.map((item) => ({
       id: item.id,
       name: item.name,
       description: item.description,

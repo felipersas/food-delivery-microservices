@@ -7,4 +7,4 @@ export interface CreateTRPCContext {
   userRole?: string;
 }
 
-export type TRPCContext = ReturnType<typeof CreateTRPCContext>;
+export type TRPCContext = CreateTRPCContext;

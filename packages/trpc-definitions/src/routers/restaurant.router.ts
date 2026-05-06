@@ -1,11 +1,17 @@
-import { z } from 'zod';
-import { TRPCError } from '@trpc/server';
-import { router, publicProcedure } from '../trpc.js';
-import { ResourceNotFoundException, DomainException } from '@app/shared';
-
 /**
- * Schema definitions for Restaurant Service procedures
+ * Restaurant Router Contract
+ * 
+ * This file defines the tRPC API contract for Restaurant Service.
+ * It provides:
+ * - Schema validation with Zod
+ * - Type-safe input/output definitions
+ * - Procedure signatures for IDE auto-completion
+ * 
+ * NOTE: This is a contract specification package.
+ * Actual implementations are provided by individual services.
  */
+import { z } from 'zod';
+import { router, publicProcedure } from '../trpc.js';
 
 const MenuItemOutputSchema = z.object({
   id: z.string().uuid(),
@@ -26,10 +32,6 @@ const RestaurantMenuItemsInputSchema = z.object({
   restaurantId: z.string().uuid(),
 });
 
-/**
- * Restaurant Router
- * Defines procedures that Restaurant Service exposes to other services
- */
 export const restaurantRouter = router({
   /**
    * Get a single menu item by ID
@@ -38,13 +40,10 @@ export const restaurantRouter = router({
   getMenuItem: publicProcedure
     .input(MenuItemInputSchema)
     .output(MenuItemOutputSchema)
-    .query(async ({ input, ctx }) => {
-      // This procedure will be implemented by Restaurant Service
-      // The actual data fetching happens in the service layer
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Procedure not implemented - use with Restaurant Service implementation',
-      });
+    .query(() => {
+      // Implementation provided by Restaurant Service
+      // This defines the contract; actual logic is in restaurant.trpc.server.ts
+      throw new Error('Router contract only - implement in service layer');
     }),
 
   /**
@@ -54,12 +53,8 @@ export const restaurantRouter = router({
   getMenuItems: publicProcedure
     .input(RestaurantMenuItemsInputSchema)
     .output(z.array(MenuItemOutputSchema))
-    .query(async ({ input, ctx }) => {
-      // This procedure will be implemented by Restaurant Service
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Procedure not implemented - use with Restaurant Service implementation',
-      });
+    .query(() => {
+      throw new Error('Router contract only - implement in service layer');
     }),
 
   /**
@@ -69,11 +64,8 @@ export const restaurantRouter = router({
   isMenuItemAvailable: publicProcedure
     .input(MenuItemInputSchema)
     .output(z.object({ available: z.boolean() }))
-    .query(async ({ input }) => {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Procedure not implemented - use with Restaurant Service implementation',
-      });
+    .query(() => {
+      throw new Error('Router contract only - implement in service layer');
     }),
 });
 
