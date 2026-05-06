@@ -5,13 +5,12 @@
  * Enables type-safe synchronous calls between microservices
  */
 
-// tRPC configuration
+// AUTO-GENERATED AppRouter from nestjs-trpc CLI
+// Run `npx nestjs-trpc generate` to regenerate after router changes
+export type { AppRouter } from './generated/server.js';
+
+// Legacy exports (for backward compatibility during migration)
+// TODO: Remove after full migration to decorator-based routers
 export { initTRPC } from '@trpc/server';
 export type { CreateTRPCContext } from './context.js';
-
-// Router exports
 export { router, publicProcedure, protectedProcedure, adminProcedure } from './trpc.js';
-export { appRouter, type AppRouter } from './root.router.js';
-
-// Individual router exports for service composition
-export { restaurantRouter, type RestaurantRouter } from './routers/restaurant.router.js';
