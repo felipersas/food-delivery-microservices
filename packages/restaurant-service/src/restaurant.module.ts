@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RestaurantController } from './infra/http/restaurant.controller';
 import { HealthController } from './infra/http/health.controller';
+import { TrpcController } from './infra/trpc/trpc.controller';
 import { CreateRestaurantUseCase } from './application/use-cases/create-restaurant/create-restaurant.use-case';
 import { GetRestaurantUseCase } from './application/use-cases/get-restaurant/get-restaurant.use-case';
 import { ListRestaurantsUseCase } from './application/use-cases/list-restaurants/list-restaurants.use-case';
@@ -18,6 +19,7 @@ import { InMemoryMenuItemRepository } from './infra/database/memory/menu-item.re
 import { PostgresMenuItemRepository } from './infra/database/typeorm/repositories/menu-item.repository.impl';
 import { RabbitMQEventPublisher } from './infra/messaging/rabbitmq/restaurant-event.publisher';
 import { RestaurantConsumer } from './infra/messaging/rabbitmq/restaurant.consumer';
+import { TrpcModule } from './infra/trpc/trpc.module';
 import { RabbitMQConnection } from '@app/messaging';
 import { AllExceptionsFilter, SuccessResponseInterceptor, RolesGuard } from '@app/shared';
 import { RestaurantEntity } from './infra/database/typeorm/entities/restaurant.entity';
@@ -36,6 +38,7 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
       validationSchema,
       isGlobal: true,
     }),
+    TrpcModule,
     ...(usePostgres ? [TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.RESTAURANT_DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5437/restaurants',
@@ -43,7 +46,7 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
       synchronize: process.env.NODE_ENV !== 'production',
     })] : []),
   ],
-  controllers: [RestaurantController, HealthController],
+  controllers: [RestaurantController, HealthController, TrpcController],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_INTERCEPTOR, useClass: SuccessResponseInterceptor },
@@ -52,7 +55,7 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
       provide: RABBITMQ_CONNECTION,
       useFactory: (configService: ConfigService) => new RabbitMQConnection({
         url: configService.get<string>('rabbitmq.url')!,
-        exchange: configService.get<string>('rabbitmq.exchange')!,
+        exchange: configService.get<string>('rabbitmq.exchange')!',
       }),
       inject: [ConfigService],
     },
