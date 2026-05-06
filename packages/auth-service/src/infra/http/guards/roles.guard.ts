@@ -3,7 +3,7 @@ import { Guard } from '@nestjs/common';
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtAuthGuard } from './jwt.guard';
-import { UserRoleEnum } from '../../domain/value-objects/user-role.vo';
+import { UserRoleEnum } from '@app/shared';
 
 @Injectable()
 export class RolesGuard implements Guard {

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsOptional } from 'class-validator';
-import { UserRoleEnum } from '../../../domain/value-objects/user-role.vo';
+import { UserRoleEnum } from '@app/shared';
 
 export class ManageRolesDto {
   @ApiProperty({ enum: UserRoleEnum, example: UserRoleEnum.RESTAURANT })

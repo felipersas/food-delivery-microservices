@@ -7,6 +7,7 @@ export type { Repository } from './domain/repository.interface';
 
 // Types
 export { Money } from './types/money';
+export { UserRoleEnum, isUserRole, getAllRoles } from './types/user-roles';
 
 // Events
 export type { OrderCreatedEvent, OrderCreatedData } from './events/order-created.event';

@@ -1,8 +1,8 @@
-import { AggregateRoot, DomainException } from '@app/shared';
+import { AggregateRoot, DomainException, UserRoleEnum } from '@app/shared';
 import type { Repository } from '@app/shared';
 import { Email } from '../value-objects/email.vo';
 import { HashedPassword } from '../value-objects/hashed-password.vo';
-import { UserRole, UserRoleEnum } from '../value-objects/user-role.vo';
+import { UserRole } from '../value-objects/user-role.vo';
 import { UserStatus, UserStatusEnum } from '../value-objects/user-status.vo';
 import { RefreshToken } from '../value-objects/refresh-token.vo';
 import { v4 as uuidv4 } from 'uuid';

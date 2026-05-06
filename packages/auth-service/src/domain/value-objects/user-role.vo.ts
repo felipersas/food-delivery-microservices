@@ -1,11 +1,4 @@
-import { ValueObject } from '@app/shared';
-
-export enum UserRoleEnum {
-  CUSTOMER = 'customer',
-  RESTAURANT = 'restaurant',
-  DELIVERY = 'delivery',
-  ADMIN = 'admin',
-}
+import { ValueObject, UserRoleEnum } from '@app/shared';
 
 export class UserRole extends ValueObject<UserRoleEnum> {
   protected constructor(value: UserRoleEnum) {
