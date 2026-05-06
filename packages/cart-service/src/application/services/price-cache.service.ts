@@ -1,4 +1,5 @@
-import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import type { OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Redis } from 'ioredis';
 import { Money, ResourceNotFoundException, DomainException } from '@app/shared';
@@ -71,12 +72,16 @@ export class PriceCacheService implements OnModuleDestroy {
     const cachedResults = await pipeline.exec();
 
     // Process cached results
+    if (!cachedResults) {
+      return new Map();
+    }
+
     for (let i = 0; i < itemIds.length; i++) {
       const id = itemIds[i];
-      const [err, value] = cachedResults![i];
+      const [err, value] = cachedResults[i];
 
       if (value && !err) {
-        const item: CachedMenuItem = JSON.parse(value);
+        const item = JSON.parse(value as string) as CachedMenuItem;
         result.set(id, {
           price: Money.BRLFromCents(item.priceCents),
           available: item.available,
@@ -153,12 +158,12 @@ export class PriceCacheService implements OnModuleDestroy {
       throw new DomainException('Failed to fetch menu item');
     }
 
-    return response.json();
+    return response.json() as Promise<CachedMenuItem>;
   }
 
   private async fetchMenuItems(restaurantId: string): Promise<CachedMenuItem[]> {
     const response = await fetch(`${this.RESTAURANT_SERVICE_URL}/restaurants/${restaurantId}/menu-items`);
     if (!response.ok) throw new DomainException('Failed to fetch menu items');
-    return response.json();
+    return response.json() as Promise<CachedMenuItem[]>;
   }
 }
