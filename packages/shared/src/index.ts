@@ -49,5 +49,7 @@ export type { SuccessResponse, ResponseMeta, PaginationMeta, PaginatedResponse }
 // HTTP - Auth components
 export { CurrentUser } from './infra/http/current-user.decorator';
 export { Roles, ROLES_KEY } from './infra/http/decorators/roles.decorator';
+export { ResourceOwner, UseResourceOwner } from './infra/http/decorators/resource-owner.decorator';
 export { RolesGuard } from './infra/http/guards/roles.guard';
+export { ResourceOwnerGuard, RESOURCE_OWNER_GUARD_OPTIONS, type ResourceOwnerGuardOptions } from './infra/http/guards/resource-owner.guard';
 export { UserContextMiddleware } from './infra/http/middleware/user-context.middleware';
