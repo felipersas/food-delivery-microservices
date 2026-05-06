@@ -1,10 +1,10 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { validationSchema } from './config/validation';
 import configuration from './config/configuration';
-import { AllExceptionsFilter, SuccessResponseInterceptor } from '@app/shared';
+import { AllExceptionsFilter, SuccessResponseInterceptor, RolesGuard } from '@app/shared';
 import { CartController } from './infra/http/cart.controller';
 import { HealthController } from './infra/http/health.controller';
 import { CartConsumer } from './infra/messaging/rabbitmq/cart.consumer';
@@ -35,6 +35,7 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_INTERCEPTOR, useClass: SuccessResponseInterceptor },
+    { provide: APP_GUARD, useClass: RolesGuard },
     {
       provide: 'RABBITMQ_CONNECTION',
       useFactory: (configService: ConfigService) => {
@@ -66,22 +67,8 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
       provide: 'PRICE_CACHE_SERVICE',
       useClass: PriceCacheService,
     },
-    {
-      provide: GetCartUseCase,
-      useFactory: (repository: any, priceCacheService: any) => {
-        const { GetCartUseCase } = require('./application/use-cases/get-cart/get-cart.use-case');
-        return new GetCartUseCase(repository, priceCacheService);
-      },
-      inject: ['CART_REPOSITORY', 'PRICE_CACHE_SERVICE'],
-    },
-    {
-      provide: AddItemUseCase,
-      useFactory: (repository: any, eventPublisher: any, priceCacheService: any) => {
-        const { AddItemUseCase } = require('./application/use-cases/add-item/add-item.use-case');
-        return new AddItemUseCase(repository, eventPublisher, priceCacheService);
-      },
-      inject: ['CART_REPOSITORY', 'EVENT_PUBLISHER', 'PRICE_CACHE_SERVICE'],
-    },
+    GetCartUseCase,
+    AddItemUseCase,
     CartConsumer,
     PriceChangeConsumer,
   ],
