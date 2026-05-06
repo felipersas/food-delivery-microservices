@@ -1,5 +1,5 @@
 import { Module, type OnModuleInit } from '@nestjs/common';
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HealthController } from './infra/http/health.controller';
@@ -12,7 +12,7 @@ import { InMemoryPaymentRepository } from './infra/database/memory/payment.repos
 import { PostgresPaymentRepository } from './infra/database/typeorm/repositories/payment.repository.impl';
 import { PaymentEntity } from './infra/database/typeorm/entities/payment.entity';
 import { RabbitMQConnection } from '@app/messaging';
-import { AllExceptionsFilter, SuccessResponseInterceptor } from '@app/shared';
+import { AllExceptionsFilter, SuccessResponseInterceptor, RolesGuard } from '@app/shared';
 import type { EventPublisher } from './infra/messaging/rabbitmq/payment-event.publisher';
 import type { PaymentRepository } from './domain/repositories/payment.repository.interface';
 import configuration from './config/configuration';
@@ -52,6 +52,10 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
     {
       provide: APP_INTERCEPTOR,
       useClass: SuccessResponseInterceptor,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
     {
       provide: PAYMENT_REPOSITORY,

@@ -1,6 +1,6 @@
-import { Injectable, NestMiddleware, NotFoundException } from '@nestjs/common';
+import { Injectable, type NestMiddleware } from '@nestjs/common';
 import type { Request, Response, NextFunction } from 'express';
-import { UserContext } from '../../domain/user-context.vo';
+import { UserContext } from '../../../domain/user-context.vo';
 
 /**
  * User Context Middleware

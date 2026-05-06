@@ -1,5 +1,5 @@
 import { Module, type OnModuleInit } from '@nestjs/common';
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RestaurantController } from './infra/http/restaurant.controller';
@@ -12,7 +12,7 @@ import { PostgresRestaurantRepository } from './infra/database/typeorm/repositor
 import { RabbitMQEventPublisher } from './infra/messaging/rabbitmq/restaurant-event.publisher';
 import { RestaurantConsumer } from './infra/messaging/rabbitmq/restaurant.consumer';
 import { RabbitMQConnection } from '@app/messaging';
-import { AllExceptionsFilter, SuccessResponseInterceptor } from '@app/shared';
+import { AllExceptionsFilter, SuccessResponseInterceptor, RolesGuard } from '@app/shared';
 import { RestaurantEntity } from './infra/database/typeorm/entities/restaurant.entity';
 import { OperatingHoursEntity } from './infra/database/typeorm/entities/operating-hours.entity';
 import configuration from './config/configuration';
@@ -39,6 +39,7 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_INTERCEPTOR, useClass: SuccessResponseInterceptor },
+    { provide: APP_GUARD, useClass: RolesGuard },
     {
       provide: RABBITMQ_CONNECTION,
       useFactory: (configService: ConfigService) => new RabbitMQConnection({

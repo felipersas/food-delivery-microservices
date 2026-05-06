@@ -1,5 +1,5 @@
 import { Module, type OnModuleInit } from '@nestjs/common';
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HealthController } from './infra/http/health.controller';
@@ -18,7 +18,7 @@ import { PostgresKitchenTicketRepository } from './infra/database/typeorm/reposi
 import { KitchenTicketEntity } from './infra/database/typeorm/entities/kitchen-ticket.entity';
 import { KitchenTicketItemEntity } from './infra/database/typeorm/entities/kitchen-ticket-item.entity';
 import { RabbitMQConnection } from '@app/messaging';
-import { AllExceptionsFilter, SuccessResponseInterceptor } from '@app/shared';
+import { AllExceptionsFilter, SuccessResponseInterceptor, RolesGuard } from '@app/shared';
 import type { KitchenTicketRepository } from './domain/repositories/kitchen-ticket.repository.interface';
 import configuration from './config/configuration';
 import { validationSchema } from './config/validation';
@@ -59,6 +59,10 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
     {
       provide: APP_INTERCEPTOR,
       useClass: SuccessResponseInterceptor,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
     {
       provide: RABBITMQ_CONNECTION,

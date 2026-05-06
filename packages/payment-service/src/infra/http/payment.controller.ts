@@ -6,7 +6,9 @@ import {
   ApiBadRequestResponse,
   ApiBody,
   ApiParam,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
+import { Roles, UserRoleEnum } from '@app/shared';
 import { ProcessPaymentUseCase } from '@application/use-cases/process-payment/process-payment.use-case';
 import { RefundPaymentUseCase } from '@application/use-cases/refund-payment/refund-payment.use-case';
 import {
@@ -16,6 +18,7 @@ import {
 import { RefundPaymentDto } from '@application/use-cases/refund-payment/refund-payment.dto';
 
 @ApiTags('payments')
+@ApiBearerAuth('JWT')
 @Controller('payments')
 export class PaymentController {
   constructor(
@@ -24,6 +27,7 @@ export class PaymentController {
   ) {}
 
   @Get(':id')
+  @Roles(UserRoleEnum.CUSTOMER, UserRoleEnum.ADMIN)
   @ApiOperation({
     summary: 'Get payment by ID',
     description: 'Retrieves payment details (not yet implemented)',
@@ -39,6 +43,7 @@ export class PaymentController {
   }
 
   @Post('refund/:id')
+  @Roles(UserRoleEnum.ADMIN)
   @ApiOperation({
     summary: 'Refund payment',
     description: 'Process a refund for a confirmed payment',

@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Put, Body, Param, Query, HttpCode, HttpStatus, NotFoundException, Inject } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBadRequestResponse, ApiNotFoundResponse, ApiBody, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBadRequestResponse, ApiNotFoundResponse, ApiBody, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import { Roles, UserRoleEnum } from '@app/shared';
 import { CreateKitchenTicketUseCase } from '../../application/use-cases/create-kitchen-ticket';
 import { GetKitchenTicketUseCase } from '../../application/use-cases/get-kitchen-ticket';
 import { UpdateKitchenTicketStatusUseCase } from '../../application/use-cases/update-kitchen-ticket-status';
@@ -11,6 +12,7 @@ import { UpdateKitchenTicketOutput } from '../../application/dto/update-kitchen-
 import { ListKitchenTicketsDto, KitchenTicketOutput } from '../../application/dto/list-kitchen-tickets.dto';
 
 @ApiTags('kitchen')
+@ApiBearerAuth('JWT')
 @Controller('kitchen')
 export class KitchenController {
   constructor(
@@ -21,6 +23,7 @@ export class KitchenController {
   ) {}
 
   @Get('tickets')
+  @Roles(UserRoleEnum.RESTAURANT, UserRoleEnum.ADMIN)
   @ApiOperation({ summary: 'List kitchen tickets', description: 'List all kitchen tickets, optionally filtered by restaurant and status' })
   @ApiResponse({ status: 200, description: 'List of kitchen tickets', type: [KitchenTicketOutput] })
   async listTickets(@Query() query: ListKitchenTicketsDto) {
@@ -28,6 +31,7 @@ export class KitchenController {
   }
 
   @Get('tickets/queue')
+  @Roles(UserRoleEnum.RESTAURANT, UserRoleEnum.ADMIN)
   @ApiOperation({ summary: 'List kitchen queue', description: 'List kitchen tickets by queue status' })
   @ApiResponse({ status: 200, description: 'List of tickets in queue', type: [KitchenTicketOutput] })
   async listQueue(@Query('restaurantId') restaurantId: string) {
@@ -39,6 +43,7 @@ export class KitchenController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @Roles(UserRoleEnum.RESTAURANT, UserRoleEnum.ADMIN)
   @ApiOperation({ summary: 'Create kitchen ticket', description: 'Creates a new kitchen ticket for order preparation' })
   @ApiBody({ type: CreateKitchenTicketDto, description: 'Kitchen ticket data with order ID and items' })
   @ApiResponse({ status: 201, description: 'Kitchen ticket created', type: CreateKitchenTicketOutput })
@@ -48,6 +53,7 @@ export class KitchenController {
   }
 
   @Get(':id')
+  @Roles(UserRoleEnum.RESTAURANT, UserRoleEnum.ADMIN)
   @ApiOperation({ summary: 'Get kitchen ticket', description: 'Retrieves kitchen ticket details' })
   @ApiParam({ name: 'id', description: 'Kitchen ticket ID (UUID)', example: '123e4567-e89b-12d3-a456-426614174000' })
   @ApiResponse({ status: 200, description: 'Kitchen ticket found', type: GetKitchenTicketDto })
@@ -61,6 +67,7 @@ export class KitchenController {
   }
 
   @Put(':id/status')
+  @Roles(UserRoleEnum.RESTAURANT, UserRoleEnum.ADMIN)
   @ApiOperation({ summary: 'Update ticket status', description: 'Updates the status of a kitchen ticket' })
   @ApiParam({ name: 'id', description: 'Kitchen ticket ID (UUID)', example: '123e4567-e89b-12d3-a456-426614174000' })
   @ApiBody({ description: 'New status for the kitchen ticket', schema: { type: 'object', properties: { status: { type: 'string', enum: ['PENDING', 'PREPARING', 'READY', 'CANCELLED'], example: 'PREPARING' } } } })

@@ -4,10 +4,14 @@ import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { KitchenModule } from './kitchen.module';
-import { scalarHtml } from '@app/shared';
+import { scalarHtml, UserContextMiddleware } from '@app/shared';
 
 async function bootstrap() {
   const app = await NestFactory.create(KitchenModule);
+
+  // User context middleware - extracts user from gateway headers
+  app.use(UserContextMiddleware);
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -22,7 +26,7 @@ async function bootstrap() {
           errors: messages,
         });
       },
-    }),
+    ),
   );
 
   const configService = app.get(ConfigService);
@@ -33,6 +37,16 @@ async function bootstrap() {
     .setTitle('Kitchen Service API')
     .setDescription('Kitchen order preparation microservice for food delivery system')
     .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token obtained from Auth Service',
+      },
+      'JWT', // This name must match the security name in @ApiBearerAuth()
+    )
     .addTag('kitchen', 'Kitchen ticket management endpoints')
     .addTag('health', 'Health check endpoints')
     .build();

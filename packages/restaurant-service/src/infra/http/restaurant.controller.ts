@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Param, Query, UsePipes, ValidationPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBadRequestResponse, ApiNotFoundResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBadRequestResponse, ApiNotFoundResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { Roles, UserRoleEnum } from '@app/shared';
 import { CreateRestaurantUseCase } from '@application/use-cases/create-restaurant/create-restaurant.use-case';
 import { GetRestaurantUseCase } from '@application/use-cases/get-restaurant/get-restaurant.use-case';
 import { ListRestaurantsUseCase } from '@application/use-cases/list-restaurants/list-restaurants.use-case';
@@ -8,6 +9,7 @@ import { ListRestaurantsDto } from '@application/use-cases/list-restaurants/list
 import type { GetRestaurantOutput } from '@application/use-cases/get-restaurant/get-restaurant.dto';
 
 @ApiTags('restaurants')
+@ApiBearerAuth('JWT')
 @Controller('restaurants')
 export class RestaurantController {
   constructor(
@@ -17,6 +19,7 @@ export class RestaurantController {
   ) {}
 
   @Post()
+  @Roles(UserRoleEnum.ADMIN)
   @ApiOperation({
     summary: 'Create a new restaurant',
     description: 'Creates a new restaurant with profile information, address, and operating hours'
@@ -28,6 +31,7 @@ export class RestaurantController {
   }
 
   @Get(':id')
+  @Roles(UserRoleEnum.CUSTOMER, UserRoleEnum.RESTAURANT, UserRoleEnum.ADMIN)
   @ApiOperation({
     summary: 'Get restaurant by ID',
     description: 'Retrieves detailed information about a specific restaurant'
@@ -40,6 +44,7 @@ export class RestaurantController {
   }
 
   @Get()
+  @Roles(UserRoleEnum.CUSTOMER, UserRoleEnum.RESTAURANT, UserRoleEnum.ADMIN)
   @ApiOperation({
     summary: 'List restaurants',
     description: 'Lists restaurants with optional filtering by status, name search, geolocation, or owner'

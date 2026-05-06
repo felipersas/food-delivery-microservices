@@ -4,10 +4,14 @@ import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { PaymentModule } from './payment.module';
-import { scalarHtml } from '@app/shared';
+import { scalarHtml, UserContextMiddleware } from '@app/shared';
 
 async function bootstrap() {
   const app = await NestFactory.create(PaymentModule);
+
+  // User context middleware - extracts user from gateway headers
+  app.use(UserContextMiddleware);
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -33,6 +37,16 @@ async function bootstrap() {
     .setTitle('Payment Service API')
     .setDescription('Payment processing microservice for food delivery system')
     .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token obtained from Auth Service',
+      },
+      'JWT',
+    )
     .addTag('payments', 'Payment processing endpoints')
     .addTag('health', 'Health check endpoints')
     .build();

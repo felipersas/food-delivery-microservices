@@ -4,10 +4,14 @@ import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { RestaurantModule } from './restaurant.module';
-import { scalarHtml } from '@app/shared';
+import { scalarHtml, UserContextMiddleware } from '@app/shared';
 
 async function bootstrap() {
   const app = await NestFactory.create(RestaurantModule);
+
+  // User context middleware - extracts user from gateway headers
+  app.use(UserContextMiddleware);
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -33,6 +37,16 @@ async function bootstrap() {
     .setTitle('Restaurant Service API')
     .setDescription('Restaurant management microservice for food delivery system')
     .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token obtained from Auth Service',
+      },
+      'JWT',
+    )
     .addTag('restaurants', 'Restaurant management endpoints')
     .addTag('health', 'Health check endpoints')
     .build();
