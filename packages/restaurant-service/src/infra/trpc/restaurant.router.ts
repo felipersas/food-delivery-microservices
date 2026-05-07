@@ -4,8 +4,6 @@ import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { GetMenuItemUseCase } from '../../application/use-cases/get-menu-item/get-menu-item.use-case';
 import { ListMenuItemsUseCase } from '../../application/use-cases/list-menu-items/list-menu-items.use-case';
-import type { GetMenuItemOutput } from '../../application/use-cases/get-menu-item/get-menu-item.dto';
-import type { ListMenuItemsOutput } from '../../application/use-cases/list-menu-items/list-menu-items.dto';
 
 const MenuItemOutputSchema = z.object({
   id: z.string().uuid(),
@@ -41,8 +39,10 @@ const RestaurantMenuItemsInputSchema = z.object({
 @Router({ alias: 'restaurant' })
 export class RestaurantRouter {
   constructor(
-    @Inject(GetMenuItemUseCase) private readonly getMenuItemUseCase: GetMenuItemUseCase,
-    @Inject(ListMenuItemsUseCase) private readonly listMenuItemsUseCase: ListMenuItemsUseCase,
+    @Inject(GetMenuItemUseCase)
+    private readonly getMenuItemUseCase: GetMenuItemUseCase,
+    @Inject(ListMenuItemsUseCase)
+    private readonly listMenuItemsUseCase: ListMenuItemsUseCase,
   ) {}
 
   /**

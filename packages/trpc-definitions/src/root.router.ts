@@ -1,5 +1,5 @@
-import { router } from './trpc.js';
-import { restaurantRouter } from './routers/restaurant.router.js';
+import { router } from './trpc';
+import { restaurantRouter } from './routers/restaurant.router';
 
 /**
  * Root tRPC router combining all service routers

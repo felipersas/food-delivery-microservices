@@ -1,17 +1,17 @@
 /**
  * Restaurant Router Contract
- * 
+ *
  * This file defines the tRPC API contract for Restaurant Service.
  * It provides:
  * - Schema validation with Zod
  * - Type-safe input/output definitions
  * - Procedure signatures for IDE auto-completion
- * 
+ *
  * NOTE: This is a contract specification package.
  * Actual implementations are provided by individual services.
  */
 import { z } from 'zod';
-import { router, publicProcedure } from '../trpc.js';
+import { router, publicProcedure } from '../trpc';
 
 const MenuItemOutputSchema = z.object({
   id: z.string().uuid(),
