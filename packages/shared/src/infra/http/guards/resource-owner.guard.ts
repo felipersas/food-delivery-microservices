@@ -1,7 +1,11 @@
-import { Injectable, type CanActivate, type ExecutionContext } from '@nestjs/common';
+import {
+  Injectable,
+  type CanActivate,
+  type ExecutionContext,
+} from '@nestjs/common';
 import { ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import type { UserContext } from '../../domain/user-context.vo';
+import type { UserContext } from '../../../domain/user-context.vo';
 
 /**
  * ResourceOwnerGuard decorator options
@@ -94,7 +98,10 @@ export class ResourceOwnerGuard implements CanActivate {
     );
   }
 
-  private extractOwnerId(request: any, options: ResourceOwnerGuardOptions): string | undefined {
+  private extractOwnerId(
+    request: any,
+    options: ResourceOwnerGuardOptions,
+  ): string | undefined {
     // Use custom extractor if provided
     if (options.extractOwnerId) {
       return options.extractOwnerId(request);

@@ -1,8 +1,24 @@
-import { Controller, Get, Put, Patch, Delete, Body, Param, UseGuards, Req } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../guards/jwt.guard';
-import { RolesGuard } from '../guards/roles.guard';
-import { Roles } from '../../../decorators/roles.decorator';
+import {
+  Controller,
+  Get,
+  Put,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiHeader,
+} from '@nestjs/swagger';
+import { JwtAuthGuard } from './guards/jwt.guard';
+import { RolesGuard } from './guards/roles.guard';
+import { Roles } from '../../decorators/roles.decorator';
 import { UserRoleEnum } from '@app/shared';
 import { GetCurrentUserUseCase } from '../../application/use-cases/get-current-user/get-current-user.use-case';
 import { UpdateUserUseCase } from '../../application/use-cases/update-user/update-user.use-case';

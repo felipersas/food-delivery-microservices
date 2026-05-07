@@ -1,8 +1,8 @@
 import { describe, test, expect } from 'bun:test';
 import { User } from '../../src/domain/aggregates/user.aggregate';
-import { UserRoleEnum } from '../../src/domain/value-objects/user-role.vo';
 import { UserStatusEnum } from '../../src/domain/value-objects/user-status.vo';
 import { DomainException } from '@app/shared';
+import { UserRoleEnum } from '@app/shared';
 
 describe('User Aggregate', () => {
   test('should create user with default customer role', async () => {

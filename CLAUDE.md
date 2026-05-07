@@ -197,6 +197,12 @@ Copy `.env.example` to `.env`. Key variables:
 
 ## Development Notes
 
+**CRITICAL: NEVER use .js file extensions in imports**
+- All imports must be extension-less (e.g., `from './file'` NOT `from './file.js'`)
+- Bun handles TypeScript files directly at runtime
+- This is a hard rule - do NOT add .js extensions to fix import errors
+- If you get "Cannot find module" errors, investigate the actual cause (file doesn't exist, wrong path, etc.)
+
 ### Test-Driven Development
 
 **MANDATORY**: Run tests after EVERY code change to ensure functionality remains intact.

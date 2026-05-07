@@ -26,7 +26,7 @@ async function bootstrap() {
           errors: messages,
         });
       },
-    ),
+    }),
   );
 
   const configService = app.get(ConfigService);

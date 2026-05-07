@@ -1,9 +1,10 @@
 import { Injectable, Inject, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import type { UserRepository } from '../../../../domain/repositories/user.repository.interface';
-import { User } from '../../../../domain/aggregates/user.aggregate';
-import { RefreshToken } from '../../../../domain/value-objects/refresh-token.vo';
-import { RefreshTokenDto, RefreshTokenOutput } from './refresh-token.dto';
+import type { UserRepository } from '@domain/repositories/user.repository.interface';
+import { User } from '@domain/aggregates/user.aggregate';
+import { RefreshToken } from '@domain/value-objects/refresh-token.vo';
+import { RefreshTokenDto } from './refresh-token.dto';
+import type { RefreshTokenOutput } from './refresh-token.dto';
 import { USER_REPOSITORY, JWT_SERVICE } from '../../../tokens';
 import type { JwtPayload } from '../login/login.use-case';
 
@@ -14,7 +15,10 @@ export class RefreshTokenUseCase {
     @Inject(JWT_SERVICE) private readonly jwtService: JwtService,
   ) {}
 
-  async execute(input: RefreshTokenDto, deviceId: string): Promise<RefreshTokenOutput> {
+  async execute(
+    input: RefreshTokenDto,
+    deviceId: string,
+  ): Promise<RefreshTokenOutput> {
     // Find user with this refresh token
     const users = await this.repo.findAll();
     let user: User | null = null;
@@ -22,7 +26,9 @@ export class RefreshTokenUseCase {
 
     for (const u of users) {
       const tokens = u.getRefreshTokens();
-      const found = tokens.find((t) => t.token === input.refreshToken && t.isValid());
+      const found = tokens.find(
+        (t) => t.token === input.refreshToken && t.isValid(),
+      );
       if (found) {
         user = u;
         matchingToken = found;
