@@ -1,5 +1,10 @@
 import { Module, type OnModuleInit } from '@nestjs/common';
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import {
+  APP_FILTER,
+  APP_GUARD,
+  APP_INTERCEPTOR,
+  Reflector,
+} from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -23,7 +28,11 @@ import { AuthEventPublisher } from './infra/messaging/rabbitmq/auth-event.publis
 import { AuthConsumer } from './infra/messaging/rabbitmq/auth.consumer';
 import { JwtStrategy } from './infra/http/guards/jwt.strategy';
 import { RabbitMQConnection } from '@app/messaging';
-import { AllExceptionsFilter, SuccessResponseInterceptor } from '@app/shared';
+import {
+  AllExceptionsFilter,
+  RolesGuard,
+  SuccessResponseInterceptor,
+} from '@app/shared';
 import { UserEntity } from './infra/database/typeorm/entities/user.entity';
 import { RefreshTokenEntity } from './infra/database/typeorm/entities/refresh-token.entity';
 import configuration from './config/configuration';
@@ -44,10 +53,12 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
       validationSchema,
       isGlobal: true,
     }),
-    ThrottlerModule.forRoot([{
-      ttl: 60000, // 1 minute
-      limit: 5, // 5 requests per minute
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 1 minute
+        limit: 5, // 5 requests per minute
+      },
+    ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -63,7 +74,9 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
       ? [
           TypeOrmModule.forRoot({
             type: 'postgres',
-            url: process.env.AUTH_DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5438/auth',
+            url:
+              process.env.AUTH_DATABASE_URL ??
+              'postgres://postgres:postgres@localhost:5438/auth',
             entities: [UserEntity, RefreshTokenEntity],
             synchronize: process.env.NODE_ENV !== 'production',
           }),
@@ -72,8 +85,14 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
   ],
   controllers: [AuthController, UserController, HealthController],
   providers: [
+    Reflector,
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_INTERCEPTOR, useClass: SuccessResponseInterceptor },
+    {
+      provide: APP_GUARD,
+      useFactory: (reflector: Reflector) => new RolesGuard(reflector),
+      inject: [Reflector],
+    },
     {
       provide: RABBITMQ_CONNECTION,
       useFactory: (config: ConfigService) =>

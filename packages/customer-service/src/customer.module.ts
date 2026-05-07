@@ -1,5 +1,10 @@
 import { Module, type OnModuleInit } from '@nestjs/common';
-import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
+import {
+  APP_FILTER,
+  APP_INTERCEPTOR,
+  APP_GUARD,
+  Reflector,
+} from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CustomerController } from './infra/http/customer.controller';
@@ -17,7 +22,11 @@ import { PostgresCustomerRepository } from './infra/database/typeorm/repositorie
 import { RabbitMQEventPublisher } from './infra/messaging/rabbitmq/customer-event.publisher';
 import { CustomerConsumer } from './infra/messaging/rabbitmq/customer.consumer';
 import { RabbitMQConnection } from '@app/messaging';
-import { AllExceptionsFilter, SuccessResponseInterceptor, RolesGuard } from '@app/shared';
+import {
+  AllExceptionsFilter,
+  SuccessResponseInterceptor,
+  RolesGuard,
+} from '@app/shared';
 import { CustomerEntity } from './infra/database/typeorm/entities/customer.entity';
 import configuration from './config/configuration';
 import { validationSchema } from './config/validation';
@@ -40,7 +49,9 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
       ? [
           TypeOrmModule.forRoot({
             type: 'postgres',
-            url: process.env.CUSTOMER_DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5436/customers',
+            url:
+              process.env.CUSTOMER_DATABASE_URL ??
+              'postgres://postgres:postgres@localhost:5436/customers',
             entities: [CustomerEntity],
             synchronize: process.env.NODE_ENV !== 'production',
           }),
@@ -49,6 +60,7 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
   ],
   controllers: [CustomerController, HealthController],
   providers: [
+    Reflector,
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,
@@ -59,7 +71,8 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
     },
     {
       provide: APP_GUARD,
-      useClass: RolesGuard,
+      useFactory: (reflector: Reflector) => new RolesGuard(reflector),
+      inject: [Reflector],
     },
     {
       provide: RABBITMQ_CONNECTION,
@@ -72,11 +85,14 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
     },
     {
       provide: CUSTOMER_REPOSITORY,
-      useClass: usePostgres ? PostgresCustomerRepository : InMemoryCustomerRepository,
+      useClass: usePostgres
+        ? PostgresCustomerRepository
+        : InMemoryCustomerRepository,
     },
     {
       provide: EVENT_PUBLISHER,
-      useFactory: (conn: RabbitMQConnection) => new RabbitMQEventPublisher(conn),
+      useFactory: (conn: RabbitMQConnection) =>
+        new RabbitMQEventPublisher(conn),
       inject: [RABBITMQ_CONNECTION],
     },
     CreateCustomerUseCase,
