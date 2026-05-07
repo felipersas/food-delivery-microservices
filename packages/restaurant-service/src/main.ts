@@ -4,21 +4,12 @@ import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { RestaurantModule } from './restaurant.module';
-import { scalarHtml } from '@app/shared';
+import { scalarHtml, userContextMiddleware } from '@app/shared';
 
 async function bootstrap() {
   const app = await NestFactory.create(RestaurantModule);
 
-  // User context middleware - extracts user from gateway headers
-  app.use((req: any, _res: any, next: any) => {
-    const userId = req.headers['x-user-id'] as string | undefined;
-    const userEmail = req.headers['x-user-email'] as string | undefined;
-    const userRole = req.headers['x-user-role'] as string | undefined;
-    if (userId) {
-      req.user = { id: userId, email: userEmail, role: userRole };
-    }
-    next();
-  });
+  app.use(userContextMiddleware);
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -43,7 +34,9 @@ async function bootstrap() {
   // OpenAPI Configuration
   const config = new DocumentBuilder()
     .setTitle('Restaurant Service API')
-    .setDescription('Restaurant management microservice for food delivery system')
+    .setDescription(
+      'Restaurant management microservice for food delivery system',
+    )
     .setVersion('1.0')
     .addBearerAuth(
       {
@@ -69,9 +62,9 @@ async function bootstrap() {
   // Scalar UI endpoint using middleware
   app.use('/api', (req: any, res: any, next: any) => {
     if (req.method === 'GET' && req.url === '/') {
-      res.set('Content-Type', 'text/html').send(
-        scalarHtml('/api/docs-json', 'Restaurant Service API'),
-      );
+      res
+        .set('Content-Type', 'text/html')
+        .send(scalarHtml('/api/docs-json', 'Restaurant Service API'));
     } else {
       next();
     }
@@ -79,13 +72,19 @@ async function bootstrap() {
 
   await app.listen(port);
   console.log(`[RestaurantService] Running on port ${port}`);
-  console.log(`[RestaurantService] Swagger UI: http://localhost:${port}/api/docs`);
+  console.log(
+    `[RestaurantService] Swagger UI: http://localhost:${port}/api/docs`,
+  );
   console.log(`[RestaurantService] Scalar UI: http://localhost:${port}/api`);
-  console.log(`[RestaurantService] OpenAPI JSON: http://localhost:${port}/api/docs-json`);
+  console.log(
+    `[RestaurantService] OpenAPI JSON: http://localhost:${port}/api/docs-json`,
+  );
 
   // Graceful shutdown
   const shutdown = async (signal: string) => {
-    console.log(`[RestaurantService] Received ${signal}, shutting down gracefully...`);
+    console.log(
+      `[RestaurantService] Received ${signal}, shutting down gracefully...`,
+    );
     await app.close();
     console.log('[RestaurantService] Shutdown complete');
     process.exit(0);

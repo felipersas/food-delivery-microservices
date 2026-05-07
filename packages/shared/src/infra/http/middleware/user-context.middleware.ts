@@ -58,3 +58,18 @@ declare global {
     }
   }
 }
+
+/**
+ * Factory function to create middleware instance
+ * Use this in main.ts: app.use(createUserContextMiddleware())
+ */
+export function createUserContextMiddleware() {
+  const middleware = new UserContextMiddleware();
+  return (req: Request, res: Response, next: NextFunction) => middleware.use(req, res, next);
+}
+
+/**
+ * Default middleware instance for direct use
+ * Use this in main.ts: app.use(userContextMiddleware)
+ */
+export const userContextMiddleware = createUserContextMiddleware();

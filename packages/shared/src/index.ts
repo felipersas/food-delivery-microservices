@@ -80,7 +80,11 @@ export {
   RESOURCE_OWNER_GUARD_OPTIONS,
   type ResourceOwnerGuardOptions,
 } from './infra/http/guards/resource-owner.guard';
-export { UserContextMiddleware } from './infra/http/middleware/user-context.middleware';
+export {
+  UserContextMiddleware,
+  userContextMiddleware,
+  createUserContextMiddleware,
+} from './infra/http/middleware/user-context.middleware';
 
 // Messaging
 export type { EventPublisher } from './infra/messaging/event-publisher';

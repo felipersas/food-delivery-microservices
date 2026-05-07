@@ -5,25 +5,29 @@ import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import type { Request, Response, NextFunction } from 'express';
 import { CartModule } from './cart.module';
-import { scalarHtml } from '@app/shared';
+import { scalarHtml, userContextMiddleware } from '@app/shared';
 
 async function bootstrap() {
   const app = await NestFactory.create(CartModule);
 
-  app.useGlobalPipes(new ValidationPipe({
-    transform: true,
-    whitelist: true,
-    exceptionFactory: (errors) => {
-      const messages = errors.map((err) => ({
-        field: err.property,
-        constraints: Object.values(err.constraints || {}),
-      }));
-      return new BadRequestException({
-        message: 'Validation failed',
-        errors: messages,
-      });
-    },
-  }));
+  app.use(userContextMiddleware);
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      exceptionFactory: (errors) => {
+        const messages = errors.map((err) => ({
+          field: err.property,
+          constraints: Object.values(err.constraints || {}),
+        }));
+        return new BadRequestException({
+          message: 'Validation failed',
+          errors: messages,
+        });
+      },
+    }),
+  );
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('port') ?? 3009;
@@ -32,17 +36,24 @@ async function bootstrap() {
     .setTitle('Cart Service API')
     .setDescription('Shopping cart management microservice')
     .setVersion('1.0')
-    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'JWT')
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'JWT',
+    )
     .addTag('carts')
     .addTag('health')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document, { customSiteTitle: 'Cart Service API' });
+  SwaggerModule.setup('api/docs', app, document, {
+    customSiteTitle: 'Cart Service API',
+  });
 
   app.use('/api', (req: Request, res: Response, next: NextFunction) => {
     if (req.method === 'GET' && req.url === '/') {
-      res.set('Content-Type', 'text/html').send(scalarHtml('/api/docs-json', 'Cart Service API'));
+      res
+        .set('Content-Type', 'text/html')
+        .send(scalarHtml('/api/docs-json', 'Cart Service API'));
     } else {
       next();
     }

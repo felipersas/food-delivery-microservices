@@ -44,12 +44,12 @@ export class AuthInterceptor implements NestInterceptor {
     }
 
     const request = context.switchToHttp().getRequest();
-    const authHeader = request.headers?.authorization;
-
+    // Headers in NestJS/Express are typically lowercase, but check both cases
+    const authHeader = request.headers?.authorization || request.headers?.Authorization;
     const token = extractJwtFromHeader(authHeader);
 
     if (!token) {
-      throw new UnauthorizedException('Missing authorization token');
+      throw new UnauthorizedException('Missing or invalid authorization token. Format: "Bearer <token>"');
     }
 
     // Validate JWT and extract user context

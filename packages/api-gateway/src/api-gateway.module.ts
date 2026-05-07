@@ -13,6 +13,7 @@ import { PaymentsController } from './infra/http/controllers/payments.controller
 import { CustomersController } from './infra/http/controllers/customers.controller';
 import { AuthController } from './infra/http/controllers/auth.controller';
 import { CartsController } from './infra/http/controllers/carts.controller';
+import { RestaurantsController } from './infra/http/controllers/restaurants.controller';
 
 import { JwtValidator } from './infra/auth/jwt.validator';
 import { AuthProxyStrategy } from './infra/auth/auth-proxy.strategy';
@@ -70,6 +71,7 @@ const CART_SERVICE_URL_VALUE =
     CustomersController,
     AuthController,
     CartsController,
+    RestaurantsController,
   ],
   providers: [
     HttpProxyStrategy,

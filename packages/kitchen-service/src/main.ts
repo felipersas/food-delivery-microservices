@@ -4,13 +4,13 @@ import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { KitchenModule } from './kitchen.module';
-import { scalarHtml, UserContextMiddleware } from '@app/shared';
+import { scalarHtml, userContextMiddleware } from '@app/shared';
 
 async function bootstrap() {
   const app = await NestFactory.create(KitchenModule);
 
   // User context middleware - extracts user from gateway headers
-  app.use(UserContextMiddleware);
+  app.use(userContextMiddleware);
 
   app.useGlobalPipes(
     new ValidationPipe({
