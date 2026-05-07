@@ -1,23 +1,22 @@
-import { ValueObject, Money, DomainException } from '@app/shared';
+import { ValueObject, DomainException } from '@app/shared';
 
-export interface OrderItemProps {
+export interface KitchenTicketItemProps {
   productId: string;
   productName: string;
   quantity: number;
-  unitPrice: Money;
 }
 
-export class OrderItem extends ValueObject<OrderItemProps> {
-  private constructor(props: OrderItemProps) {
+export class KitchenTicketItem extends ValueObject<KitchenTicketItemProps> {
+  private constructor(props: KitchenTicketItemProps) {
     super(props);
   }
 
-  static create(props: OrderItemProps): OrderItem {
-    OrderItem.validate(props);
-    return new OrderItem(props);
+  static create(props: KitchenTicketItemProps): KitchenTicketItem {
+    KitchenTicketItem.validate(props);
+    return new KitchenTicketItem(props);
   }
 
-  private static validate(props: OrderItemProps): void {
+  private static validate(props: KitchenTicketItemProps): void {
     if (!props.productId || props.productId.trim().length === 0) {
       throw new DomainException('Product ID is required');
     }
@@ -29,12 +28,6 @@ export class OrderItem extends ValueObject<OrderItemProps> {
     }
     if (props.quantity > 99) {
       throw new DomainException('Quantity cannot exceed 99');
-    }
-    if (!props.unitPrice) {
-      throw new DomainException('Unit price is required');
-    }
-    if (props.unitPrice.isZero()) {
-      throw new DomainException('Unit price must be greater than zero');
     }
   }
 
@@ -50,11 +43,11 @@ export class OrderItem extends ValueObject<OrderItemProps> {
     return this.props.quantity;
   }
 
-  get unitPrice(): Money {
-    return this.props.unitPrice;
-  }
-
-  getTotal(): Money {
-    return Money.BRL(this.props.unitPrice.amount * this.props.quantity);
+  toPlain(): { productId: string; productName: string; quantity: number } {
+    return {
+      productId: this.props.productId,
+      productName: this.props.productName,
+      quantity: this.props.quantity,
+    };
   }
 }

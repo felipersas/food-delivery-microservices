@@ -49,8 +49,8 @@ export class Order extends AggregateRoot<string> {
       paymentMethodIndex: props.paymentMethodIndex,
       paymentMethodType: props.paymentMethodType,
     });
-    (order as any).status = new OrderStatus(props.status);
-    (order as any).totalAmount = props.totalAmount;
+    order.setRawState('status', new OrderStatus(props.status));
+    order.setRawState('totalAmount', props.totalAmount);
     for (let i = 0; i < props.version; i++) {
       order.incrementVersion();
     }
@@ -101,6 +101,10 @@ export class Order extends AggregateRoot<string> {
   }
 
   confirm(): void {
+
+    if (this.paymentMethodIndex === undefined || this.paymentMethodIndex === null || !this.paymentMethodType) {
+      throw new DomainException('Order cannot be confirmed without payment method');
+    }
     this.transitionTo(OrderStatus.confirmed());
     this.addDomainEvent({
       eventId: uuidv4(),

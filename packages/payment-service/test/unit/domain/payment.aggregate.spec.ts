@@ -5,6 +5,7 @@ import { Payment, PaymentStatus, PaymentMethod } from '@domain/aggregates/paymen
 describe('Payment Aggregate', () => {
   function makePayment(): Payment {
     return new Payment({
+    paymentMethodToken: 'tok_1234',
       orderId: 'order-1',
       amount: Money.BRL(50),
       method: PaymentMethod.PIX,

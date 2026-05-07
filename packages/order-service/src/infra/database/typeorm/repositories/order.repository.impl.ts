@@ -49,7 +49,7 @@ export class PostgresOrderRepository implements OrderRepository {
   private toDomain(entity: OrderEntity): Order {
     const items = entity.items.map(
       (item) =>
-        new OrderItem({
+        OrderItem.create({
           productId: item.productId,
           productName: item.productName,
           quantity: item.quantity,
