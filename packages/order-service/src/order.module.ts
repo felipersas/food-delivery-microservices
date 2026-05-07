@@ -6,6 +6,7 @@ import { OrderController } from './infra/http/order.controller';
 import { HealthController } from './infra/http/health.controller';
 import { CreateOrderUseCase } from './application/use-cases/create-order/create-order.use-case';
 import { GetOrderUseCase } from './application/use-cases/get-order/get-order.use-case';
+import { ListOrdersUseCase } from './application/use-cases/list-orders/list-orders.use-case';
 import { InMemoryOrderRepository } from './infra/database/memory/order.repository';
 import { PostgresOrderRepository } from './infra/database/typeorm/repositories/order.repository.impl';
 import { RabbitMQEventPublisher } from './infra/messaging/rabbitmq/order-event.publisher';
@@ -80,6 +81,7 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
     },
     CreateOrderUseCase,
     GetOrderUseCase,
+    ListOrdersUseCase,
     OrderConsumer,
     CartConsumer,
     CreateOrderFromCartUseCase,
