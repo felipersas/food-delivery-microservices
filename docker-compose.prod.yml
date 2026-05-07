@@ -13,10 +13,9 @@ services:
   api-gateway:
     build:
       context: .
-    dockerfile: Dockerfile
-    args:
-      SERVICE_NAME:packages/api-gateway
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: packages/api-gateway
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -46,10 +45,9 @@ services:
   order-service:
     build:
       context: .
-    dockerfile: Dockerfile
-    args:
-      SERVICE_NAME:packages/order-service
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: packages/order-service
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -76,10 +74,9 @@ services:
   kitchen-service:
     build:
       context: .
-    dockerfile: Dockerfile
-    args:
-      SERVICE_NAME:packages/kitchen-service
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: packages/kitchen-service
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -110,10 +107,9 @@ services:
   payment-service:
     build:
       context: .
-    dockerfile: Dockerfile
-    args:
-      SERVICE_NAME:packages/payment-service
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: packages/payment-service
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -140,10 +136,9 @@ services:
   notification-service:
     build:
       context: .
-    dockerfile: Dockerfile
-    args:
-      SERVICE_NAME:packages/notification-service
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: packages/notification-service
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -166,10 +161,9 @@ services:
   analytics-service:
     build:
       context: .
-    dockerfile: Dockerfile
-    args:
-      SERVICE_NAME:packages/analytics-service
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: packages/analytics-service
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -192,10 +186,9 @@ services:
   customer-service:
     build:
       context: .
-    dockerfile: Dockerfile
-    args:
-      SERVICE_NAME:packages/customer-service
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: packages/customer-service
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -222,10 +215,9 @@ services:
   restaurant-service:
     build:
       context: .
-    dockerfile: Dockerfile
-    args:
-      SERVICE_NAME:packages/restaurant-service
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: packages/restaurant-service
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -252,10 +244,9 @@ services:
   auth-service:
     build:
       context: .
-    dockerfile: Dockerfile
-    args:
-      SERVICE_NAME:packages/auth-service
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: packages/auth-service
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -287,8 +278,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        SERVICE_NAME:packages/cart-service
-      dockerfile: Dockerfile
+        SERVICE_NAME: packages/cart-service
     restart: unless-stopped
     environment:
       NODE_ENV: production
