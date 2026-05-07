@@ -1,7 +1,7 @@
 import { Module, type OnModuleInit } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD, Reflector } from '@nestjs/core';
 import { validationSchema } from './config/validation';
 import configuration from './config/configuration';
 import {
@@ -62,9 +62,14 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
   ],
   controllers: [CartController, HealthController],
   providers: [
+    Reflector,
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_INTERCEPTOR, useClass: SuccessResponseInterceptor },
-    { provide: APP_GUARD, useClass: RolesGuard },
+    {
+      provide: APP_GUARD,
+      useFactory: (reflector: Reflector) => new RolesGuard(reflector),
+      inject: [Reflector],
+    },
     {
       provide: RABBITMQ_CONNECTION,
       useFactory: (configService: ConfigService) => {

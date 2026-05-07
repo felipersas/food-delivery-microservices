@@ -1,8 +1,12 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
-import type { UserRepository } from '../../../../domain/repositories/user.repository.interface';
-import type { EventPublisher } from '@app/messaging';
-import { UserStatus, UserStatusEnum } from '../../../../domain/value-objects/user-status.vo';
-import { ChangeStatusDto, ChangeStatusOutput } from './change-status.dto';
+import type { UserRepository } from '@domain/repositories/user.repository.interface';
+import type { EventPublisher } from '@app/shared';
+import {
+  UserStatus,
+  UserStatusEnum,
+} from '@domain/value-objects/user-status.vo';
+import { ChangeStatusDto } from './change-status.dto';
+import type { ChangeStatusOutput } from './change-status.dto';
 import { USER_REPOSITORY, EVENT_PUBLISHER } from '../../../tokens';
 
 @Injectable()
@@ -12,7 +16,10 @@ export class ChangeStatusUseCase {
     @Inject(EVENT_PUBLISHER) private readonly publisher: EventPublisher,
   ) {}
 
-  async execute(userId: string, input: ChangeStatusDto): Promise<ChangeStatusOutput> {
+  async execute(
+    userId: string,
+    input: ChangeStatusDto,
+  ): Promise<ChangeStatusOutput> {
     const user = await this.repo.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');

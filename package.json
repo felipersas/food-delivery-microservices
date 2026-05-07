@@ -9,6 +9,8 @@
   "scripts": {
     "test": "bun test",
     "test:e2e": "bun test test/e2e",
+    "test:integration": "bun test 'packages/*/test/integration/**/*.spec.ts'",
+    "test:integration:order": "bun test --cwd packages/order-service test/integration",
     "test:shared": "bun test --cwd packages/shared",
     "test:order": "bun test --cwd packages/order-service",
     "test:kitchen": "bun test --cwd packages/kitchen-service test/unit",
@@ -36,16 +38,20 @@
     "docker:dev:down": "docker compose -f docker-compose.infra.yml -f docker-compose.db.yml -f docker-compose.dev.yml down",
     "docker:prod": "docker compose -f docker-compose.infra.yml -f docker-compose.db.yml -f docker-compose.prod.yml up -d --build",
     "docker:prod:down": "docker compose -f docker-compose.infra.yml -f docker-compose.db.yml -f docker-compose.prod.yml down",
-    "dev": "bun run dev:infra && bun run dev:customer & bun run dev:order & bun run dev:kitchen & bun run dev:payment & bun run dev:notification & bun run dev:analytics & sleep 3 && bun run dev:gateway",
+    "dev": "bun run dev:infra && bun run dev:customer & bun run dev:order & bun run dev:restaurant & bun run dev:cart & bun run dev:auth & bun run dev:kitchen & bun run dev:payment & bun run dev:notification & bun run dev:analytics & sleep 3 && bun run dev:gateway",
     "stop": "pkill -f 'bun.*src/main.ts' && bun run dev:infra:down",
     "lint": "eslint \"packages/*/src/**/*.ts\" --fix",
     "format": "prettier --write \"packages/*/src/**/*.ts\" \"packages/*/test/**/*.ts\""
   },
   "devDependencies": {
     "@nestjs/swagger": "^11.4.2",
+    "@testcontainers/postgresql": "^10.14.0",
+    "@testcontainers/rabbitmq": "^10.14.0",
+    "@testcontainers/redis": "^10.14.0",
     "@types/bun": "^1.1.13",
     "@types/ioredis": "^5.0.0",
     "@types/joi": "^17.2.3",
+    "@types/pg": "^8.20.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^8.0.0",
@@ -53,9 +59,11 @@
     "eslint-plugin-prettier": "^5.0.0",
     "joi": "^18.2.1",
     "prettier": "^3.0.0",
+    "testcontainers": "^10.14.0",
     "typescript": "^5.1.3"
   },
   "dependencies": {
-    "ioredis": "^5.10.1"
+    "ioredis": "^5.10.1",
+    "reflect-metadata": "^0.2.2"
   }
 }

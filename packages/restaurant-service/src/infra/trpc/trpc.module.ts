@@ -7,7 +7,7 @@ import { TrpcErrorHandler } from './trpc.error-handler';
  * tRPC Module for Restaurant Service
  *
  * This module sets up the tRPC server using nestjs-trpc adapter.
- * Exposes RestaurantRouter procedures to other microservices.
+ * The RestaurantRouter is provided by RestaurantModule.
  *
  * Architecture:
  * - Decorator-based router with @Router(), @Query(), @Mutation()

@@ -1,9 +1,9 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Cart } from '../../../domain/aggregates/cart.aggregate';
 import type { CartRepository } from '../../../domain/repositories/cart.repository.interface';
-import type { EventPublisher } from '../../../infra/messaging/rabbitmq/cart-event.publisher';
+import type { EventPublisher } from '@app/shared';
 import type { RemoveItemInput, RemoveItemOutput } from './remove-item.dto';
-import { CART_REPOSITORY, EVENT_PUBLISHER } from '../../../tokens';
+import { CART_REPOSITORY, EVENT_PUBLISHER } from '@tokens/tokens';
 
 @Injectable()
 export class RemoveItemUseCase {
@@ -13,7 +13,9 @@ export class RemoveItemUseCase {
   ) {}
 
   async execute(input: RemoveItemInput): Promise<RemoveItemOutput> {
-    let cart = await this.cartRepository.findActiveByCustomerId(input.customerId);
+    let cart = await this.cartRepository.findActiveByCustomerId(
+      input.customerId,
+    );
 
     if (!cart) {
       cart = Cart.create(input.customerId);

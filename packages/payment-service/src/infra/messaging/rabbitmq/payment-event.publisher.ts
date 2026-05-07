@@ -1,9 +1,6 @@
 import type { DomainEvent } from '@app/shared';
 import type { RabbitMQConnection } from '@app/messaging';
-
-export interface EventPublisher {
-  publishAll(events: ReadonlyArray<DomainEvent>): Promise<void>;
-}
+import type { EventPublisher } from '@app/shared';
 
 export class RabbitMQEventPublisher implements EventPublisher {
   constructor(private readonly connection: RabbitMQConnection) {}

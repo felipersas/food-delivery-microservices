@@ -1,4 +1,5 @@
 import { AggregateRoot, InvalidStateException } from '@app/shared';
+import { KitchenTicketItem } from '../value-objects/kitchen-ticket-item.vo';
 import { v4 as uuidv4 } from 'uuid';
 
 export enum KitchenTicketStatus {
@@ -10,11 +11,7 @@ export enum KitchenTicketStatus {
 export class KitchenTicket extends AggregateRoot<string> {
   private orderId: string;
   private restaurantId: string;
-  private items: Array<{
-    productId: string;
-    productName: string;
-    quantity: number;
-  }>;
+  private items: KitchenTicketItem[];
   private status: KitchenTicketStatus;
   private createdAt: Date;
   private updatedAt: Date;
@@ -23,7 +20,7 @@ export class KitchenTicket extends AggregateRoot<string> {
     id?: string;
     orderId: string;
     restaurantId: string;
-    items: Array<{ productId: string; productName: string; quantity: number }>;
+    items: KitchenTicketItem[];
   }) {
     super(props.id ?? uuidv4());
     this.orderId = props.orderId;
@@ -39,7 +36,18 @@ export class KitchenTicket extends AggregateRoot<string> {
     restaurantId: string;
     items: Array<{ productId: string; productName: string; quantity: number }>;
   }): KitchenTicket {
-    return new KitchenTicket(data);
+    const items = data.items.map((item) =>
+      KitchenTicketItem.create({
+        productId: item.productId,
+        productName: item.productName,
+        quantity: item.quantity,
+      }),
+    );
+    return new KitchenTicket({
+      orderId: data.orderId,
+      restaurantId: data.restaurantId,
+      items,
+    });
   }
 
   static reconstitute(props: {
@@ -52,15 +60,22 @@ export class KitchenTicket extends AggregateRoot<string> {
     createdAt: Date;
     updatedAt: Date;
   }): KitchenTicket {
+    const items = props.items.map((item) =>
+      KitchenTicketItem.create({
+        productId: item.productId,
+        productName: item.productName,
+        quantity: item.quantity,
+      }),
+    );
     const ticket = new KitchenTicket({
       id: props.id,
       orderId: props.orderId,
       restaurantId: props.restaurantId,
-      items: props.items,
+      items,
     });
-    (ticket as any).status = props.status;
-    (ticket as any).createdAt = props.createdAt;
-    (ticket as any).updatedAt = props.updatedAt;
+    ticket.setRawState('status', props.status);
+    ticket.setRawState('createdAt', props.createdAt);
+    ticket.setRawState('updatedAt', props.updatedAt);
     for (let i = 0; i < props.version; i++) {
       ticket.incrementVersion();
     }
@@ -116,7 +131,7 @@ export class KitchenTicket extends AggregateRoot<string> {
     productName: string;
     quantity: number;
   }> {
-    return [...this.items];
+    return this.items.map((item) => item.toPlain());
   }
 
   getCreatedAt(): Date {

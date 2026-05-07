@@ -15,19 +15,9 @@ export interface CheckoutCartInput {
   paymentMethodType?: PaymentMethodType;
 }
 
-export interface CheckoutOrderItem {
-  productId: string;
-  productName: string;
-  quantity: number;
-  priceCents: number;
-}
-
 export interface CheckoutCartOutput {
   cartId: string;
-  orderId: string;
   restaurantId: string;
-  items: CheckoutOrderItem[];
   totalAmountCents: number;
-  paymentMethodIndex?: number;
-  paymentMethodType?: string;
+  message: string;
 }

@@ -1,5 +1,5 @@
 import { Module, type OnModuleInit } from '@nestjs/common';
-import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD, Reflector } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RestaurantController } from './infra/http/restaurant.controller';
@@ -19,6 +19,7 @@ import { PostgresMenuItemRepository } from './infra/database/typeorm/repositorie
 import { RabbitMQEventPublisher } from './infra/messaging/rabbitmq/restaurant-event.publisher';
 import { RestaurantConsumer } from './infra/messaging/rabbitmq/restaurant.consumer';
 import { TrpcModule } from './infra/trpc/trpc.module';
+import { RestaurantRouter } from './infra/trpc/restaurant.router';
 import { RabbitMQConnection } from '@app/messaging';
 import {
   AllExceptionsFilter,
@@ -64,7 +65,12 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_INTERCEPTOR, useClass: SuccessResponseInterceptor },
-    { provide: APP_GUARD, useClass: RolesGuard },
+    {
+      provide: APP_GUARD,
+      useFactory: (reflector: Reflector) => new RolesGuard(reflector),
+      inject: [Reflector],
+    },
+    Reflector,
     {
       provide: RABBITMQ_CONNECTION,
       useFactory: (configService: ConfigService) =>
@@ -101,6 +107,7 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
     UpdateMenuItemUseCase,
     DeleteMenuItemUseCase,
     RestaurantConsumer,
+    RestaurantRouter,
   ],
 })
 export class RestaurantModule implements OnModuleInit {

@@ -104,7 +104,7 @@ export class Cart extends AggregateRoot<string> {
     });
 
     // Set actual status after construction (reconstitution pattern)
-    (cart as any).status = CartStatus.fromString(props.status);
+    cart.setRawState('status', CartStatus.fromString(props.status));
 
     for (let i = 0; i < props.version; i++) {
       cart.incrementVersion();
@@ -139,6 +139,11 @@ export class Cart extends AggregateRoot<string> {
     }
 
     this.totalAmount = this.calculateTotal();
+
+    // Max cart value: R$ 10,000
+    if (this.totalAmount.cents > 1_000_000) {
+      throw new DomainException('Cart total cannot exceed R$ 10,000');
+    }
     this.markAsUpdated();
 
     this.addDomainEvent({

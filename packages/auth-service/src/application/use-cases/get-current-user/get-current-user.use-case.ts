@@ -1,13 +1,11 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
-import type { UserRepository } from '../../../../domain/repositories/user.repository.interface';
-import { GetCurrentUserOutput } from './get-current-user.dto';
-import { USER_REPOSITORY } from '../../../tokens';
+import type { UserRepository } from '@domain/repositories/user.repository.interface';
+import type { GetCurrentUserOutput } from './get-current-user.dto';
+import { USER_REPOSITORY } from '@tokens/tokens';
 
 @Injectable()
 export class GetCurrentUserUseCase {
-  constructor(
-    @Inject(USER_REPOSITORY) private readonly repo: UserRepository,
-  ) {}
+  constructor(@Inject(USER_REPOSITORY) private readonly repo: UserRepository) {}
 
   async execute(userId: string): Promise<GetCurrentUserOutput> {
     const user = await this.repo.findById(userId);

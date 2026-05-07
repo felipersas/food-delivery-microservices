@@ -1,13 +1,12 @@
 import { Injectable, Inject } from '@nestjs/common';
-import type { DomainEvent } from '@app/shared';
 import { KitchenTicket } from '@domain/aggregates/kitchen-ticket.aggregate';
 import type { KitchenTicketRepository } from '@domain/repositories/kitchen-ticket.repository.interface';
 import type {
   CreateKitchenTicketInput,
   CreateKitchenTicketOutput,
 } from '@application/dto/create-kitchen-ticket.dto';
-import type { EventPublisher } from '@infra/messaging/rabbitmq/kitchen-event.publisher';
 import { EVENT_PUBLISHER } from '../../../tokens';
+import type { EventPublisher } from '@app/shared';
 
 @Injectable()
 export class CreateKitchenTicketUseCase {

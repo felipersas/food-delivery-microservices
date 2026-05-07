@@ -74,7 +74,7 @@ export class Payment extends AggregateRoot<string> {
       refundedAmount: props.refundedAmount,
       processedRefundIds: props.processedRefundIds,
     });
-    (payment as any).status = props.status;
+    payment.setRawState('status', props.status);
     for (let i = 0; i < props.version; i++) {
       payment.incrementVersion();
     }
@@ -84,6 +84,9 @@ export class Payment extends AggregateRoot<string> {
   confirm(): void {
     if (this.status !== PaymentStatus.PENDING) {
       throw new InvalidStateException(`Cannot confirm payment in ${this.status} status`);
+    }
+    if (!this.paymentMethodToken) {
+      throw new InvalidStateException('Cannot confirm payment without payment method token');
     }
     this.status = PaymentStatus.CONFIRMED;
     this.incrementVersion();

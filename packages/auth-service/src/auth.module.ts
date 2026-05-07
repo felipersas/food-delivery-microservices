@@ -3,7 +3,7 @@ import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './infra/http/auth.controller';
 import { UserController } from './infra/http/user.controller';
@@ -24,7 +24,8 @@ import { AuthConsumer } from './infra/messaging/rabbitmq/auth.consumer';
 import { JwtStrategy } from './infra/http/guards/jwt.strategy';
 import { RabbitMQConnection } from '@app/messaging';
 import { AllExceptionsFilter, SuccessResponseInterceptor } from '@app/shared';
-import { UserEntity, RefreshTokenEntity } from './infra/database/typeorm/entities';
+import { UserEntity } from './infra/database/typeorm/entities/user.entity';
+import { RefreshTokenEntity } from './infra/database/typeorm/entities/refresh-token.entity';
 import configuration from './config/configuration';
 import { validationSchema } from './config/validation';
 import {
@@ -93,7 +94,7 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
     },
     {
       provide: JWT_SERVICE,
-      useExisting: JwtModule,
+      useClass: JwtService,
     },
     JwtStrategy,
     RegisterUseCase,

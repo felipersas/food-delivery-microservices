@@ -4,8 +4,8 @@ import { ConfigService } from '@nestjs/config';
 import { Redis } from 'ioredis';
 import { Money, ResourceNotFoundException, DomainException } from '@app/shared';
 import { TRPCClientError } from '@trpc/client';
-import type { RestaurantServiceClient } from '../../infra/trpc/restaurant-service.client';
-import { RESTAURANT_SERVICE_CLIENT } from '../../tokens';
+import type { RestaurantServiceClient } from '@infra/trpc/restaurant-service.client';
+import { RESTAURANT_SERVICE_CLIENT } from '@tokens/tokens';
 import { REDIS_CLIENT } from '../../config/redis.config';
 
 interface CachedMenuItem {
@@ -208,9 +208,7 @@ export class PriceCacheService implements OnModuleDestroy {
         if (error.shape?.code === -32004 || error.shape?.code === -32600) {
           throw new ResourceNotFoundException('MenuItem', itemId);
         }
-        throw new DomainException(
-          `Restaurant Service error: ${error.message}`,
-        );
+        throw new DomainException(`Restaurant Service error: ${error.message}`);
       }
       throw new DomainException(
         'Failed to fetch menu item from Restaurant Service',

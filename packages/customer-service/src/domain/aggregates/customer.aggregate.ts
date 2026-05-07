@@ -74,7 +74,7 @@ export class Customer extends AggregateRoot<string> {
       createdAt: props.createdAt,
       updatedAt: props.updatedAt,
     });
-    (customer as any).status = new CustomerStatus(props.status);
+    customer.setRawState('status', new CustomerStatus(props.status));
     for (let i = 0; i < props.version; i++) {
       customer.incrementVersion();
     }

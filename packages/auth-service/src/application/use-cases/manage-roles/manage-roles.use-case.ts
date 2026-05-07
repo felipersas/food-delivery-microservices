@@ -1,8 +1,7 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
-import type { UserRepository } from '../../../../domain/repositories/user.repository.interface';
-import type { EventPublisher } from '@app/messaging';
-import { UserRoleEnum } from '@app/shared';
-import { ManageRolesDto, ManageRolesOutput } from './manage-roles.dto';
+import type { UserRepository } from '../../../domain/repositories/user.repository.interface';
+import type { EventPublisher } from '@app/shared';
+import { ManageRolesDto, type ManageRolesOutput } from './manage-roles.dto';
 import { USER_REPOSITORY, EVENT_PUBLISHER } from '../../../tokens';
 
 @Injectable()
@@ -12,7 +11,10 @@ export class ManageRolesUseCase {
     @Inject(EVENT_PUBLISHER) private readonly publisher: EventPublisher,
   ) {}
 
-  async execute(userId: string, input: ManageRolesDto): Promise<ManageRolesOutput> {
+  async execute(
+    userId: string,
+    input: ManageRolesDto,
+  ): Promise<ManageRolesOutput> {
     const user = await this.repo.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');

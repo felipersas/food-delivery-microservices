@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import type { CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { UserRoleEnum } from '../../types/user-roles';
-import type { UserContext } from '../../domain/user-context.vo';
+import { UserRoleEnum } from '../../../types/user-roles';
+import type { UserContext } from '../../../domain/user-context.vo';
 
 /**
  * RolesGuard for microservices
@@ -25,10 +25,10 @@ export class RolesGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     // Get required roles from decorator
-    const requiredRoles = this.reflector.getAllAndOverride<UserRoleEnum[]>('roles', [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const requiredRoles = this.reflector.getAllAndOverride<UserRoleEnum[]>(
+      'roles',
+      [context.getHandler(), context.getClass()],
+    );
 
     // No roles required = public route within service
     if (!requiredRoles || requiredRoles.length === 0) {

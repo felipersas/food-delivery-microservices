@@ -93,7 +93,7 @@ export class Restaurant extends AggregateRoot<string> {
       createdAt: props.createdAt,
       updatedAt: props.updatedAt,
     });
-    (restaurant as any).status = RestaurantStatus.fromString(props.status);
+    restaurant.setRawState('status', RestaurantStatus.fromString(props.status));
     for (let i = 0; i < props.version; i++) {
       restaurant.incrementVersion();
     }

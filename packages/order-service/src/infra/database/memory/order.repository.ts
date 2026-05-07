@@ -8,6 +8,12 @@ export class InMemoryOrderRepository implements OrderRepository {
     return this.orders.get(id) ?? null;
   }
 
+  async findByCustomerId(customerId: string): Promise<Order[]> {
+    return Array.from(this.orders.values()).filter(
+      (order) => order.getCustomerId() === customerId,
+    );
+  }
+
   async save(aggregate: Order): Promise<void> {
     this.orders.set(aggregate.getId(), aggregate);
   }

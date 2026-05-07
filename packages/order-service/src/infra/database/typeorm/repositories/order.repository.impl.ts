@@ -20,6 +20,16 @@ export class PostgresOrderRepository implements OrderRepository {
     return this.toDomain(entity);
   }
 
+  async findByCustomerId(customerId: string): Promise<Order[]> {
+    const repo = this.dataSource.getRepository(OrderEntity);
+    const entities = await repo.find({
+      where: { customerId },
+      order: { createdAt: 'DESC' },
+    });
+
+    return entities.map((entity) => this.toDomain(entity));
+  }
+
   async save(order: Order): Promise<void> {
     const repo = this.dataSource.getRepository(OrderEntity);
     const itemRepo = this.dataSource.getRepository(OrderItemEntity);
@@ -49,7 +59,7 @@ export class PostgresOrderRepository implements OrderRepository {
   private toDomain(entity: OrderEntity): Order {
     const items = entity.items.map(
       (item) =>
-        new OrderItem({
+        OrderItem.create({
           productId: item.productId,
           productName: item.productName,
           quantity: item.quantity,
