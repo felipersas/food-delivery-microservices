@@ -8,6 +8,7 @@ function makeMockRepo(): OrderRepository {
   const store = new Map();
   return {
     findById: mock(async (id: string) => store.get(id) ?? null),
+    findByCustomerId: mock(async (_customerId: string) => []),
     save: mock(async (order: any) => { store.set(order.getId(), order); }),
     delete: mock(async (id: string) => { store.delete(id); }),
   };
