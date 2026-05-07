@@ -3,7 +3,7 @@ import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './infra/http/auth.controller';
 import { UserController } from './infra/http/user.controller';
@@ -94,7 +94,7 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
     },
     {
       provide: JWT_SERVICE,
-      useExisting: JwtModule,
+      useClass: JwtService,
     },
     JwtStrategy,
     RegisterUseCase,
