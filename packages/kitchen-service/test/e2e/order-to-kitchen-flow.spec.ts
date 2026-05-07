@@ -180,7 +180,6 @@ describe('Order-to-Kitchen E2E Flow', () => {
         occurredAt: new Date().toISOString(),
         aggregateId: orderId,
         aggregateType: 'Order',
-        version: 1,
         data: {
           orderId,
           customerId: uuidv4(),
