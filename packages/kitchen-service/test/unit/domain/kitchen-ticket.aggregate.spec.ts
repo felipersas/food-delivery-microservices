@@ -5,6 +5,7 @@ describe('KitchenTicket Aggregate', () => {
   it('should create with WAITING status', () => {
     const ticket = KitchenTicket.createFromOrder({
       orderId: 'order-1',
+      restaurantId: 'restaurant-123',
       items: [{ productId: 'p-1', productName: 'Burger', quantity: 2 }],
     });
 
@@ -15,6 +16,7 @@ describe('KitchenTicket Aggregate', () => {
   it('should transition WAITING → PREPARING → READY', () => {
     const ticket = KitchenTicket.createFromOrder({
       orderId: 'order-1',
+      restaurantId: 'restaurant-123',
       items: [{ productId: 'p-1', productName: 'Burger', quantity: 1 }],
     });
 
@@ -28,6 +30,7 @@ describe('KitchenTicket Aggregate', () => {
   it('should NOT skip PREPARING step', () => {
     const ticket = KitchenTicket.createFromOrder({
       orderId: 'order-1',
+      restaurantId: 'restaurant-123',
       items: [{ productId: 'p-1', productName: 'Burger', quantity: 1 }],
     });
 
