@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'bun:test';
-import { UserRole, UserRoleEnum } from '../../src/domain/value-objects/user-role.vo';
+import { UserRole } from '../../src/domain/value-objects/user-role.vo';
+import { UserRoleEnum } from '@app/shared';
 
 describe('UserRole Value Object', () => {
   test('should create role values', () => {
