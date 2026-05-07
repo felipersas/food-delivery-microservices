@@ -174,6 +174,99 @@ stateDiagram-v2
     end note
 ```
 
+## Arquitetura de Testes
+
+```mermaid
+graph TB
+    subgraph "Test Suite"
+        Unit[Unit Tests<br/>Domain Layer]
+        Integration[Integration Tests<br/>Repository + Use Case]
+        E2E[E2E Tests<br/>Cross-Service Flows]
+    end
+
+    subgraph "Unit Tests"
+        U1[Domain Primitives]
+        U2[Aggregates]
+        U3[Value Objects]
+    end
+
+    subgraph "Integration Tests"
+        I1[TestCompose.start]
+        I2[NestJS TestingModule]
+        I3[TypeORM + PostgreSQL]
+    end
+
+    subgraph "E2E Tests"
+        E1[Dynamic Imports]
+        E2[RabbitMQ Events]
+        E3[Multi-Service Flow]
+    end
+
+    Unit --> U1
+    Unit --> U2
+    Unit --> U3
+
+    Integration --> I1
+    Integration --> I2
+    Integration --> I3
+
+    E2E --> E1
+    E2E --> E2
+    E2E --> E3
+
+    I1 -.->|Docker Compose CLI| D1[(postgres-order)]
+    I1 -.->|Docker Compose CLI| D2[(postgres-payment)]
+    I1 -.->|Docker Compose CLI| D3[(postgres-kitchen)]
+    I1 -.->|Docker Compose CLI| RQ[RabbitMQ]
+
+    style Unit fill:#4caf50,color:#fff
+    style Integration fill:#2196f3,color:#fff
+    style E2E fill:#ff9800,color:#fff
+    style I1 fill:#e91e63,color:#fff
+```
+
+## Fluxo de Teste E2E: Order-to-Payment
+
+```mermaid
+sequenceDiagram
+    participant T as Test Suite
+    participant DC as TestCompose
+    participant DO as postgres-order
+    participant DP as postgres-payment
+    participant RMQ as RabbitMQ
+    participant OU as Order UseCase
+    participant PU as Payment UseCase
+
+    T->>DC: start(['postgres-order', 'postgres-payment', 'rabbitmq'])
+    DC->>DO: Start container
+    DC->>DP: Start container
+    DC->>RMQ: Start container
+    DC->>DC: waitForServices()
+
+    T->>OU: execute(CreateOrderRequest)
+    OU->>OU: Order.create()
+    OU->>DO: save(Order)
+    OU->>T: return orderResult
+
+    Note over T: Capture order.created event
+
+    T->>PU: execute(ProcessPaymentRequest)
+    PU->>PU: Payment.create()
+    PU->>DP: save(Payment)
+    PU->>T: return paymentResult
+
+    T->>DO: findById(orderId)
+    DO->>T: return Order
+
+    T->>DP: findById(paymentId)
+    DP->>T: return Payment
+
+    T->>DC: stop()
+    DC->>DO: Stop container
+    DC->>DP: Stop container
+    DC->>RMQ: Stop container
+```
+
 ## Stack Tecnológico
 
 | Camada | Tecnologia | Justificativa |
