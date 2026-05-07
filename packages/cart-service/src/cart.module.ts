@@ -19,10 +19,15 @@ import { RestaurantServiceClient } from './infra/trpc/restaurant-service.client'
 import { PriceCacheService } from './application/services/price-cache.service';
 import { GetCartUseCase } from './application/use-cases/get-cart/get-cart.use-case';
 import { AddItemUseCase } from './application/use-cases/add-item/add-item.use-case';
+import { RemoveItemUseCase } from './application/use-cases/remove-item/remove-item.use-case';
+import { UpdateQuantityUseCase } from './application/use-cases/update-quantity/update-quantity.use-case';
+import { ClearCartUseCase } from './application/use-cases/clear-cart/clear-cart.use-case';
+import { CheckoutCartUseCase } from './application/use-cases/checkout-cart/checkout-cart.use-case';
 import { InMemoryCartRepository } from './infra/database/memory/cart.repository';
 import { PostgresCartRepository } from './infra/database/typeorm/repositories/cart.repository.impl';
 import { RabbitMQEventPublisher } from './infra/messaging/rabbitmq/cart-event.publisher';
-import type { RabbitMQConnection } from '@app/messaging';
+import { RabbitMQConnection } from '@app/messaging';
+import { CartEntity } from './infra/database/typeorm/entities/cart.entity';
 import {
   CART_REPOSITORY,
   EVENT_PUBLISHER,
@@ -49,12 +54,7 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
             url:
               process.env.CART_DATABASE_URL ??
               'postgres://postgres:postgres@localhost:5439/carts',
-            entities: [
-              usePostgres
-                ? require('./infra/database/typeorm/entities/cart.entity')
-                    .CartEntity
-                : [],
-            ],
+            entities: [CartEntity],
             synchronize: process.env.NODE_ENV !== 'production',
           }),
         ]
@@ -68,8 +68,7 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
     {
       provide: RABBITMQ_CONNECTION,
       useFactory: (configService: ConfigService) => {
-        const { MessagingFactory } = require('@app/messaging');
-        return MessagingFactory.createConnection({
+        return new RabbitMQConnection({
           url: configService.get<string>('rabbitmq.url')!,
           exchange: configService.get<string>('rabbitmq.exchange')!,
         });
@@ -86,7 +85,7 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
       provide: EVENT_PUBLISHER,
       useFactory: (conn: RabbitMQConnection) =>
         new RabbitMQEventPublisher(conn),
-      inject: ['RABBITMQ_CONNECTION'],
+      inject: [RABBITMQ_CONNECTION],
     },
     {
       provide: RESTAURANT_SERVICE_CLIENT,
@@ -98,6 +97,10 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
     },
     GetCartUseCase,
     AddItemUseCase,
+    RemoveItemUseCase,
+    UpdateQuantityUseCase,
+    ClearCartUseCase,
+    CheckoutCartUseCase,
     CartConsumer,
     PriceChangeConsumer,
   ],

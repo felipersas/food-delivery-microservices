@@ -1,5 +1,6 @@
-import { IsUUID, IsOptional, IsNumber, Min, Max, IsEnum } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+/**
+ * Checkout Cart Use Case DTOs
+ */
 
 export enum PaymentMethodType {
   CREDIT_CARD = 'CREDIT_CARD',
@@ -8,25 +9,11 @@ export enum PaymentMethodType {
   CASH = 'CASH',
 }
 
-export class CheckoutCartDto {
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
-  @IsUUID()
-  customerId!: string;
-
-  @ApiProperty({ example: 0, required: false })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Max(3)
+export interface CheckoutCartInput {
+  customerId: string;
   paymentMethodIndex?: number;
-
-  @ApiProperty({ enum: PaymentMethodType, required: false })
-  @IsOptional()
-  @IsEnum(PaymentMethodType)
   paymentMethodType?: PaymentMethodType;
 }
-
-export type CheckoutCartInput = CheckoutCartDto;
 
 export interface CheckoutOrderItem {
   productId: string;

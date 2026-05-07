@@ -5,7 +5,7 @@ import { Redis } from 'ioredis';
 import { Money, ResourceNotFoundException, DomainException } from '@app/shared';
 import { TRPCClientError } from '@trpc/client';
 import type { RestaurantServiceClient } from '../../infra/trpc/restaurant-service.client';
-import { RESTAURANT_SERVICE_CLIENT } from '../../../tokens';
+import { RESTAURANT_SERVICE_CLIENT } from '../../tokens';
 import { REDIS_CLIENT } from '../../config/redis.config';
 
 interface CachedMenuItem {
@@ -19,13 +19,13 @@ interface CachedMenuItem {
 
 /**
  * Price Cache Service
- * 
+ *
  * Provides a caching layer for menu item prices with:
  * - Redis cache-aside pattern with 5-minute TTL
  * - tRPC client for type-safe inter-service communication
  * - Batch fetching support for cart views
  * - Event-driven cache invalidation
- * 
+ *
  * Architecture:
  * 1. Check Redis cache first (fast path)
  * 2. Cache miss: call Restaurant Service via tRPC
@@ -39,10 +39,14 @@ export class PriceCacheService implements OnModuleDestroy {
 
   constructor(
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
-    @Inject(RESTAURANT_SERVICE_CLIENT) private readonly restaurantClient: RestaurantServiceClient,
+    @Inject(RESTAURANT_SERVICE_CLIENT)
+    private readonly restaurantClient: RestaurantServiceClient,
     private readonly configService: ConfigService,
   ) {
-    this.CACHE_TTL_SECONDS = this.configService.get('REDIS_CACHE_TTL_SECONDS', 300);
+    this.CACHE_TTL_SECONDS = this.configService.get(
+      'REDIS_CACHE_TTL_SECONDS',
+      300,
+    );
   }
 
   async onModuleDestroy() {
@@ -53,7 +57,9 @@ export class PriceCacheService implements OnModuleDestroy {
    * Get current price from cache or fetch from Restaurant Service
    * Uses cache-aside pattern for optimal performance
    */
-  async getItemPrice(itemId: string): Promise<{ price: Money; available: boolean; name: string }> {
+  async getItemPrice(
+    itemId: string,
+  ): Promise<{ price: Money; available: boolean; name: string }> {
     // Try cache first
     const cached = await this.getFromCache(itemId);
     if (cached) {
@@ -78,12 +84,17 @@ export class PriceCacheService implements OnModuleDestroy {
   /**
    * Batch fetch prices for multiple items (optimization for cart view)
    * Uses Redis pipeline for efficient multi-get
-   * 
+   *
    * NOTE: Currently fetches individually. For optimal performance,
    * consider grouping by restaurantId and using getMenuItems batch endpoint.
    */
-  async getItemPrices(itemIds: string[]): Promise<Map<string, { price: Money; available: boolean; name: string }>> {
-    const result = new Map<string, { price: Money; available: boolean; name: string }>();
+  async getItemPrices(
+    itemIds: string[],
+  ): Promise<Map<string, { price: Money; available: boolean; name: string }>> {
+    const result = new Map<
+      string,
+      { price: Money; available: boolean; name: string }
+    >();
     const missingIds: string[] = [];
 
     // Try to get all from cache (pipeline for performance)
@@ -178,7 +189,9 @@ export class PriceCacheService implements OnModuleDestroy {
    */
   private async fetchFromService(itemId: string): Promise<CachedMenuItem> {
     try {
-      const menuItem = await this.restaurantClient.restaurant.getMenuItem.query({ id: itemId });
+      const menuItem = await this.restaurantClient.restaurant.getMenuItem.query(
+        { id: itemId },
+      );
 
       return {
         id: menuItem.id,
@@ -191,12 +204,17 @@ export class PriceCacheService implements OnModuleDestroy {
     } catch (error) {
       // Handle tRPC errors with proper error code checking
       if (error instanceof TRPCClientError) {
-        if (error.code === 'NOT_FOUND' || error.code === 'BAD_REQUEST') {
+        // tRPC uses numeric error codes: NOT_FOUND = -32004, BAD_REQUEST = -32600
+        if (error.shape?.code === -32004 || error.shape?.code === -32600) {
           throw new ResourceNotFoundException('MenuItem', itemId);
         }
-        throw new DomainException(`Restaurant Service error: ${error.message}`, { cause: error });
+        throw new DomainException(
+          `Restaurant Service error: ${error.message}`,
+        );
       }
-      throw new DomainException('Failed to fetch menu item from Restaurant Service', { cause: error });
+      throw new DomainException(
+        'Failed to fetch menu item from Restaurant Service',
+      );
     }
   }
 
@@ -204,9 +222,14 @@ export class PriceCacheService implements OnModuleDestroy {
    * Fetch all menu items for a restaurant via tRPC
    * Used for cache warming and bulk operations
    */
-  private async fetchMenuItems(restaurantId: string): Promise<CachedMenuItem[]> {
+  private async fetchMenuItems(
+    restaurantId: string,
+  ): Promise<CachedMenuItem[]> {
     try {
-      const menuItems = await this.restaurantClient.restaurant.getMenuItems.query({ restaurantId });
+      const menuItems =
+        await this.restaurantClient.restaurant.getMenuItems.query({
+          restaurantId,
+        });
 
       const now = new Date().toISOString();
       return menuItems.map((item) => ({
@@ -218,7 +241,9 @@ export class PriceCacheService implements OnModuleDestroy {
         cachedAt: now,
       }));
     } catch (error) {
-      throw new DomainException('Failed to fetch menu items from Restaurant Service', { cause: error });
+      throw new DomainException(
+        'Failed to fetch menu items from Restaurant Service',
+      );
     }
   }
 }

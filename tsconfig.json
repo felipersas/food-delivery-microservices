@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "lib": ["ESNext"],
-    "target": "ESNext",
+    "target": "ES2022",
     "module": "ESNext",
     "moduleDetection": "force",
     "moduleResolution": "bundler",
@@ -9,6 +9,7 @@
     "verbatimModuleSyntax": true,
     "noEmit": true,
     "strict": true,
+    "strictPropertyInitialization": false,
     "skipLibCheck": true,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
@@ -16,6 +17,18 @@
     "noUnusedParameters": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true
-  }
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@app/shared": ["./packages/shared/src"],
+      "@app/messaging": ["./packages/messaging/src"],
+      "@app/trpc-definitions": ["./packages/trpc-definitions/src"],
+      "@app/health": ["./packages/health/src"],
+      "@domain/*": ["./packages/*/src/domain/*"],
+      "@application/*": ["./packages/*/src/application/*"],
+      "@infra/*": ["./packages/*/src/infra/*"],
+      "@services/*": ["./packages/*/src/services/*"],
+      "@test/*": ["./packages/*/test/*"],
+    },
+  },
 }
