@@ -1,5 +1,4 @@
 import { AggregateRoot, DomainException, UserRoleEnum } from '@app/shared';
-import type { Repository } from '@app/shared';
 import { Email } from '../value-objects/email.vo';
 import { HashedPassword } from '../value-objects/hashed-password.vo';
 import { UserRole } from '../value-objects/user-role.vo';
@@ -57,7 +56,9 @@ export class User extends AggregateRoot<string> {
 
     const roles = props.roles?.map((role) => {
       if (role === UserRoleEnum.ADMIN) {
-        throw new DomainException('Cannot create user with ADMIN role directly');
+        throw new DomainException(
+          'Cannot create user with ADMIN role directly',
+        );
       }
       return UserRole.fromString(role);
     }) ?? [UserRole.customer()];
@@ -166,8 +167,8 @@ export class User extends AggregateRoot<string> {
 
     // If at max capacity, remove oldest
     if (this.refreshTokens.length >= MAX_REFRESH_TOKENS) {
-      this.refreshTokens.sort((a, b) =>
-        a.createdAt.getTime() - b.createdAt.getTime(),
+      this.refreshTokens.sort(
+        (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
       );
       this.refreshTokens.shift();
     }
@@ -178,9 +179,7 @@ export class User extends AggregateRoot<string> {
   }
 
   removeRefreshToken(token: string): void {
-    this.refreshTokens = this.refreshTokens.filter(
-      (rt) => rt.token !== token,
-    );
+    this.refreshTokens = this.refreshTokens.filter((rt) => rt.token !== token);
     this.markAsUpdated();
     this.incrementVersion();
   }
