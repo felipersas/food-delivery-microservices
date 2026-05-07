@@ -53,6 +53,14 @@ export class PostgresCartRepository implements CartRepository {
     return this.mapToAggregate(entity);
   }
 
+  async findAllActive(): Promise<Cart[]> {
+    const entities = await this.cartRepo.find({
+      where: { status: Equal('active' as any) },
+    });
+
+    return entities.map((entity) => this.mapToAggregate(entity));
+  }
+
   private mapToAggregate(entity: CartEntity): Cart {
     const items = entity.items.map((item) =>
       CartItem.create({

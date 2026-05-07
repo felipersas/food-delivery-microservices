@@ -26,4 +26,8 @@ export class InMemoryCartRepository implements CartRepository {
     }
     return null;
   }
+
+  async findAllActive(): Promise<Cart[]> {
+    return Array.from(this.carts.values()).filter((cart) => cart.isActive());
+  }
 }
