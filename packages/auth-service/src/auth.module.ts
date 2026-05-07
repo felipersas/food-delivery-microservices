@@ -1,9 +1,6 @@
 import { Module, type OnModuleInit } from '@nestjs/common';
-import {
-  APP_FILTER,
-  APP_INTERCEPTOR,
-  Reflector,
-} from '@nestjs/core';
+import path from 'path';
+import { APP_FILTER, APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -27,11 +24,7 @@ import { AuthEventPublisher } from './infra/messaging/rabbitmq/auth-event.publis
 import { AuthConsumer } from './infra/messaging/rabbitmq/auth.consumer';
 import { JwtStrategy } from './infra/http/guards/jwt.strategy';
 import { RabbitMQConnection } from '@app/messaging';
-import {
-  AllExceptionsFilter,
-  RolesGuard,
-  SuccessResponseInterceptor,
-} from '@app/shared';
+import { AllExceptionsFilter, SuccessResponseInterceptor } from '@app/shared';
 import { UserEntity } from './infra/database/typeorm/entities/user.entity';
 import { RefreshTokenEntity } from './infra/database/typeorm/entities/refresh-token.entity';
 import configuration from './config/configuration';
@@ -41,6 +34,7 @@ import {
   USER_REPOSITORY,
   EVENT_PUBLISHER,
   JWT_SERVICE,
+  CONFIG_SERVICE,
 } from './tokens';
 
 const usePostgres = process.env.DB_DRIVER === 'postgres';
@@ -51,6 +45,7 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
       load: [configuration],
       validationSchema,
       isGlobal: true,
+      envFilePath: '../../.env',
     }),
     ThrottlerModule.forRoot([
       {
@@ -87,6 +82,10 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
     Reflector,
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_INTERCEPTOR, useClass: SuccessResponseInterceptor },
+    {
+      provide: CONFIG_SERVICE,
+      useClass: ConfigService,
+    },
     {
       provide: RABBITMQ_CONNECTION,
       useFactory: (config: ConfigService) =>

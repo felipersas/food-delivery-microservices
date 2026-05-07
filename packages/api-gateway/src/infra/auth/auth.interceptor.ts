@@ -1,8 +1,9 @@
-import {
-  Injectable,
-  UnauthorizedException,
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import type {
+  CallHandler,
+  ExecutionContext,
+  NestInterceptor,
 } from '@nestjs/common';
-import type { CallHandler, ExecutionContext, NestInterceptor } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { Reflector } from '@nestjs/core';
 import { extractJwtFromHeader } from './jwt.extractor';
@@ -33,10 +34,10 @@ export class AuthInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     // Check if route is public (e.g., /auth/login, /auth/register)
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_ROUTE, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const isPublic = this.reflector.getAllAndOverride<boolean>(
+      IS_PUBLIC_ROUTE,
+      [context.getHandler(), context.getClass()],
+    );
 
     if (isPublic) {
       return next.handle();
@@ -73,7 +74,9 @@ export const USER_CONTEXT_HEADERS = {
 /**
  * Build headers with user context for downstream requests
  */
-export function buildUserContextHeaders(user: UserContext): Record<string, string> {
+export function buildUserContextHeaders(
+  user: UserContext,
+): Record<string, string> {
   return {
     [USER_CONTEXT_HEADERS.USER_ID]: user.userId,
     [USER_CONTEXT_HEADERS.EMAIL]: user.email,

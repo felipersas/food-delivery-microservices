@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import type { Request, Response, NextFunction } from 'express';
@@ -9,10 +9,20 @@ import { scalarHtml } from '@app/shared';
 
 async function bootstrap() {
   const app = await NestFactory.create(CartModule);
-  
+
   app.useGlobalPipes(new ValidationPipe({
     transform: true,
     whitelist: true,
+    exceptionFactory: (errors) => {
+      const messages = errors.map((err) => ({
+        field: err.property,
+        constraints: Object.values(err.constraints || {}),
+      }));
+      return new BadRequestException({
+        message: 'Validation failed',
+        errors: messages,
+      });
+    },
   }));
 
   const configService = app.get(ConfigService);

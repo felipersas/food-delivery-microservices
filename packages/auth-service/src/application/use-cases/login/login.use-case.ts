@@ -6,8 +6,14 @@ import { UserRoleEnum } from '@app/shared';
 import { RefreshToken } from '@domain/value-objects/refresh-token.vo';
 import { LoginDto } from './login.dto';
 import type { LoginOutput } from './login.dto';
-import { USER_REPOSITORY, EVENT_PUBLISHER, JWT_SERVICE } from '../../../tokens';
+import {
+  USER_REPOSITORY,
+  EVENT_PUBLISHER,
+  JWT_SERVICE,
+  CONFIG_SERVICE,
+} from '../../../tokens';
 import bcrypt from 'bcrypt';
+import type { ConfigService } from '@nestjs/config';
 
 export interface JwtPayload {
   sub: string;
@@ -21,6 +27,7 @@ export class LoginUseCase {
     @Inject(USER_REPOSITORY) private readonly repo: UserRepository,
     @Inject(EVENT_PUBLISHER) private readonly publisher: EventPublisher,
     @Inject(JWT_SERVICE) private readonly jwtService: JwtService,
+    @Inject(CONFIG_SERVICE) private readonly configService: ConfigService,
   ) {}
 
   async execute(input: LoginDto, deviceId: string): Promise<LoginOutput> {
@@ -53,7 +60,9 @@ export class LoginUseCase {
       roles: user.getRoles(),
     };
 
-    const accessToken = await this.jwtService.signAsync(payload);
+    const accessToken = await this.jwtService.signAsync(payload, {
+      secret: this.configService.get('jwt.secret'),
+    });
     const refreshTokenEntity = RefreshToken.create(deviceId, 7);
     user.addRefreshToken(refreshTokenEntity);
 

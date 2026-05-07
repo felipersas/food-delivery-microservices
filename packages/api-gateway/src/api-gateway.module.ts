@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import path from 'path';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { validationSchema } from './config/validation';
 import configuration from './config/configuration';
@@ -28,15 +29,24 @@ import {
   CART_SERVICE_URL,
 } from './tokens';
 
-const ORDER_SERVICE_URL_VALUE = process.env.ORDER_SERVICE_URL ?? 'http://localhost:3001';
-const KITCHEN_SERVICE_URL_VALUE = process.env.KITCHEN_SERVICE_URL ?? 'http://localhost:3002';
-const PAYMENT_SERVICE_URL_VALUE = process.env.PAYMENT_SERVICE_URL ?? 'http://localhost:3003';
-const NOTIFICATION_SERVICE_URL_VALUE = process.env.NOTIFICATION_SERVICE_URL ?? 'http://localhost:3004';
-const ANALYTICS_SERVICE_URL_VALUE = process.env.ANALYTICS_SERVICE_URL ?? 'http://localhost:3005';
-const CUSTOMER_SERVICE_URL_VALUE = process.env.CUSTOMER_SERVICE_URL ?? 'http://localhost:3006';
-const AUTH_SERVICE_URL_VALUE = process.env.AUTH_SERVICE_URL ?? 'http://localhost:3008';
-const RESTAURANT_SERVICE_URL_VALUE = process.env.RESTAURANT_SERVICE_URL ?? 'http://localhost:3007';
-const CART_SERVICE_URL_VALUE = process.env.CART_SERVICE_URL ?? 'http://localhost:3009';
+const ORDER_SERVICE_URL_VALUE =
+  process.env.ORDER_SERVICE_URL ?? 'http://localhost:3001';
+const KITCHEN_SERVICE_URL_VALUE =
+  process.env.KITCHEN_SERVICE_URL ?? 'http://localhost:3002';
+const PAYMENT_SERVICE_URL_VALUE =
+  process.env.PAYMENT_SERVICE_URL ?? 'http://localhost:3003';
+const NOTIFICATION_SERVICE_URL_VALUE =
+  process.env.NOTIFICATION_SERVICE_URL ?? 'http://localhost:3004';
+const ANALYTICS_SERVICE_URL_VALUE =
+  process.env.ANALYTICS_SERVICE_URL ?? 'http://localhost:3005';
+const CUSTOMER_SERVICE_URL_VALUE =
+  process.env.CUSTOMER_SERVICE_URL ?? 'http://localhost:3006';
+const AUTH_SERVICE_URL_VALUE =
+  process.env.AUTH_SERVICE_URL ?? 'http://localhost:3008';
+const RESTAURANT_SERVICE_URL_VALUE =
+  process.env.RESTAURANT_SERVICE_URL ?? 'http://localhost:3007';
+const CART_SERVICE_URL_VALUE =
+  process.env.CART_SERVICE_URL ?? 'http://localhost:3009';
 
 @Module({
   imports: [
@@ -44,6 +54,12 @@ const CART_SERVICE_URL_VALUE = process.env.CART_SERVICE_URL ?? 'http://localhost
       isGlobal: true,
       validationSchema,
       load: [configuration],
+      envFilePath: [
+        '.env',
+        '../../.env',
+        '../.env',
+        path.join(process.cwd(), '../../.env'),
+      ],
     }),
   ],
   controllers: [
@@ -66,7 +82,10 @@ const CART_SERVICE_URL_VALUE = process.env.CART_SERVICE_URL ?? 'http://localhost
     { provide: ORDER_SERVICE_URL, useValue: ORDER_SERVICE_URL_VALUE },
     { provide: KITCHEN_SERVICE_URL, useValue: KITCHEN_SERVICE_URL_VALUE },
     { provide: PAYMENT_SERVICE_URL, useValue: PAYMENT_SERVICE_URL_VALUE },
-    { provide: NOTIFICATION_SERVICE_URL, useValue: NOTIFICATION_SERVICE_URL_VALUE },
+    {
+      provide: NOTIFICATION_SERVICE_URL,
+      useValue: NOTIFICATION_SERVICE_URL_VALUE,
+    },
     { provide: ANALYTICS_SERVICE_URL, useValue: ANALYTICS_SERVICE_URL_VALUE },
     { provide: CUSTOMER_SERVICE_URL, useValue: CUSTOMER_SERVICE_URL_VALUE },
     { provide: RESTAURANT_SERVICE_URL, useValue: RESTAURANT_SERVICE_URL_VALUE },
