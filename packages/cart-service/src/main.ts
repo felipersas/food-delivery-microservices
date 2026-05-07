@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import type { Request, Response, NextFunction } from 'express';
 import { CartModule } from './cart.module';
 import { scalarHtml } from '@app/shared';
 
@@ -29,7 +30,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document, { customSiteTitle: 'Cart Service API' });
 
-  app.use('/api', (req, res, next) => {
+  app.use('/api', (req: Request, res: Response, next: NextFunction) => {
     if (req.method === 'GET' && req.url === '/') {
       res.set('Content-Type', 'text/html').send(scalarHtml('/api/docs-json', 'Cart Service API'));
     } else {
@@ -38,10 +39,10 @@ async function bootstrap() {
   });
 
   await app.listen(port);
-  console.log(\`[CartService] Running on port \${port}\`);
-  
+  console.log(`[CartService] Running on port ${port}`);
+
   const shutdown = async (signal: string) => {
-    console.log(\`[CartService] Received \${signal}, shutting down...\`);
+    console.log(`[CartService] Received ${signal}, shutting down...`);
     await app.close();
     process.exit(0);
   };
