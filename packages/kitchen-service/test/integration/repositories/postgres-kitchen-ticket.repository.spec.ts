@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { TestCompose } from '@app/test-utils';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -13,6 +13,8 @@ import { KitchenTicketStatus } from '../../../src/domain/aggregates/kitchen-tick
 
 describe('PostgresKitchenTicketRepository Integration Tests', () => {
   let connections: Record<string, string>;
+  let module: TestingModule;
+  let repo: PostgresKitchenTicketRepository;
 
   beforeAll(async () => {
     console.log('[beforeAll] Starting Docker Compose environment...');
@@ -23,16 +25,9 @@ describe('PostgresKitchenTicketRepository Integration Tests', () => {
     });
 
     console.log('[beforeAll] Environment started');
-  }, { timeout: 120000 });
 
-  afterAll(async () => {
-    console.log('[afterAll] Stopping Docker Compose environment...');
-    await TestCompose.stop({ removeVolumes: false, timeout: 30000 });
-    console.log('[afterAll] Environment stopped');
-  }, { timeout: 30000 });
-
-  const createTestingModule = async () => {
-    return Test.createTestingModule({
+    // Create test module ONCE for all tests
+    module = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({ isGlobal: true }),
         TypeOrmModule.forRoot({
@@ -51,7 +46,16 @@ describe('PostgresKitchenTicketRepository Integration Tests', () => {
         },
       ],
     }).compile();
-  };
+
+    repo = module.get<PostgresKitchenTicketRepository>(PostgresKitchenTicketRepository);
+  }, { timeout: 120000 });
+
+  afterAll(async () => {
+    console.log('[afterAll] Stopping Docker Compose environment...');
+    await TestCompose.stop({ removeVolumes: false, timeout: 30000 });
+    if (module) await module.close();
+    console.log('[afterAll] Environment stopped');
+  }, { timeout: 30000 });
 
   const createTestTicket = (ticketId?: string) => {
     const id = ticketId || uuidv4();
@@ -69,9 +73,6 @@ describe('PostgresKitchenTicketRepository Integration Tests', () => {
   };
 
   it('should save a new kitchen ticket', async () => {
-    const module = await createTestingModule();
-    const repo = module.get<PostgresKitchenTicketRepository>(PostgresKitchenTicketRepository);
-
     const ticket = createTestTicket();
     await repo.save(ticket);
 
@@ -79,14 +80,9 @@ describe('PostgresKitchenTicketRepository Integration Tests', () => {
     expect(found).not.toBeNull();
     expect(found!.getId()).toBe(ticket.getId());
     expect(found!.getOrderId()).toBe(ticket.getOrderId());
-
-    await module.close();
-  }, { timeout: 30000 });
+  });
 
   it('should save ticket with items', async () => {
-    const module = await createTestingModule();
-    const repo = module.get<PostgresKitchenTicketRepository>(PostgresKitchenTicketRepository);
-
     const ticket = createTestTicket();
     await repo.save(ticket);
 
@@ -95,14 +91,9 @@ describe('PostgresKitchenTicketRepository Integration Tests', () => {
     expect(found!.getItems().length).toBe(1);
     expect(found!.getItems()[0].productId).toBe('product-1');
     expect(found!.getItems()[0].quantity).toBe(2);
-
-    await module.close();
-  }, { timeout: 30000 });
+  });
 
   it('should find ticket by id', async () => {
-    const module = await createTestingModule();
-    const repo = module.get<PostgresKitchenTicketRepository>(PostgresKitchenTicketRepository);
-
     const ticket = createTestTicket();
     await repo.save(ticket);
     const found = await repo.findById(ticket.getId());
@@ -110,26 +101,16 @@ describe('PostgresKitchenTicketRepository Integration Tests', () => {
     expect(found).not.toBeNull();
     expect(found!.getId()).toBe(ticket.getId());
     expect(found!.getStatus()).toBe(KitchenTicketStatus.WAITING);
-
-    await module.close();
-  }, { timeout: 30000 });
+  });
 
   it('should return null for non-existent ticket', async () => {
-    const module = await createTestingModule();
-    const repo = module.get<PostgresKitchenTicketRepository>(PostgresKitchenTicketRepository);
-
     const nonExistentId = uuidv4();
     const found = await repo.findById(nonExistentId);
 
     expect(found).toBeNull();
-
-    await module.close();
-  }, { timeout: 30000 });
+  });
 
   it('should update ticket status', async () => {
-    const module = await createTestingModule();
-    const repo = module.get<PostgresKitchenTicketRepository>(PostgresKitchenTicketRepository);
-
     const ticket = createTestTicket();
     await repo.save(ticket);
 
@@ -138,14 +119,9 @@ describe('PostgresKitchenTicketRepository Integration Tests', () => {
 
     const found = await repo.findById(ticket.getId());
     expect(found!.getStatus()).toBe(KitchenTicketStatus.PREPARING);
-
-    await module.close();
-  }, { timeout: 30000 });
+  });
 
   it('should mark ticket as ready and emit domain event', async () => {
-    const module = await createTestingModule();
-    const repo = module.get<PostgresKitchenTicketRepository>(PostgresKitchenTicketRepository);
-
     const ticket = createTestTicket();
     ticket.startPreparing();
     await repo.save(ticket);
@@ -161,14 +137,9 @@ describe('PostgresKitchenTicketRepository Integration Tests', () => {
     const readyEvent = events.find((e) => e.eventType === 'order.ready');
     expect(readyEvent).toBeDefined();
     expect(readyEvent!.data.orderId).toBe(ticket.getOrderId());
-
-    await module.close();
-  }, { timeout: 30000 });
+  });
 
   it('should find tickets by restaurant id', async () => {
-    const module = await createTestingModule();
-    const repo = module.get<PostgresKitchenTicketRepository>(PostgresKitchenTicketRepository);
-
     const restaurantId = uuidv4();
 
     const ticket1 = KitchenTicket.createFromOrder({
@@ -188,14 +159,9 @@ describe('PostgresKitchenTicketRepository Integration Tests', () => {
     const found = await repo.findByRestaurantId(restaurantId);
     expect(found.length).toBe(2);
     expect(found.map((t) => t.getId())).toContain(ticket1.getId());
-
-    await module.close();
-  }, { timeout: 30000 });
+  });
 
   it('should delete ticket', async () => {
-    const module = await createTestingModule();
-    const repo = module.get<PostgresKitchenTicketRepository>(PostgresKitchenTicketRepository);
-
     const ticket = createTestTicket();
     await repo.save(ticket);
 
@@ -203,7 +169,5 @@ describe('PostgresKitchenTicketRepository Integration Tests', () => {
 
     const found = await repo.findById(ticket.getId());
     expect(found).toBeNull();
-
-    await module.close();
-  }, { timeout: 30000 });
+  });
 });

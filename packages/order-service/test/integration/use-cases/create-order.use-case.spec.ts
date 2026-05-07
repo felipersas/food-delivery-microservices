@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { TestCompose } from '@app/test-utils';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -11,9 +11,14 @@ import { CreateOrderUseCase } from '../../../src/application/use-cases/create-or
 import { ORDER_REPOSITORY, EVENT_PUBLISHER, RABBITMQ_CONNECTION } from '../../../src/tokens';
 import { RabbitMQEventPublisher } from '../../../src/infra/messaging/rabbitmq/order-event.publisher';
 import { RabbitMQConnection } from '@app/messaging';
+import { PostgresOrderRepository } from '../../../src/infra/database/typeorm/repositories/order.repository.impl';
 
 describe('CreateOrderUseCase Integration Tests (Docker Compose)', () => {
   let connections: Record<string, string>;
+  let module: TestingModule;
+  let useCase: CreateOrderUseCase;
+  let repo: PostgresOrderRepository;
+  let publisher: RabbitMQEventPublisher;
 
   beforeAll(async () => {
     console.log('[beforeAll] Starting Docker Compose environment...');
@@ -24,18 +29,9 @@ describe('CreateOrderUseCase Integration Tests (Docker Compose)', () => {
     });
 
     console.log('[beforeAll] Environment started');
-    console.log('[beforeAll] Order DB URL:', connections.orderDatabase);
-    console.log('[beforeAll] RabbitMQ URL:', connections.rabbitmqUrl);
-  }, { timeout: 120000 });
 
-  afterAll(async () => {
-    console.log('[afterAll] Stopping Docker Compose environment...');
-    await TestCompose.stop({ removeVolumes: false, timeout: 30000 });
-    console.log('[afterAll] Environment stopped');
-  }, { timeout: 30000 });
-
-  it('should create order and publish domain event', async () => {
-    const module = await Test.createTestingModule({
+    // Create test module ONCE for all tests
+    module = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({ isGlobal: true }),
         TypeOrmModule.forRoot({
@@ -61,21 +57,28 @@ describe('CreateOrderUseCase Integration Tests (Docker Compose)', () => {
         },
         {
           provide: ORDER_REPOSITORY,
-          useFactory: (dataSource: DataSource) => {
-            const { PostgresOrderRepository } = require('../../../src/infra/database/typeorm/repositories/order.repository.impl');
-            return new PostgresOrderRepository(dataSource);
-          },
+          useFactory: (dataSource: DataSource) => new PostgresOrderRepository(dataSource),
           inject: [DataSource],
         },
         CreateOrderUseCase,
       ],
     }).compile();
 
-    const useCase = module.get<CreateOrderUseCase>(CreateOrderUseCase);
+    useCase = module.get<CreateOrderUseCase>(CreateOrderUseCase);
+    repo = module.get<PostgresOrderRepository>(ORDER_REPOSITORY);
+    publisher = module.get<RabbitMQEventPublisher>(EVENT_PUBLISHER);
+  }, { timeout: 120000 });
 
+  afterAll(async () => {
+    console.log('[afterAll] Stopping Docker Compose environment...');
+    await TestCompose.stop({ removeVolumes: false, timeout: 30000 });
+    if (module) await module.close();
+    console.log('[afterAll] Environment stopped');
+  }, { timeout: 30000 });
+
+  it('should create order and publish domain event', async () => {
     // Mock event publisher to capture events
     const publishedEvents: any[] = [];
-    const publisher = module.get<RabbitMQEventPublisher>(EVENT_PUBLISHER);
     const originalPublishAll = publisher.publishAll.bind(publisher);
     publisher.publishAll = async (events) => {
       publishedEvents.push(...events);
@@ -105,7 +108,5 @@ describe('CreateOrderUseCase Integration Tests (Docker Compose)', () => {
     const orderEvent = publishedEvents.find((e) => e.eventType === 'order.created');
     expect(orderEvent).toBeDefined();
     expect(orderEvent.data).toHaveProperty('orderId', result.orderId);
-
-    await module.close();
-  }, { timeout: 30000 });
+  });
 });

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { TestCompose } from '@app/test-utils';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -14,6 +14,10 @@ import { PaymentStatus } from '../../../src/domain/aggregates/payment.aggregate'
 
 describe('RefundPaymentUseCase Integration Tests', () => {
   let connections: Record<string, string>;
+  let module: TestingModule;
+  let processPaymentUseCase: ProcessPaymentUseCase;
+  let refundUseCase: RefundPaymentUseCase;
+  let repo: PostgresPaymentRepository;
 
   beforeAll(async () => {
     console.log('[beforeAll] Starting Docker Compose environment...');
@@ -24,16 +28,9 @@ describe('RefundPaymentUseCase Integration Tests', () => {
     });
 
     console.log('[beforeAll] Environment started');
-  }, { timeout: 120000 });
 
-  afterAll(async () => {
-    console.log('[afterAll] Stopping Docker Compose environment...');
-    await TestCompose.stop({ removeVolumes: false, timeout: 30000 });
-    console.log('[afterAll] Environment stopped');
-  }, { timeout: 30000 });
-
-  it('should process partial refund', async () => {
-    const module = await Test.createTestingModule({
+    // Create test module ONCE for all tests
+    module = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({ isGlobal: true }),
         TypeOrmModule.forRoot({
@@ -69,10 +66,19 @@ describe('RefundPaymentUseCase Integration Tests', () => {
       ],
     }).compile();
 
-    const processPaymentUseCase = module.get<ProcessPaymentUseCase>(ProcessPaymentUseCase);
-    const refundUseCase = module.get<RefundPaymentUseCase>(RefundPaymentUseCase);
-    const repo = module.get<PostgresPaymentRepository>(PAYMENT_REPOSITORY);
+    processPaymentUseCase = module.get<ProcessPaymentUseCase>(ProcessPaymentUseCase);
+    refundUseCase = module.get<RefundPaymentUseCase>(RefundPaymentUseCase);
+    repo = module.get<PostgresPaymentRepository>(PAYMENT_REPOSITORY);
+  }, { timeout: 120000 });
 
+  afterAll(async () => {
+    console.log('[afterAll] Stopping Docker Compose environment...');
+    await TestCompose.stop({ removeVolumes: false, timeout: 30000 });
+    if (module) await module.close();
+    console.log('[afterAll] Environment stopped');
+  }, { timeout: 30000 });
+
+  it('should process partial refund', async () => {
     // First create a confirmed payment
     const paymentResult = await processPaymentUseCase.execute({
       orderId: uuidv4(),
@@ -102,51 +108,9 @@ describe('RefundPaymentUseCase Integration Tests', () => {
     expect(savedPayment).not.toBeNull();
     expect(savedPayment!.getStatus()).toBe(PaymentStatus.PARTIALLY_REFUNDED);
     expect(savedPayment!.getRefundedAmount().amount).toBe(30);
-
-    await module.close();
-  }, { timeout: 30000 });
+  });
 
   it('should process full refund', async () => {
-    const module = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
-        TypeOrmModule.forRoot({
-          type: 'postgres',
-          url: connections.paymentDatabase,
-          entities: [PaymentEntity],
-          synchronize: true,
-          dropSchema: false,
-        }),
-      ],
-      providers: [
-        {
-          provide: PAYMENT_REPOSITORY,
-          useFactory: (dataSource: DataSource) => new PostgresPaymentRepository(dataSource),
-          inject: [DataSource],
-        },
-        {
-          provide: EVENT_PUBLISHER,
-          useFactory: () => ({
-            publishAll: async () => {},
-          }),
-        },
-        {
-          provide: ProcessPaymentUseCase,
-          useFactory: (repo) => new ProcessPaymentUseCase(repo),
-          inject: [PAYMENT_REPOSITORY],
-        },
-        {
-          provide: RefundPaymentUseCase,
-          useFactory: (repo, publisher) => new RefundPaymentUseCase(repo, publisher),
-          inject: [PAYMENT_REPOSITORY, EVENT_PUBLISHER],
-        },
-      ],
-    }).compile();
-
-    const processPaymentUseCase = module.get<ProcessPaymentUseCase>(ProcessPaymentUseCase);
-    const refundUseCase = module.get<RefundPaymentUseCase>(RefundPaymentUseCase);
-    const repo = module.get<PostgresPaymentRepository>(PAYMENT_REPOSITORY);
-
     // First create a confirmed payment
     const paymentResult = await processPaymentUseCase.execute({
       orderId: uuidv4(),
@@ -174,51 +138,9 @@ describe('RefundPaymentUseCase Integration Tests', () => {
     expect(savedPayment).not.toBeNull();
     expect(savedPayment!.getStatus()).toBe(PaymentStatus.FULLY_REFUNDED);
     expect(savedPayment!.getRefundedAmount().amount).toBe(50);
-
-    await module.close();
-  }, { timeout: 30000 });
+  });
 
   it('should handle idempotent refunds with same refundId', async () => {
-    const module = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
-        TypeOrmModule.forRoot({
-          type: 'postgres',
-          url: connections.paymentDatabase,
-          entities: [PaymentEntity],
-          synchronize: true,
-          dropSchema: false,
-        }),
-      ],
-      providers: [
-        {
-          provide: PAYMENT_REPOSITORY,
-          useFactory: (dataSource: DataSource) => new PostgresPaymentRepository(dataSource),
-          inject: [DataSource],
-        },
-        {
-          provide: EVENT_PUBLISHER,
-          useFactory: () => ({
-            publishAll: async () => {},
-          }),
-        },
-        {
-          provide: ProcessPaymentUseCase,
-          useFactory: (repo) => new ProcessPaymentUseCase(repo),
-          inject: [PAYMENT_REPOSITORY],
-        },
-        {
-          provide: RefundPaymentUseCase,
-          useFactory: (repo, publisher) => new RefundPaymentUseCase(repo, publisher),
-          inject: [PAYMENT_REPOSITORY, EVENT_PUBLISHER],
-        },
-      ],
-    }).compile();
-
-    const processPaymentUseCase = module.get<ProcessPaymentUseCase>(ProcessPaymentUseCase);
-    const refundUseCase = module.get<RefundPaymentUseCase>(RefundPaymentUseCase);
-    const repo = module.get<PostgresPaymentRepository>(PAYMENT_REPOSITORY);
-
     const paymentResult = await processPaymentUseCase.execute({
       orderId: uuidv4(),
       amount: 100,
@@ -252,7 +174,5 @@ describe('RefundPaymentUseCase Integration Tests', () => {
 
     const savedPayment = await repo.findById(paymentResult.paymentId);
     expect(savedPayment!.getRefundedAmount().amount).toBe(25);
-
-    await module.close();
-  }, { timeout: 30000 });
+  });
 });

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { TestCompose } from '@app/test-utils';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -33,6 +33,10 @@ const loadPaymentService = async () => {
 
 describe('Order-to-Payment E2E Flow', () => {
   let connections: Record<string, string>;
+  let orderModule: TestingModule;
+  let paymentModule: TestingModule;
+  let createOrderUseCase: CreateOrderUseCase;
+  let orderRepo: PostgresOrderRepository;
 
   beforeAll(
     async () => {
@@ -44,6 +48,46 @@ describe('Order-to-Payment E2E Flow', () => {
       });
 
       console.log('[beforeAll] Environment started');
+
+      // Create order module ONCE
+      orderModule = await Test.createTestingModule({
+        imports: [
+          ConfigModule.forRoot({ isGlobal: true }),
+          TypeOrmModule.forRoot({
+            type: 'postgres',
+            url: connections.orderDatabase,
+            entities: [OrderEntity, OrderItemEntity],
+            synchronize: true,
+            dropSchema: false,
+          }),
+        ],
+        providers: [
+          {
+            provide: RABBITMQ_CONNECTION,
+            useFactory: () =>
+              new RabbitMQConnection({
+                url: connections.rabbitmqUrl,
+                exchange: 'food-ordering',
+              }),
+          },
+          {
+            provide: EVENT_PUBLISHER,
+            useFactory: (conn: RabbitMQConnection) =>
+              new RabbitMQEventPublisher(conn),
+            inject: [RABBITMQ_CONNECTION],
+          },
+          {
+            provide: ORDER_REPOSITORY,
+            useFactory: (dataSource: DataSource) =>
+              new PostgresOrderRepository(dataSource),
+            inject: [DataSource],
+          },
+          CreateOrderUseCase,
+        ],
+      }).compile();
+
+      createOrderUseCase = orderModule.get<CreateOrderUseCase>(CreateOrderUseCase);
+      orderRepo = orderModule.get<PostgresOrderRepository>(ORDER_REPOSITORY);
     },
     { timeout: 120000 },
   );
@@ -52,48 +96,12 @@ describe('Order-to-Payment E2E Flow', () => {
     async () => {
       console.log('[afterAll] Stopping Docker Compose environment...');
       await TestCompose.stop({ removeVolumes: false, timeout: 30000 });
+      if (orderModule) await orderModule.close();
+      if (paymentModule) await paymentModule.close();
       console.log('[afterAll] Environment stopped');
     },
     { timeout: 30000 },
   );
-
-  const createOrderModule = async () => {
-    return Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
-        TypeOrmModule.forRoot({
-          type: 'postgres',
-          url: connections.orderDatabase,
-          entities: [OrderEntity, OrderItemEntity],
-          synchronize: true,
-          dropSchema: false,
-        }),
-      ],
-      providers: [
-        {
-          provide: RABBITMQ_CONNECTION,
-          useFactory: () =>
-            new RabbitMQConnection({
-              url: connections.rabbitmqUrl,
-              exchange: 'food-ordering',
-            }),
-        },
-        {
-          provide: EVENT_PUBLISHER,
-          useFactory: (conn: RabbitMQConnection) =>
-            new RabbitMQEventPublisher(conn),
-          inject: [RABBITMQ_CONNECTION],
-        },
-        {
-          provide: ORDER_REPOSITORY,
-          useFactory: (dataSource: DataSource) =>
-            new PostgresOrderRepository(dataSource),
-          inject: [DataSource],
-        },
-        CreateOrderUseCase,
-      ],
-    }).compile();
-  };
 
   const createPaymentModule = async (paymentClasses: any) => {
     return Test.createTestingModule({
@@ -129,9 +137,8 @@ describe('Order-to-Payment E2E Flow', () => {
       // Load payment service classes dynamically
       const paymentClasses = await loadPaymentService();
 
-      // Setup: Create both service modules
-      const orderModule = await createOrderModule();
-      const paymentModule = await createPaymentModule(paymentClasses);
+      // Create payment module
+      paymentModule = await createPaymentModule(paymentClasses);
 
       // Capture published events from order creation
       const publishedEvents: DomainEvent[] = [];
@@ -144,8 +151,6 @@ describe('Order-to-Payment E2E Flow', () => {
       };
 
       // Step 1: Create an order (this emits order.created event)
-      const createOrderUseCase =
-        orderModule.get<CreateOrderUseCase>(CreateOrderUseCase);
       const orderResult = await createOrderUseCase.execute({
         customerId: uuidv4(),
         restaurantId: uuidv4(),
@@ -204,8 +209,6 @@ describe('Order-to-Payment E2E Flow', () => {
       expect(savedPayment!.getAmount().amount).toBe(100);
 
       // Step 4: Verify order status can be updated (simulating OrderConsumer)
-      const orderRepo =
-        orderModule.get<PostgresOrderRepository>(ORDER_REPOSITORY);
       const order = await orderRepo.findById(orderResult.orderId);
       expect(order).not.toBeNull();
 
@@ -219,8 +222,8 @@ describe('Order-to-Payment E2E Flow', () => {
       const updatedOrder = await orderRepo.findById(orderResult.orderId);
       expect(updatedOrder!.getStatus()).toBe(OrderStatusEnum.CONFIRMED);
 
-      await orderModule.close();
       await paymentModule.close();
+      paymentModule = null as any;
     },
     { timeout: 30000 },
   );
@@ -229,8 +232,7 @@ describe('Order-to-Payment E2E Flow', () => {
     'should handle payment rejection for high-value orders',
     async () => {
       const paymentClasses = await loadPaymentService();
-      const orderModule = await createOrderModule();
-      const paymentModule = await createPaymentModule(paymentClasses);
+      paymentModule = await createPaymentModule(paymentClasses);
 
       const publishedEvents: DomainEvent[] = [];
       const eventPublisher =
@@ -240,9 +242,6 @@ describe('Order-to-Payment E2E Flow', () => {
         publishedEvents.push(...events);
         await originalPublishAll(events);
       };
-
-      const createOrderUseCase =
-        orderModule.get<CreateOrderUseCase>(CreateOrderUseCase);
 
       // Create a high-value order (total > 1000, which triggers rejection in ProcessPaymentUseCase)
       const orderResult = await createOrderUseCase.execute({
@@ -275,6 +274,7 @@ describe('Order-to-Payment E2E Flow', () => {
         amount: eventData.totalAmountCents / 100,
         method: 'CREDIT_CARD',
         customerId: eventData.customerId,
+        paymentMethodToken: '4242',
       });
 
       // Verify payment was rejected due to high amount
@@ -288,8 +288,8 @@ describe('Order-to-Payment E2E Flow', () => {
 
       expect(savedPayment!.getStatus()).toBe('REJECTED');
 
-      await orderModule.close();
       await paymentModule.close();
+      paymentModule = null as any;
     },
     { timeout: 30000 },
   );

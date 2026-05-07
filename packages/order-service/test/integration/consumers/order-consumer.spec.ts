@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { TestCompose } from '@app/test-utils';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -21,6 +21,9 @@ import { OrderStatusEnum } from '../../../src/domain/value-objects/order-status.
 
 describe('OrderConsumer Integration Tests', () => {
   let connections: Record<string, string>;
+  let module: TestingModule;
+  let orderRepo: PostgresOrderRepository;
+  let createOrderUseCase: CreateOrderUseCase;
 
   beforeAll(async () => {
     console.log('[beforeAll] Starting Docker Compose environment...');
@@ -31,16 +34,9 @@ describe('OrderConsumer Integration Tests', () => {
     });
 
     console.log('[beforeAll] Environment started');
-  }, { timeout: 120000 });
 
-  afterAll(async () => {
-    console.log('[afterAll] Stopping Docker Compose environment...');
-    await TestCompose.stop({ removeVolumes: false, timeout: 30000 });
-    console.log('[afterAll] Environment stopped');
-  }, { timeout: 30000 });
-
-  it('should process payment.confirmed event and update order status', async () => {
-    const module = await Test.createTestingModule({
+    // Create test module ONCE for all tests
+    module = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({ isGlobal: true }),
         TypeOrmModule.forRoot({
@@ -77,10 +73,19 @@ describe('OrderConsumer Integration Tests', () => {
       ],
     }).compile();
 
-    const orderRepo = module.get<PostgresOrderRepository>(ORDER_REPOSITORY);
+    orderRepo = module.get<PostgresOrderRepository>(ORDER_REPOSITORY);
+    createOrderUseCase = module.get<CreateOrderUseCase>(CreateOrderUseCase);
+  }, { timeout: 120000 });
 
+  afterAll(async () => {
+    console.log('[afterAll] Stopping Docker Compose environment...');
+    await TestCompose.stop({ removeVolumes: false, timeout: 30000 });
+    if (module) await module.close();
+    console.log('[afterAll] Environment stopped');
+  }, { timeout: 30000 });
+
+  it('should process payment.confirmed event and update order status', async () => {
     // Create an order with payment method info
-    const createOrderUseCase = module.get<CreateOrderUseCase>(CreateOrderUseCase);
     const orderResult = await createOrderUseCase.execute({
       customerId: uuidv4(),
       restaurantId: uuidv4(),
@@ -112,52 +117,10 @@ describe('OrderConsumer Integration Tests', () => {
     // Verify order status was updated
     const updatedOrder = await orderRepo.findById(orderResult.orderId);
     expect(updatedOrder!.getStatus()).toBe(OrderStatusEnum.CONFIRMED);
-
-    await module.close();
-  }, { timeout: 30000 });
+  });
 
   it('should process payment.rejected event and cancel order', async () => {
-    const module = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
-        TypeOrmModule.forRoot({
-          type: 'postgres',
-          url: connections.orderDatabase,
-          entities: [OrderEntity, OrderItemEntity],
-          synchronize: true,
-          dropSchema: false,
-        }),
-      ],
-      providers: [
-        {
-          provide: RABBITMQ_CONNECTION,
-          useFactory: () =>
-            new RabbitMQConnection({
-              url: connections.rabbitmqUrl,
-              exchange: 'food-ordering',
-            }),
-        },
-        {
-          provide: ORDER_REPOSITORY,
-          useFactory: (dataSource: DataSource) =>
-            new PostgresOrderRepository(dataSource),
-          inject: [DataSource],
-        },
-        {
-          provide: EVENT_PUBLISHER,
-          useFactory: (conn: RabbitMQConnection) =>
-            new RabbitMQEventPublisher(conn),
-          inject: [RABBITMQ_CONNECTION],
-        },
-        CreateOrderUseCase,
-        OrderConsumer,
-      ],
-    }).compile();
-
-    const orderRepo = module.get<PostgresOrderRepository>(ORDER_REPOSITORY);
-
     // Create an order
-    const createOrderUseCase = module.get<CreateOrderUseCase>(CreateOrderUseCase);
     const orderResult = await createOrderUseCase.execute({
       customerId: uuidv4(),
       restaurantId: uuidv4(),
@@ -185,52 +148,10 @@ describe('OrderConsumer Integration Tests', () => {
     // Verify order status was updated
     const updatedOrder = await orderRepo.findById(orderResult.orderId);
     expect(updatedOrder!.getStatus()).toBe(OrderStatusEnum.CANCELLED);
-
-    await module.close();
-  }, { timeout: 30000 });
+  });
 
   it('should process order.ready event and update order status', async () => {
-    const module = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
-        TypeOrmModule.forRoot({
-          type: 'postgres',
-          url: connections.orderDatabase,
-          entities: [OrderEntity, OrderItemEntity],
-          synchronize: true,
-          dropSchema: false,
-        }),
-      ],
-      providers: [
-        {
-          provide: RABBITMQ_CONNECTION,
-          useFactory: () =>
-            new RabbitMQConnection({
-              url: connections.rabbitmqUrl,
-              exchange: 'food-ordering',
-            }),
-        },
-        {
-          provide: ORDER_REPOSITORY,
-          useFactory: (dataSource: DataSource) =>
-            new PostgresOrderRepository(dataSource),
-          inject: [DataSource],
-        },
-        {
-          provide: EVENT_PUBLISHER,
-          useFactory: (conn: RabbitMQConnection) =>
-            new RabbitMQEventPublisher(conn),
-          inject: [RABBITMQ_CONNECTION],
-        },
-        CreateOrderUseCase,
-        OrderConsumer,
-      ],
-    }).compile();
-
-    const orderRepo = module.get<PostgresOrderRepository>(ORDER_REPOSITORY);
-
     // Create and confirm an order
-    const createOrderUseCase = module.get<CreateOrderUseCase>(CreateOrderUseCase);
     const orderResult = await createOrderUseCase.execute({
       customerId: uuidv4(),
       restaurantId: uuidv4(),
@@ -265,7 +186,5 @@ describe('OrderConsumer Integration Tests', () => {
     // Verify order status was updated
     const updatedOrder = await orderRepo.findById(orderResult.orderId);
     expect(updatedOrder!.getStatus()).toBe(OrderStatusEnum.READY);
-
-    await module.close();
-  }, { timeout: 30000 });
+  });
 });
