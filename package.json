@@ -36,7 +36,7 @@
     "docker:dev:down": "docker compose -f docker-compose.infra.yml -f docker-compose.db.yml -f docker-compose.dev.yml down",
     "docker:prod": "docker compose -f docker-compose.infra.yml -f docker-compose.db.yml -f docker-compose.prod.yml up -d --build",
     "docker:prod:down": "docker compose -f docker-compose.infra.yml -f docker-compose.db.yml -f docker-compose.prod.yml down",
-    "dev": "bun run dev:infra && bun run dev:customer & bun run dev:order & bun run dev:kitchen & bun run dev:payment & bun run dev:notification & bun run dev:analytics & sleep 3 && bun run dev:gateway",
+    "dev": "bun run dev:infra && bun run dev:customer & bun run dev:order & bun run dev:restaurant & bun run dev:cart & bun run dev:auth & bun run dev:kitchen & bun run dev:payment & bun run dev:notification & bun run dev:analytics & sleep 3 && bun run dev:gateway",
     "stop": "pkill -f 'bun.*src/main.ts' && bun run dev:infra:down",
     "lint": "eslint \"packages/*/src/**/*.ts\" --fix",
     "format": "prettier --write \"packages/*/src/**/*.ts\" \"packages/*/test/**/*.ts\""

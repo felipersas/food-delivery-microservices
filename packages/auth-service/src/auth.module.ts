@@ -24,7 +24,8 @@ import { AuthConsumer } from './infra/messaging/rabbitmq/auth.consumer';
 import { JwtStrategy } from './infra/http/guards/jwt.strategy';
 import { RabbitMQConnection } from '@app/messaging';
 import { AllExceptionsFilter, SuccessResponseInterceptor } from '@app/shared';
-import { UserEntity, RefreshTokenEntity } from './infra/database/typeorm/entities';
+import { UserEntity } from './infra/database/typeorm/entities/user.entity';
+import { RefreshTokenEntity } from './infra/database/typeorm/entities/refresh-token.entity';
 import configuration from './config/configuration';
 import { validationSchema } from './config/validation';
 import {
