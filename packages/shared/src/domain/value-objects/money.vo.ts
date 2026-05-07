@@ -1,5 +1,5 @@
-import { ValueObject } from '../domain/value-object';
-import { ValidationException } from '../exceptions/domain.exception';
+import { ValueObject } from '../value-object';
+import { ValidationException } from '../../exceptions/domain.exception';
 
 /**
  * Properties for Money value object.

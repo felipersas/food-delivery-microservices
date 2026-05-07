@@ -7,7 +7,7 @@ export type { Repository } from './domain/repository.interface';
 export { UserContext, type UserContextProps } from './domain/user-context.vo';
 
 // Types
-export { Money } from './types/money';
+export { Money } from './domain/value-objects/money.vo';
 export { UserRoleEnum, isUserRole, getAllRoles } from './types/user-roles';
 
 // Events
