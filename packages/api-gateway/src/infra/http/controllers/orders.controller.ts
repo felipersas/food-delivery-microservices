@@ -24,6 +24,15 @@ export class OrdersController {
     });
   }
 
+  @Get()
+  @ApiOperation({ summary: 'List customer orders (proxy)', description: 'Proxies customer orders list to Order Service' })
+  @ApiBearerAuth()
+  async list(@Headers('authorization') auth?: string) {
+    return this.proxy.get(`${this.orderServiceUrl}/orders`, {
+      headers: auth ? { authorization: auth } : undefined,
+    });
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get order by ID (proxy)', description: 'Proxies order retrieval to Order Service' })
   @ApiBearerAuth()

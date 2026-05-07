@@ -2,6 +2,7 @@ import { Controller, Post, Get, Body, Param, NotFoundException, ForbiddenExcepti
 import { ApiTags, ApiOperation, ApiResponse, ApiBadRequestResponse, ApiNotFoundResponse, ApiBody, ApiBearerAuth, ApiForbiddenResponse } from '@nestjs/swagger';
 import { CreateOrderUseCase } from '@application/use-cases/create-order/create-order.use-case';
 import { GetOrderUseCase } from '@application/use-cases/get-order/get-order.use-case';
+import { ListOrdersUseCase } from '@application/use-cases/list-orders/list-orders.use-case';
 import { CreateOrderDto } from '@application/use-cases/create-order/create-order.dto';
 import { GetOrderOutput } from '@application/use-cases/get-order/get-order.dto';
 import { UserContext, Roles, CurrentUser, UserRoleEnum } from '@app/shared';
@@ -13,6 +14,7 @@ export class OrderController {
   constructor(
     private readonly createOrderUseCase: CreateOrderUseCase,
     private readonly getOrderUseCase: GetOrderUseCase,
+    private readonly listOrdersUseCase: ListOrdersUseCase,
   ) {}
 
   @Post()
@@ -25,6 +27,16 @@ export class OrderController {
     // Override customerId with authenticated user (security)
     const orderInput = { ...input, customerId: user.userId };
     return this.createOrderUseCase.execute(orderInput);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'List customer orders', description: 'Retrieves all orders for the authenticated customer' })
+  @ApiResponse({ status: 200, description: 'Orders retrieved successfully' })
+  @Roles(UserRoleEnum.CUSTOMER, UserRoleEnum.ADMIN)
+  async list(@CurrentUser() user: UserContext) {
+    return this.listOrdersUseCase.execute({
+      customerId: user.userId,
+    });
   }
 
   @Get(':id')
