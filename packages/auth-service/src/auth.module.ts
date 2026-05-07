@@ -1,7 +1,6 @@
 import { Module, type OnModuleInit } from '@nestjs/common';
 import {
   APP_FILTER,
-  APP_GUARD,
   APP_INTERCEPTOR,
   Reflector,
 } from '@nestjs/core';
@@ -88,11 +87,6 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
     Reflector,
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_INTERCEPTOR, useClass: SuccessResponseInterceptor },
-    {
-      provide: APP_GUARD,
-      useFactory: (reflector: Reflector) => new RolesGuard(reflector),
-      inject: [Reflector],
-    },
     {
       provide: RABBITMQ_CONNECTION,
       useFactory: (config: ConfigService) =>

@@ -17,7 +17,7 @@ import {
   ApiHeader,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from './guards/jwt.guard';
-import { RolesGuard } from '@app/shared';
+import { RolesGuard } from './guards/roles.guard';
 import { Roles } from '@app/shared';
 import { UserRoleEnum } from '@app/shared';
 import { GetCurrentUserUseCase } from '../../application/use-cases/get-current-user/get-current-user.use-case';
