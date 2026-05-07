@@ -1,11 +1,13 @@
 import { Injectable, Inject, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import type { UserRepository } from '../../../../domain/repositories/user.repository.interface';
-import type { EventPublisher } from '@app/messaging';
-import { User, UserRoleEnum } from '../../../../domain/aggregates/user.aggregate';
-import { RefreshToken } from '../../../../domain/value-objects/refresh-token.vo';
-import { LoginDto, LoginOutput } from './login.dto';
+import type { UserRepository } from '@domain/repositories/user.repository.interface';
+import type { EventPublisher } from '@infra/messaging/rabbitmq/auth-event.publisher';
+import { UserRoleEnum } from '@app/shared';
+import { RefreshToken } from '@domain/value-objects/refresh-token.vo';
+import { LoginDto } from './login.dto';
+import type { LoginOutput } from './login.dto';
 import { USER_REPOSITORY, EVENT_PUBLISHER, JWT_SERVICE } from '../../../tokens';
+import bcrypt from 'bcrypt';
 
 export interface JwtPayload {
   sub: string;
@@ -32,7 +34,6 @@ export class LoginUseCase {
     const hashedPassword = {
       getHash: () => user.getPasswordHash(),
       compare: async (plain: string) => {
-        const bcrypt = await import('bcrypt');
         return bcrypt.compare(plain, user.getPasswordHash());
       },
     };
