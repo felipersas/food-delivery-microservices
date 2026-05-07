@@ -58,9 +58,9 @@ export class KitchenTicket extends AggregateRoot<string> {
       restaurantId: props.restaurantId,
       items: props.items,
     });
-    (ticket as any).status = props.status;
-    (ticket as any).createdAt = props.createdAt;
-    (ticket as any).updatedAt = props.updatedAt;
+    ticket.setRawState('status', props.status);
+    ticket.setRawState('createdAt', props.createdAt);
+    ticket.setRawState('updatedAt', props.updatedAt);
     for (let i = 0; i < props.version; i++) {
       ticket.incrementVersion();
     }

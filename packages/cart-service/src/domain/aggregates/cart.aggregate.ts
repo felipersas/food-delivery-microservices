@@ -104,7 +104,7 @@ export class Cart extends AggregateRoot<string> {
     });
 
     // Set actual status after construction (reconstitution pattern)
-    (cart as any).status = CartStatus.fromString(props.status);
+    cart.setRawState('status', CartStatus.fromString(props.status));
 
     for (let i = 0; i < props.version; i++) {
       cart.incrementVersion();

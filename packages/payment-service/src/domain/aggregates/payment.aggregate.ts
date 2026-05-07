@@ -74,7 +74,7 @@ export class Payment extends AggregateRoot<string> {
       refundedAmount: props.refundedAmount,
       processedRefundIds: props.processedRefundIds,
     });
-    (payment as any).status = props.status;
+    payment.setRawState('status', props.status);
     for (let i = 0; i < props.version; i++) {
       payment.incrementVersion();
     }
