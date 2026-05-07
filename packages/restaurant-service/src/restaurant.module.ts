@@ -65,7 +65,11 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_INTERCEPTOR, useClass: SuccessResponseInterceptor },
-    { provide: APP_GUARD, useClass: RolesGuard },
+    {
+      provide: APP_GUARD,
+      useFactory: (reflector: Reflector) => new RolesGuard(reflector),
+      inject: [Reflector],
+    },
     Reflector,
     {
       provide: RABBITMQ_CONNECTION,
