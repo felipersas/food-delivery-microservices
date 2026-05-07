@@ -9,6 +9,8 @@
   "scripts": {
     "test": "bun test",
     "test:e2e": "bun test test/e2e",
+    "test:integration": "bun test 'packages/*/test/integration/**/*.spec.ts'",
+    "test:integration:order": "bun test --cwd packages/order-service test/integration",
     "test:shared": "bun test --cwd packages/shared",
     "test:order": "bun test --cwd packages/order-service",
     "test:kitchen": "bun test --cwd packages/kitchen-service test/unit",
@@ -43,9 +45,13 @@
   },
   "devDependencies": {
     "@nestjs/swagger": "^11.4.2",
+    "@testcontainers/postgresql": "^10.14.0",
+    "@testcontainers/rabbitmq": "^10.14.0",
+    "@testcontainers/redis": "^10.14.0",
     "@types/bun": "^1.1.13",
     "@types/ioredis": "^5.0.0",
     "@types/joi": "^17.2.3",
+    "@types/pg": "^8.20.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^8.0.0",
@@ -53,6 +59,7 @@
     "eslint-plugin-prettier": "^5.0.0",
     "joi": "^18.2.1",
     "prettier": "^3.0.0",
+    "testcontainers": "^10.14.0",
     "typescript": "^5.1.3"
   },
   "dependencies": {
