@@ -49,6 +49,23 @@ export class PostgresUserRepository implements UserRepository {
     return count > 0;
   }
 
+  async findByRefreshToken(token: string): Promise<User[]> {
+    const rt = await this.refreshTokenRepo.findOne({
+      where: { token },
+    });
+    if (!rt) return [];
+
+    const user = await this.userRepo.findOne({ where: { id: rt.userId } });
+    if (!user) return [];
+
+    const refreshTokens = await this.refreshTokenRepo.find({
+      where: { userId: user.id },
+      order: { createdAt: 'DESC' },
+    });
+
+    return [this.mapToDomain(user, refreshTokens)];
+  }
+
   async save(user: User): Promise<void> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();

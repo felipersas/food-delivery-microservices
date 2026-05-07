@@ -20,7 +20,7 @@ export class RefreshTokenUseCase {
     deviceId: string,
   ): Promise<RefreshTokenOutput> {
     // Find user with this refresh token
-    const users = await this.repo.findAll();
+    const users = await this.repo.findByRefreshToken(input.refreshToken);
     let user: User | null = null;
     let matchingToken: RefreshToken | null = null;
 

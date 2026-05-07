@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { TRPCContext } from 'nestjs-trpc';
+import type { TRPCContext, ContextOptions } from 'nestjs-trpc';
 import type { CreateTRPCContext } from '@app/trpc-definitions';
 
 /**
@@ -15,8 +15,6 @@ import type { CreateTRPCContext } from '@app/trpc-definitions';
  */
 @Injectable()
 export class TrpcContext implements TRPCContext {
-  constructor(private readonly request: Request) {}
-
   /**
    * Create context object for tRPC procedures
    *
@@ -24,10 +22,10 @@ export class TrpcContext implements TRPCContext {
    * - x-user-id: User UUID from JWT
    * - x-user-role: User role (admin, customer, restaurant_staff)
    */
-  async create(): Promise<CreateTRPCContext> {
+  async create(opts: ContextOptions): Promise<CreateTRPCContext & Record<string, unknown>> {
     return {
-      userId: this.request.headers.get('x-user-id') ?? undefined,
-      userRole: this.request.headers.get('x-user-role') ?? undefined,
+      userId: opts.req.headers['x-user-id'] as string | undefined,
+      userRole: opts.req.headers['x-user-role'] as string | undefined,
     };
   }
 }

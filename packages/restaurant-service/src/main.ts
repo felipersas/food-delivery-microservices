@@ -4,13 +4,21 @@ import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { RestaurantModule } from './restaurant.module';
-import { scalarHtml, UserContextMiddleware } from '@app/shared';
+import { scalarHtml } from '@app/shared';
 
 async function bootstrap() {
   const app = await NestFactory.create(RestaurantModule);
 
   // User context middleware - extracts user from gateway headers
-  app.use(UserContextMiddleware);
+  app.use((req: any, _res: any, next: any) => {
+    const userId = req.headers['x-user-id'] as string | undefined;
+    const userEmail = req.headers['x-user-email'] as string | undefined;
+    const userRole = req.headers['x-user-role'] as string | undefined;
+    if (userId) {
+      req.user = { id: userId, email: userEmail, role: userRole };
+    }
+    next();
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({

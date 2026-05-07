@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { TRPCErrorHandler, OnErrorOptions } from 'nestjs-trpc';
+import type { TRPCErrorHandler, OnErrorOptions } from 'nestjs-trpc';
 
 /**
  * tRPC Error Handler for Restaurant Service
@@ -29,7 +29,7 @@ export class TrpcErrorHandler implements TRPCErrorHandler {
     this.logger.error(
       {
         procedureType: type,
-        path: path.join('.'),
+        path: path ?? 'unknown',
         errorCode: error.code,
         message: error.message,
         input: this.sanitizeInput(input),
