@@ -10,6 +10,8 @@ import { InMemoryOrderRepository } from './infra/database/memory/order.repositor
 import { PostgresOrderRepository } from './infra/database/typeorm/repositories/order.repository.impl';
 import { RabbitMQEventPublisher } from './infra/messaging/rabbitmq/order-event.publisher';
 import { OrderConsumer } from './infra/messaging/rabbitmq/order.consumer';
+import { CartConsumer } from './infra/messaging/rabbitmq/cart-consumer';
+import { CreateOrderFromCartUseCase } from './application/use-cases/create-order-from-cart/create-order-from-cart.use-case';
 import { RabbitMQConnection } from '@app/messaging';
 import { AllExceptionsFilter, SuccessResponseInterceptor, RolesGuard } from '@app/shared';
 import { OrderEntity } from './infra/database/typeorm/entities/order.entity';
@@ -79,12 +81,18 @@ const usePostgres = process.env.DB_DRIVER === 'postgres';
     CreateOrderUseCase,
     GetOrderUseCase,
     OrderConsumer,
+    CartConsumer,
+    CreateOrderFromCartUseCase,
   ],
 })
 export class OrderModule implements OnModuleInit {
-  constructor(private readonly orderConsumer: OrderConsumer) {}
+  constructor(
+    private readonly orderConsumer: OrderConsumer,
+    private readonly cartConsumer: CartConsumer,
+  ) {}
 
   async onModuleInit() {
     await this.orderConsumer.start();
+    await this.cartConsumer.start();
   }
 }
