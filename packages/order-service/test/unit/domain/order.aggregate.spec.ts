@@ -5,7 +5,7 @@ import { OrderItem } from '@domain/value-objects/order-item.vo';
 import { OrderStatusEnum } from '@domain/value-objects/order-status.vo';
 
 function makeItem(overrides: { price?: number; quantity?: number } = {}): OrderItem {
-  return new OrderItem({
+  return OrderItem.create({
     productId: 'prod-1',
     productName: 'X-Burger',
     quantity: overrides.quantity ?? 2,

@@ -17,7 +17,7 @@ export class CreateOrderUseCase {
   async execute(input: CreateOrderInput): Promise<CreateOrderOutput> {
     const items = input.items.map(
       (item) =>
-        new OrderItem({
+        OrderItem.create({
           productId: item.productId,
           productName: item.productName,
           quantity: item.quantity,
