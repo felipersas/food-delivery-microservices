@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import type { DomainEvent } from '@app/shared';
 import type { RabbitMQConnection } from '@app/messaging';
 import type { OrderRepository } from '@domain/repositories/order.repository.interface';
@@ -6,6 +6,8 @@ import { RABBITMQ_CONNECTION, ORDER_REPOSITORY } from '../../../tokens';
 
 @Injectable()
 export class OrderConsumer {
+  private readonly logger = new Logger(OrderConsumer.name);
+
   constructor(
     @Inject(RABBITMQ_CONNECTION) private readonly connection: RabbitMQConnection,
     @Inject(ORDER_REPOSITORY) private readonly orderRepository: OrderRepository,
@@ -16,13 +18,13 @@ export class OrderConsumer {
       'order-service-events',
       ['payment.confirmed', 'payment.rejected', 'order.ready'],
       async (event: DomainEvent) => {
-        console.log(`[OrderConsumer] Received event: ${event.eventType}`, JSON.stringify(event.data).slice(0, 200));
+        this.logger.debug(`Received event: ${event.eventType}`);
         const data = event.data as any;
         const orderId = data.orderId;
 
         const order = await this.orderRepository.findById(orderId);
         if (!order) {
-          console.error(`[OrderConsumer] Order not found: ${orderId}`);
+          this.logger.error(`Order not found: ${orderId}`);
           return;
         }
 
@@ -40,6 +42,7 @@ export class OrderConsumer {
 
         await this.orderRepository.save(order);
         order.clearDomainEvents();
+        this.logger.log(`Order ${orderId} updated to ${order.getStatus()}`);
       },
     );
   }

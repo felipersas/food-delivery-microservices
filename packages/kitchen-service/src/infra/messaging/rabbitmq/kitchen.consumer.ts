@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import type { DomainEvent } from '@app/shared';
 import type { RabbitMQConnection } from '@app/messaging';
 import { KitchenQueue } from '@infra/queue/kitchen.queue';
@@ -6,6 +6,7 @@ import { RABBITMQ_CONNECTION, KITCHEN_QUEUE } from '../../../tokens';
 
 @Injectable()
 export class KitchenConsumer {
+  private readonly logger = new Logger(KitchenConsumer.name);
   private kitchenQueue: KitchenQueue;
 
   constructor(
@@ -23,19 +24,16 @@ export class KitchenConsumer {
       async (event: DomainEvent) => {
         const data = event.data as any;
 
-        console.log(
-          `[KitchenConsumer] Received event: ${event.eventType}`,
-          data,
-        );
-        await this.kitchenQueue.addJob({
-          orderId: data.orderId,
-          restaurantId: data.restaurantId,
-          items: data.items,
-        });
-
-        console.log(
-          `[KitchenConsumer] Ticket queued for order: ${data.orderId}, restaurant: ${data.restaurantId}`,
-        );
+        try {
+          await this.kitchenQueue.addJob({
+            orderId: data.orderId,
+            restaurantId: data.restaurantId,
+            items: data.items,
+          });
+          this.logger.log(`Kitchen ticket queued for order ${data.orderId}`);
+        } catch (error) {
+          this.logger.error(`Failed to queue kitchen ticket for order ${data.orderId}:`, error);
+        }
       },
     );
   }
