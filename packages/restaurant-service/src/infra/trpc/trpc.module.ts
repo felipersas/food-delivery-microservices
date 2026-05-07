@@ -1,8 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { TRPCModule } from 'nestjs-trpc';
-import { RestaurantRouter } from './restaurant.router';
-import { GetMenuItemUseCase } from '../../application/use-cases/get-menu-item/get-menu-item.use-case';
-import { ListMenuItemsUseCase } from '../../application/use-cases/list-menu-items/list-menu-items.use-case';
+import { TrpcContext } from './trpc.context';
+import { TrpcErrorHandler } from './trpc.error-handler';
 
 /**
  * tRPC Module for Restaurant Service
@@ -14,6 +13,8 @@ import { ListMenuItemsUseCase } from '../../application/use-cases/list-menu-item
  * - Decorator-based router with @Router(), @Query(), @Mutation()
  * - Auto-registers procedures with tRPC
  * - Full NestJS dependency injection support
+ * - Context provides userId/userRole from request headers
+ * - Centralized error handling with structured logging
  *
  * Usage:
  * - Import TrpcModule in AppModule
@@ -23,16 +24,18 @@ import { ListMenuItemsUseCase } from '../../application/use-cases/list-menu-item
 @Global()
 @Module({
   imports: [
-    TRPCModule.forRoot(),
+    TRPCModule.forRoot({
+      basePath: '/trpc',
+      context: TrpcContext,
+      onError: TrpcErrorHandler,
+    }),
   ],
   providers: [
-    RestaurantRouter,
-    GetMenuItemUseCase,
-    ListMenuItemsUseCase,
+    TrpcContext,
+    TrpcErrorHandler,
   ],
   exports: [
     TRPCModule,
-    RestaurantRouter,
   ],
 })
 export class TrpcModule {}
