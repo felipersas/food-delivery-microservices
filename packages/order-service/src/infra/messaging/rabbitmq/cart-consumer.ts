@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { DomainEvent } from '@app/shared';
 import type { RabbitMQConnection } from '@app/messaging';
-import type { CreateOrderFromCartUseCase } from '@application/use-cases/create-order-from-cart/create-order-from-cart.use-case';
+import { CreateOrderFromCartUseCase } from '@application/use-cases/create-order-from-cart/create-order-from-cart.use-case';
 import { RABBITMQ_CONNECTION } from '../../../tokens';
 
 /**
