@@ -27,6 +27,7 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@app/test-utils": "workspace:*",
     "@nestjs/testing": "^10.0.0",
     "@types/bun": "^1.1.13",
     "@types/uuid": "^9.0.0",
