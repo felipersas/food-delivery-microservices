@@ -1,13 +1,12 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { CreateKitchenTicketUseCase } from '../../../src/application/use-cases/create-kitchen-ticket/create-kitchen-ticket.use-case';
-import { GetKitchenTicketUseCase } from '../../../src/application/use-cases/get-kitchen-ticket/get-kitchen-ticket.use-case';
-import { UpdateKitchenTicketStatusUseCase } from '../../../src/application/use-cases/update-kitchen-ticket-status/update-kitchen-ticket-status.use-case';
-import { ListKitchenTicketsUseCase } from '../../../src/application/use-cases/list-kitchen-tickets/list-kitchen-tickets.use-case';
+import { CreateKitchenTicketUseCase } from '@application/use-cases/create-kitchen-ticket/create-kitchen-ticket.use-case';
+import { GetKitchenTicketUseCase } from '@application/use-cases/get-kitchen-ticket/get-kitchen-ticket.use-case';
+import { UpdateKitchenTicketStatusUseCase } from '@application/use-cases/update-kitchen-ticket-status/update-kitchen-ticket-status.use-case';
+import { ListKitchenTicketsUseCase } from '@application/use-cases/list-kitchen-tickets/list-kitchen-tickets.use-case';
 import { KitchenTicket } from '@domain/aggregates/kitchen-ticket.aggregate';
 import { KitchenTicketStatus } from '@domain/aggregates/kitchen-ticket.aggregate';
 import { InvalidStateException, type DomainEvent } from '@app/shared';
 import type { KitchenTicketRepository } from '@domain/repositories/kitchen-ticket.repository.interface';
-import type { EventPublisher } from '../../../src/infra/messaging/rabbitmq/kitchen-event.publisher';
 
 // Mock implementations
 class MockKitchenTicketRepository implements KitchenTicketRepository {
@@ -92,7 +91,9 @@ describe('Kitchen Service Use Cases Unit Tests', () => {
       const result = await createUseCase.execute({
         orderId: 'order-123',
         restaurantId: 'restaurant-456',
-        items: [{ productId: 'product-1', productName: 'X-Burger', quantity: 1 }],
+        items: [
+          { productId: 'product-1', productName: 'X-Burger', quantity: 1 },
+        ],
       });
 
       const saved = await repo.findById(result.ticketId);
@@ -105,7 +106,9 @@ describe('Kitchen Service Use Cases Unit Tests', () => {
       await createUseCase.execute({
         orderId: 'order-123',
         restaurantId: 'restaurant-456',
-        items: [{ productId: 'product-1', productName: 'X-Burger', quantity: 1 }],
+        items: [
+          { productId: 'product-1', productName: 'X-Burger', quantity: 1 },
+        ],
       });
 
       // No events on creation
@@ -118,7 +121,9 @@ describe('Kitchen Service Use Cases Unit Tests', () => {
       const created = await createUseCase.execute({
         orderId: 'order-123',
         restaurantId: 'restaurant-456',
-        items: [{ productId: 'product-1', productName: 'X-Burger', quantity: 1 }],
+        items: [
+          { productId: 'product-1', productName: 'X-Burger', quantity: 1 },
+        ],
       });
 
       const result = await getUseCase.execute(created.ticketId);
@@ -140,7 +145,9 @@ describe('Kitchen Service Use Cases Unit Tests', () => {
       const created = await createUseCase.execute({
         orderId: 'order-123',
         restaurantId: 'restaurant-456',
-        items: [{ productId: 'product-1', productName: 'X-Burger', quantity: 1 }],
+        items: [
+          { productId: 'product-1', productName: 'X-Burger', quantity: 1 },
+        ],
       });
 
       const result = await updateStatusUseCase.execute(
@@ -156,10 +163,15 @@ describe('Kitchen Service Use Cases Unit Tests', () => {
       const created = await createUseCase.execute({
         orderId: 'order-123',
         restaurantId: 'restaurant-456',
-        items: [{ productId: 'product-1', productName: 'X-Burger', quantity: 1 }],
+        items: [
+          { productId: 'product-1', productName: 'X-Burger', quantity: 1 },
+        ],
       });
 
-      await updateStatusUseCase.execute(created.ticketId, KitchenTicketStatus.PREPARING);
+      await updateStatusUseCase.execute(
+        created.ticketId,
+        KitchenTicketStatus.PREPARING,
+      );
       const result = await updateStatusUseCase.execute(
         created.ticketId,
         KitchenTicketStatus.READY,
@@ -181,16 +193,27 @@ describe('Kitchen Service Use Cases Unit Tests', () => {
       const created = await createUseCase.execute({
         orderId: 'order-123',
         restaurantId: 'restaurant-456',
-        items: [{ productId: 'product-1', productName: 'X-Burger', quantity: 1 }],
+        items: [
+          { productId: 'product-1', productName: 'X-Burger', quantity: 1 },
+        ],
       });
 
-      await updateStatusUseCase.execute(created.ticketId, KitchenTicketStatus.PREPARING);
+      await updateStatusUseCase.execute(
+        created.ticketId,
+        KitchenTicketStatus.PREPARING,
+      );
 
       await expect(async () => {
-        await updateStatusUseCase.execute(created.ticketId, KitchenTicketStatus.WAITING);
+        await updateStatusUseCase.execute(
+          created.ticketId,
+          KitchenTicketStatus.WAITING,
+        );
       }).toThrow(InvalidStateException);
       await expect(async () => {
-        await updateStatusUseCase.execute(created.ticketId, KitchenTicketStatus.WAITING);
+        await updateStatusUseCase.execute(
+          created.ticketId,
+          KitchenTicketStatus.WAITING,
+        );
       }).toThrow('Cannot transition back to WAITING status');
     });
 
@@ -198,21 +221,31 @@ describe('Kitchen Service Use Cases Unit Tests', () => {
       const created = await createUseCase.execute({
         orderId: 'order-123',
         restaurantId: 'restaurant-456',
-        items: [{ productId: 'product-1', productName: 'X-Burger', quantity: 1 }],
+        items: [
+          { productId: 'product-1', productName: 'X-Burger', quantity: 1 },
+        ],
       });
 
       publisher.clear();
 
-      await updateStatusUseCase.execute(created.ticketId, KitchenTicketStatus.PREPARING);
+      await updateStatusUseCase.execute(
+        created.ticketId,
+        KitchenTicketStatus.PREPARING,
+      );
 
       // No events on preparing
       expect(publisher.publishedEvents.length).toBe(0);
 
-      await updateStatusUseCase.execute(created.ticketId, KitchenTicketStatus.READY);
+      await updateStatusUseCase.execute(
+        created.ticketId,
+        KitchenTicketStatus.READY,
+      );
 
       // order.ready event emitted on ready
       expect(publisher.publishedEvents.length).toBeGreaterThan(0);
-      const readyEvent = publisher.publishedEvents.find((e: any) => e.eventType === 'order.ready');
+      const readyEvent = publisher.publishedEvents.find(
+        (e: any) => e.eventType === 'order.ready',
+      );
       expect(readyEvent).toBeDefined();
       expect(readyEvent!.data.orderId).toBe('order-123');
     });
@@ -224,13 +257,17 @@ describe('Kitchen Service Use Cases Unit Tests', () => {
       await createUseCase.execute({
         orderId: 'order-1',
         restaurantId: 'restaurant-123',
-        items: [{ productId: 'product-1', productName: 'X-Burger', quantity: 1 }],
+        items: [
+          { productId: 'product-1', productName: 'X-Burger', quantity: 1 },
+        ],
       });
 
       await createUseCase.execute({
         orderId: 'order-2',
         restaurantId: 'restaurant-123',
-        items: [{ productId: 'product-2', productName: 'X-Fries', quantity: 2 }],
+        items: [
+          { productId: 'product-2', productName: 'X-Fries', quantity: 2 },
+        ],
       });
 
       const ticket3 = await createUseCase.execute({
@@ -239,11 +276,16 @@ describe('Kitchen Service Use Cases Unit Tests', () => {
         items: [{ productId: 'product-3', productName: 'X-Soda', quantity: 1 }],
       });
 
-      await updateStatusUseCase.execute(ticket3.ticketId, KitchenTicketStatus.PREPARING);
+      await updateStatusUseCase.execute(
+        ticket3.ticketId,
+        KitchenTicketStatus.PREPARING,
+      );
     });
 
     it('should list all tickets for a restaurant', async () => {
-      const result = await listUseCase.execute({ restaurantId: 'restaurant-123' });
+      const result = await listUseCase.execute({
+        restaurantId: 'restaurant-123',
+      });
 
       expect(result).toHaveLength(3);
     });
@@ -265,12 +307,16 @@ describe('Kitchen Service Use Cases Unit Tests', () => {
     });
 
     it('should return empty array for restaurant with no tickets', async () => {
-      const result = await listUseCase.execute({ restaurantId: 'no-tickets-restaurant' });
+      const result = await listUseCase.execute({
+        restaurantId: 'no-tickets-restaurant',
+      });
       expect(result).toHaveLength(0);
     });
 
     it('should include ticket metadata', async () => {
-      const result = await listUseCase.execute({ restaurantId: 'restaurant-123' });
+      const result = await listUseCase.execute({
+        restaurantId: 'restaurant-123',
+      });
 
       expect(result.length).toBeGreaterThan(0);
       const ticket = result[0];

@@ -5,27 +5,38 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
-import { KitchenTicketEntity } from '../../src/infra/database/typeorm/entities/kitchen-ticket.entity';
-import { KitchenTicketItemEntity } from '../../src/infra/database/typeorm/entities/kitchen-ticket-item.entity';
-import { CreateKitchenTicketUseCase } from '../../src/application/use-cases/create-kitchen-ticket/create-kitchen-ticket.use-case';
-import { UpdateKitchenTicketStatusUseCase } from '../../src/application/use-cases/update-kitchen-ticket-status/update-kitchen-ticket-status.use-case';
-import { GetKitchenTicketUseCase } from '../../src/application/use-cases/get-kitchen-ticket/get-kitchen-ticket.use-case';
-import {
-  KITCHEN_TICKET_REPOSITORY,
-  EVENT_PUBLISHER,
-} from '../../src/tokens';
-import { PostgresKitchenTicketRepository } from '../../src/infra/database/typeorm/repositories/kitchen-ticket.repository.impl';
-import { KitchenTicketStatus } from '../../src/domain/aggregates/kitchen-ticket.aggregate';
+import { KitchenTicketEntity } from '@infra/database/typeorm/entities/kitchen-ticket.entity';
+import { KitchenTicketItemEntity } from '@infra/database/typeorm/entities/kitchen-ticket-item.entity';
+import { CreateKitchenTicketUseCase } from '@application/use-cases/create-kitchen-ticket/create-kitchen-ticket.use-case';
+import { UpdateKitchenTicketStatusUseCase } from '@application/use-cases/update-kitchen-ticket-status/update-kitchen-ticket-status.use-case';
+import { GetKitchenTicketUseCase } from '@application/use-cases/get-kitchen-ticket/get-kitchen-ticket.use-case';
+import { KITCHEN_TICKET_REPOSITORY, EVENT_PUBLISHER } from '../../src/tokens';
+import { PostgresKitchenTicketRepository } from '@infra/database/typeorm/repositories/kitchen-ticket.repository.impl';
+import { KitchenTicketStatus } from '@domain/aggregates/kitchen-ticket.aggregate';
 import type { DomainEvent } from '@app/shared';
 
 // Dynamic imports for order service (avoiding direct import issues)
 const loadOrderService = async () => {
   const orderPath = '../../../order-service/src';
   return {
-    OrderEntity: (await import(`${orderPath}/infra/database/typeorm/entities/order.entity`)).OrderEntity,
-    OrderItemEntity: (await import(`${orderPath}/infra/database/typeorm/entities/order-item.entity`)).OrderItemEntity,
-    CreateOrderUseCase: (await import(`${orderPath}/application/use-cases/create-order/create-order.use-case`)).CreateOrderUseCase,
-    PostgresOrderRepository: (await import(`${orderPath}/infra/database/typeorm/repositories/order.repository.impl`)).PostgresOrderRepository,
+    OrderEntity: (
+      await import(`${orderPath}/infra/database/typeorm/entities/order.entity`)
+    ).OrderEntity,
+    OrderItemEntity: (
+      await import(
+        `${orderPath}/infra/database/typeorm/entities/order-item.entity`
+      )
+    ).OrderItemEntity,
+    CreateOrderUseCase: (
+      await import(
+        `${orderPath}/application/use-cases/create-order/create-order.use-case`
+      )
+    ).CreateOrderUseCase,
+    PostgresOrderRepository: (
+      await import(
+        `${orderPath}/infra/database/typeorm/repositories/order.repository.impl`
+      )
+    ).PostgresOrderRepository,
     ORDER_REPOSITORY: (await import(`${orderPath}/tokens`)).ORDER_REPOSITORY,
   };
 };
@@ -65,7 +76,8 @@ describe('Order-to-Kitchen E2E Flow', () => {
         providers: [
           {
             provide: KITCHEN_TICKET_REPOSITORY,
-            useFactory: (dataSource: DataSource) => new PostgresKitchenTicketRepository(dataSource),
+            useFactory: (dataSource: DataSource) =>
+              new PostgresKitchenTicketRepository(dataSource),
             inject: [DataSource],
           },
           {
@@ -76,7 +88,8 @@ describe('Order-to-Kitchen E2E Flow', () => {
           },
           {
             provide: CreateKitchenTicketUseCase,
-            useFactory: (repo, publisher) => new CreateKitchenTicketUseCase(repo, publisher),
+            useFactory: (repo, publisher) =>
+              new CreateKitchenTicketUseCase(repo, publisher),
             inject: [KITCHEN_TICKET_REPOSITORY, EVENT_PUBLISHER],
           },
           {
@@ -86,16 +99,25 @@ describe('Order-to-Kitchen E2E Flow', () => {
           },
           {
             provide: UpdateKitchenTicketStatusUseCase,
-            useFactory: (repo, publisher) => new UpdateKitchenTicketStatusUseCase(repo, publisher),
+            useFactory: (repo, publisher) =>
+              new UpdateKitchenTicketStatusUseCase(repo, publisher),
             inject: [KITCHEN_TICKET_REPOSITORY, EVENT_PUBLISHER],
           },
         ],
       }).compile();
 
-      createTicketUseCase = kitchenModule.get<CreateKitchenTicketUseCase>(CreateKitchenTicketUseCase);
-      updateStatusUseCase = kitchenModule.get<UpdateKitchenTicketStatusUseCase>(UpdateKitchenTicketStatusUseCase);
-      getTicketUseCase = kitchenModule.get<GetKitchenTicketUseCase>(GetKitchenTicketUseCase);
-      kitchenRepo = kitchenModule.get<PostgresKitchenTicketRepository>(KITCHEN_TICKET_REPOSITORY);
+      createTicketUseCase = kitchenModule.get<CreateKitchenTicketUseCase>(
+        CreateKitchenTicketUseCase,
+      );
+      updateStatusUseCase = kitchenModule.get<UpdateKitchenTicketStatusUseCase>(
+        UpdateKitchenTicketStatusUseCase,
+      );
+      getTicketUseCase = kitchenModule.get<GetKitchenTicketUseCase>(
+        GetKitchenTicketUseCase,
+      );
+      kitchenRepo = kitchenModule.get<PostgresKitchenTicketRepository>(
+        KITCHEN_TICKET_REPOSITORY,
+      );
     },
     { timeout: 120000 },
   );
@@ -126,7 +148,8 @@ describe('Order-to-Kitchen E2E Flow', () => {
       providers: [
         {
           provide: orderClasses.ORDER_REPOSITORY,
-          useFactory: (dataSource: DataSource) => new orderClasses.PostgresOrderRepository(dataSource),
+          useFactory: (dataSource: DataSource) =>
+            new orderClasses.PostgresOrderRepository(dataSource),
           inject: [DataSource],
         },
         {
@@ -241,13 +264,17 @@ describe('Order-to-Kitchen E2E Flow', () => {
       const ticket1 = await createTicketUseCase.execute({
         orderId: uuidv4(),
         restaurantId,
-        items: [{ productId: 'product-1', productName: 'X-Burger', quantity: 1 }],
+        items: [
+          { productId: 'product-1', productName: 'X-Burger', quantity: 1 },
+        ],
       });
 
       const ticket2 = await createTicketUseCase.execute({
         orderId: uuidv4(),
         restaurantId,
-        items: [{ productId: 'product-2', productName: 'X-Fries', quantity: 2 }],
+        items: [
+          { productId: 'product-2', productName: 'X-Fries', quantity: 2 },
+        ],
       });
 
       const ticket3 = await createTicketUseCase.execute({
@@ -262,12 +289,24 @@ describe('Order-to-Kitchen E2E Flow', () => {
       expect(ticket3.status).toBe(KitchenTicketStatus.WAITING);
 
       // Process tickets in parallel (simulating kitchen workflow)
-      await updateStatusUseCase.execute(ticket1.ticketId, KitchenTicketStatus.PREPARING);
-      await updateStatusUseCase.execute(ticket2.ticketId, KitchenTicketStatus.PREPARING);
-      await updateStatusUseCase.execute(ticket3.ticketId, KitchenTicketStatus.PREPARING);
+      await updateStatusUseCase.execute(
+        ticket1.ticketId,
+        KitchenTicketStatus.PREPARING,
+      );
+      await updateStatusUseCase.execute(
+        ticket2.ticketId,
+        KitchenTicketStatus.PREPARING,
+      );
+      await updateStatusUseCase.execute(
+        ticket3.ticketId,
+        KitchenTicketStatus.PREPARING,
+      );
 
       // Mark first as ready
-      const ready1 = await updateStatusUseCase.execute(ticket1.ticketId, KitchenTicketStatus.READY);
+      const ready1 = await updateStatusUseCase.execute(
+        ticket1.ticketId,
+        KitchenTicketStatus.READY,
+      );
       expect(ready1!.status).toBe(KitchenTicketStatus.READY);
 
       // Verify all tickets exist in database
@@ -293,10 +332,12 @@ describe('Order-to-Kitchen E2E Flow', () => {
 
       // Capture published events
       const publishedEvents: DomainEvent[] = [];
-      const originalPublishAll = (kitchenModule.get<any>(EVENT_PUBLISHER) as any).publishAll.bind(
-        kitchenModule.get(EVENT_PUBLISHER),
-      );
-      (kitchenModule.get<any>(EVENT_PUBLISHER) as any).publishAll = async (events: DomainEvent[]) => {
+      const originalPublishAll = (
+        kitchenModule.get<any>(EVENT_PUBLISHER) as any
+      ).publishAll.bind(kitchenModule.get(EVENT_PUBLISHER));
+      (kitchenModule.get<any>(EVENT_PUBLISHER) as any).publishAll = async (
+        events: DomainEvent[],
+      ) => {
         publishedEvents.push(...events);
         await originalPublishAll(events);
       };
@@ -305,20 +346,30 @@ describe('Order-to-Kitchen E2E Flow', () => {
       const ticket = await createTicketUseCase.execute({
         orderId,
         restaurantId: uuidv4(),
-        items: [{ productId: 'product-1', productName: 'X-Burger', quantity: 1 }],
+        items: [
+          { productId: 'product-1', productName: 'X-Burger', quantity: 1 },
+        ],
       });
 
       // No events should be emitted on ticket creation (only on payment confirmation)
       // Kitchen tickets are created when payment is confirmed
 
       // Start preparing - should emit domain event
-      await updateStatusUseCase.execute(ticket.ticketId, KitchenTicketStatus.PREPARING);
+      await updateStatusUseCase.execute(
+        ticket.ticketId,
+        KitchenTicketStatus.PREPARING,
+      );
 
       // Mark ready - should emit order.ready event
-      await updateStatusUseCase.execute(ticket.ticketId, KitchenTicketStatus.READY);
+      await updateStatusUseCase.execute(
+        ticket.ticketId,
+        KitchenTicketStatus.READY,
+      );
 
       // Verify order.ready event was emitted
-      const orderReadyEvent = publishedEvents.find((e) => e.eventType === 'order.ready');
+      const orderReadyEvent = publishedEvents.find(
+        (e) => e.eventType === 'order.ready',
+      );
       expect(orderReadyEvent).toBeDefined();
       expect(orderReadyEvent!.data.orderId).toBe(orderId);
 

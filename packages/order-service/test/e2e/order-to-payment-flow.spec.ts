@@ -5,29 +5,44 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
-import { OrderEntity } from '../../src/infra/database/typeorm/entities/order.entity';
-import { OrderItemEntity } from '../../src/infra/database/typeorm/entities/order-item.entity';
-import { CreateOrderUseCase } from '../../src/application/use-cases/create-order/create-order.use-case';
+import { OrderEntity } from '@infra/database/typeorm/entities/order.entity';
+import { OrderItemEntity } from '@infra/database/typeorm/entities/order-item.entity';
+import { CreateOrderUseCase } from '@application/use-cases/create-order/create-order.use-case';
 import {
   ORDER_REPOSITORY,
   EVENT_PUBLISHER,
   RABBITMQ_CONNECTION,
 } from '../../src/tokens';
-import { RabbitMQEventPublisher } from '../../src/infra/messaging/rabbitmq/order-event.publisher';
+import { RabbitMQEventPublisher } from '@infra/messaging/rabbitmq/order-event.publisher';
 import { RabbitMQConnection } from '@app/messaging';
-import { PostgresOrderRepository } from '../../src/infra/database/typeorm/repositories/order.repository.impl';
-import { OrderStatusEnum } from '../../src/domain/value-objects/order-status.vo';
+import { PostgresOrderRepository } from '@infra/database/typeorm/repositories/order.repository.impl';
+import { OrderStatusEnum } from '@domain/value-objects/order-status.vo';
 import type { DomainEvent } from '@app/shared';
 
 // Dynamic imports for payment service (avoiding direct import issues)
 const loadPaymentService = async () => {
   const paymentPath = '../../../payment-service/src';
   return {
-    PaymentEntity: (await import(`${paymentPath}/infra/database/typeorm/entities/payment.entity`)).PaymentEntity,
-    Payment: (await import(`${paymentPath}/domain/aggregates/payment.aggregate`)).Payment,
-    ProcessPaymentUseCase: (await import(`${paymentPath}/application/use-cases/process-payment/process-payment.use-case`)).ProcessPaymentUseCase,
-    PostgresPaymentRepository: (await import(`${paymentPath}/infra/database/typeorm/repositories/payment.repository.impl`)).PostgresPaymentRepository,
-    PAYMENT_REPOSITORY: (await import(`${paymentPath}/tokens`)).PAYMENT_REPOSITORY,
+    PaymentEntity: (
+      await import(
+        `${paymentPath}/infra/database/typeorm/entities/payment.entity`
+      )
+    ).PaymentEntity,
+    Payment: (
+      await import(`${paymentPath}/domain/aggregates/payment.aggregate`)
+    ).Payment,
+    ProcessPaymentUseCase: (
+      await import(
+        `${paymentPath}/application/use-cases/process-payment/process-payment.use-case`
+      )
+    ).ProcessPaymentUseCase,
+    PostgresPaymentRepository: (
+      await import(
+        `${paymentPath}/infra/database/typeorm/repositories/payment.repository.impl`
+      )
+    ).PostgresPaymentRepository,
+    PAYMENT_REPOSITORY: (await import(`${paymentPath}/tokens`))
+      .PAYMENT_REPOSITORY,
   };
 };
 
@@ -86,7 +101,8 @@ describe('Order-to-Payment E2E Flow', () => {
         ],
       }).compile();
 
-      createOrderUseCase = orderModule.get<CreateOrderUseCase>(CreateOrderUseCase);
+      createOrderUseCase =
+        orderModule.get<CreateOrderUseCase>(CreateOrderUseCase);
       orderRepo = orderModule.get<PostgresOrderRepository>(ORDER_REPOSITORY);
     },
     { timeout: 120000 },
