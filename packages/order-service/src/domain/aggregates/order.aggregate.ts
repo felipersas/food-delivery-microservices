@@ -101,6 +101,10 @@ export class Order extends AggregateRoot<string> {
   }
 
   confirm(): void {
+
+    if (this.paymentMethodIndex === undefined || this.paymentMethodIndex === null || !this.paymentMethodType) {
+      throw new DomainException('Order cannot be confirmed without payment method');
+    }
     this.transitionTo(OrderStatus.confirmed());
     this.addDomainEvent({
       eventId: uuidv4(),

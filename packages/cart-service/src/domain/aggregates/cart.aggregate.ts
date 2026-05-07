@@ -139,6 +139,11 @@ export class Cart extends AggregateRoot<string> {
     }
 
     this.totalAmount = this.calculateTotal();
+
+    // Max cart value: R$ 10,000
+    if (this.totalAmount.cents > 1_000_000) {
+      throw new DomainException('Cart total cannot exceed R$ 10,000');
+    }
     this.markAsUpdated();
 
     this.addDomainEvent({

@@ -13,8 +13,10 @@ function makeItem(overrides: { price?: number; quantity?: number } = {}): OrderI
   });
 }
 
-function makeOrder(overrides: { items?: OrderItem[] } = {}): Order {
+function makeOrder(overrides: { items?: OrderItem[]; paymentMethodIndex?: number; paymentMethodType?: 'CREDIT_CARD' | 'DEBIT_CARD' | 'PIX' | 'CASH' } = {}): Order {
   return new Order({
+    paymentMethodIndex: overrides.paymentMethodIndex ?? 0,
+    paymentMethodType: overrides.paymentMethodType ?? 'CREDIT_CARD',
     customerId: 'customer-1',
     restaurantId: 'restaurant-1',
     items: overrides.items ?? [makeItem()],

@@ -85,6 +85,9 @@ export class Payment extends AggregateRoot<string> {
     if (this.status !== PaymentStatus.PENDING) {
       throw new InvalidStateException(`Cannot confirm payment in ${this.status} status`);
     }
+    if (!this.paymentMethodToken) {
+      throw new InvalidStateException('Cannot confirm payment without payment method token');
+    }
     this.status = PaymentStatus.CONFIRMED;
     this.incrementVersion();
   }
