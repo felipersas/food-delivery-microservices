@@ -8,8 +8,8 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@app/shared": "workspace:*",
     "@app/messaging": "workspace:*",
+    "@app/shared": "workspace:*",
     "@app/trpc-definitions": "workspace:*",
     "@nestjs/common": "^10.4.7",
     "@nestjs/config": "^3.3.0",
@@ -21,6 +21,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "joi": "^17.13.3",
+    "nestjs-trpc": "^2.9.1",
     "pg": "^8.13.1",
     "typeorm": "^0.3.20",
     "uuid": "^11.0.3",
