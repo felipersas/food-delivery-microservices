@@ -1,7 +1,7 @@
 import { Injectable, Inject, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import type { UserRepository } from '@domain/repositories/user.repository.interface';
-import type { EventPublisher } from '@infra/messaging/rabbitmq/auth-event.publisher';
+import type { EventPublisher } from '@app/shared';
 import { UserRoleEnum } from '@app/shared';
 import { RefreshToken } from '@domain/value-objects/refresh-token.vo';
 import { LoginDto } from './login.dto';

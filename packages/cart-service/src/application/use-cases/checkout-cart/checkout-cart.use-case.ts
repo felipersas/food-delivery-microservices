@@ -1,9 +1,12 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
-import { Cart } from '../../../domain/aggregates/cart.aggregate';
-import type { CartRepository } from '../../../domain/repositories/cart.repository.interface';
-import type { EventPublisher } from '../../../infra/messaging/rabbitmq/cart-event.publisher';
-import type { CheckoutCartInput, CheckoutCartOutput, CheckoutOrderItem } from './checkout-cart.dto';
+import type { CartRepository } from '@domain/repositories/cart.repository.interface';
+import type { EventPublisher } from '@app/shared';
+import type {
+  CheckoutCartInput,
+  CheckoutCartOutput,
+  CheckoutOrderItem,
+} from './checkout-cart.dto';
 import { CART_REPOSITORY, EVENT_PUBLISHER } from '../../../tokens';
 
 @Injectable()
@@ -14,7 +17,9 @@ export class CheckoutCartUseCase {
   ) {}
 
   async execute(input: CheckoutCartInput): Promise<CheckoutCartOutput> {
-    const cart = await this.cartRepository.findActiveByCustomerId(input.customerId);
+    const cart = await this.cartRepository.findActiveByCustomerId(
+      input.customerId,
+    );
 
     if (!cart) {
       throw new Error('Cart not found');

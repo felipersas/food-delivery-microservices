@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import type { UserRepository } from '../../../domain/repositories/user.repository.interface';
-import type { EventPublisher } from '../../../infra/messaging/rabbitmq/auth-event.publisher';
+import type { EventPublisher } from '@app/shared';
 import { User } from '../../../domain/aggregates/user.aggregate';
 import { RegisterDto } from './register.dto';
 import type { RegisterOutput } from './register.dto';

@@ -1,6 +1,6 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import type { UserRepository } from '@domain/repositories/user.repository.interface';
-import type { EventPublisher } from '@infra/messaging/rabbitmq/auth-event.publisher';
+import type { EventPublisher } from '@app/shared';
 import {
   UserStatus,
   UserStatusEnum,

@@ -3,7 +3,7 @@ import { Cart } from '@domain/aggregates/cart.aggregate';
 import { CartItem } from '@domain/value-objects/cart-item.vo';
 import { DomainException } from '@app/shared';
 import type { CartRepository } from '@domain/repositories/cart.repository.interface';
-import type { EventPublisher } from '@infra/messaging/rabbitmq/cart-event.publisher';
+import type { EventPublisher } from '@app/shared';
 import type { PriceCacheService } from '@services/price-cache.service';
 import type { AddItemInput, AddItemOutput } from './add-item.dto';
 import {

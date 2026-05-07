@@ -1,13 +1,14 @@
 import { Injectable, Inject } from '@nestjs/common';
 import type { RabbitMQConnection } from '@app/messaging';
-import type { UserRepository } from '../../../../domain/repositories/user.repository.interface';
+import type { UserRepository } from '../../../domain/repositories/user.repository.interface';
 import type { DomainEvent } from '@app/shared';
 import { RABBITMQ_CONNECTION, USER_REPOSITORY } from '../../../tokens';
 
 @Injectable()
 export class AuthConsumer {
   constructor(
-    @Inject(RABBITMQ_CONNECTION) private readonly connection: RabbitMQConnection,
+    @Inject(RABBITMQ_CONNECTION)
+    private readonly connection: RabbitMQConnection,
     @Inject(USER_REPOSITORY) private readonly repo: UserRepository,
   ) {}
 
