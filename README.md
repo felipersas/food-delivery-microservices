@@ -184,7 +184,8 @@ stateDiagram-v2
 | Job Queue | BullMQ + Redis | Processamento assíncrono com retentativa |
 | ORM | TypeORM | Abstração de database, suporte a PostgreSQL |
 | Database | PostgreSQL 16 | ACID, consistência forte por serviço |
-| Documentação | OpenAPI 3.0 | Contrato de API, auto-documentação |
+| Testing | Docker Compose CLI | Testes de integração/E2E com containers reais |
+| Documentation | OpenAPI 3.0 + Scalar | Contrato de API, auto-documentação |
 
 ## Domain-Driven Design
 
@@ -249,6 +250,7 @@ interface DomainEvent {
 | `order.created` | Order Service | Payment, Kitchen, Analytics | orderId, items, totalAmountCents |
 | `payment.confirmed` | Payment Service | Order, Kitchen, Notification | orderId, paymentId |
 | `payment.rejected` | Payment Service | Order, Notification | orderId, reason |
+| `payment.refunded` | Payment Service | Analytics, Notification | orderId, refundId, amount |
 | `order.ready` | Kitchen Service | Order, Notification | orderId, kitchenTicketId |
 | `order.completed` | Order Service | Analytics, Notification | orderId, deliveredAt |
 | `user.registered` | Auth Service | Analytics, Notification | userId, email |
@@ -357,17 +359,116 @@ bun run docker:prod:down
 
 ### Testes
 
+#### Test Infrastructure
+
+O projeto utiliza **Docker Compose CLI-based testing** com wrapper `TestCompose` para testes de integração e E2E. Esta abordagem oferece:
+
+- **Isolamento**: Containers isolados por suite de testes
+- **Consistência**: Mesmo ambiente de produção (PostgreSQL, RabbitMQ)
+- **Portabilidade**: Funciona em macOS, Linux, Windows sem dependências nativas
+
 ```bash
-# Unitários
+# Test Compose wrapper para testes
+# packages/test-utils/src/compose/docker-compose-cli.ts
+class TestCompose {
+  start(services: string[], env?: Record<string, string>): Promise<Connections>
+  stop(options?: StopOptions): Promise<void>
+  waitForPostgres(url: string): Promise<void>
+  waitForRabbitMQ(url: string): Promise<void>
+}
+```
+
+#### Tipos de Testes
+
+| Tipo | Escopo | Stack | Cobertura Atual |
+|------|--------|-------|-----------------|
+| **Unitários** | Domínio | Bun test | Domain primitives, aggregates |
+| **Integração** | Repositórios + Casos de Uso | NestJS TestingModule + TypeORM | 66 tests |
+| **E2E** | Fluxos multi-serviço | Dynamic imports + RabbitMQ | 2 flows |
+
+#### Comandos
+
+```bash
+# Todos os testes
 bun test
 
+# Integração + E2E (requer infra de teste)
+bun run test:integration  # Order, Payment, Kitchen
+bun run test:e2e          # Order-to-Payment flow
+
 # Por serviço
-bun run test:shared      # Domain primitives
-bun run test:order       # Order domain
-bun run test:kitchen     # Kitchen domain
-bun run test:payment     # Payment domain
-bun run test:auth        # Auth domain
-bun run test:restaurant  # Restaurant domain
+bun run test:shared       # Domain primitives
+bun run test:order        # Order domain + infra
+bun run test:kitchen      # Kitchen domain + infra
+bun run test:payment      # Payment domain + infra
+bun run test:auth         # Auth domain
+bun run test:restaurant   # Restaurant domain
+```
+
+#### Cobertura de Testes
+
+| Serviço | Repositórios | Casos de Uso | E2E | Unit | Total |
+|---------|--------------|--------------|-----|------|-------|
+| Order | 5 tests | 20 tests | 2 tests | 6 tests | 33 |
+| Payment | 7 tests | 10 tests | 8 tests | - | 25 |
+| Kitchen | 8 tests | - | - | - | 8 |
+| Shared | - | - | - | 243 tests | 243 |
+| **Total** | **20** | **30** | **10** | **249** | **309** |
+
+#### Padrão de Testes de Integração
+
+```typescript
+describe('Repository Integration Tests', () => {
+  let module: TestingModule;
+  let repo: PostgresRepository;
+
+  beforeAll(async () => {
+    // Start Docker Compose services
+    const connections = await TestCompose.start({
+      services: ['postgres-service'],
+      env: { TEST_MODE: 'integration' },
+    });
+
+    // Create NestJS test module ONCE
+    module = await Test.createTestingModule({
+      imports: [TypeOrmModule.forRoot({...})],
+      providers: [Repository],
+    }).compile();
+
+    repo = module.get<Repository>(Repository);
+  }, { timeout: 120000 });
+
+  afterAll(async () => {
+    await TestCompose.stop();
+    await module.close();
+  });
+
+  // Tests...
+});
+```
+
+#### E2E: Order-to-Payment Flow
+
+```typescript
+describe('Order-to-Payment E2E Flow', () => {
+  beforeAll(async () => {
+    connections = await TestCompose.start({
+      services: ['postgres-order', 'postgres-payment', 'rabbitmq'],
+    });
+  });
+
+  it('should complete order creation → payment → confirmation', async () => {
+    // 1. Create order via CreateOrderUseCase
+    const order = await createOrderUseCase.execute({...});
+
+    // 2. Capture order.created event
+    // 3. ProcessPaymentUseCase handles event
+    const payment = await processPaymentUseCase.execute({...});
+
+    // 4. Verify payment.confirmed emitted
+    // 5. Verify order status updated
+  });
+});
 ```
 
 ## API Documentation
@@ -384,11 +485,29 @@ bun run test:restaurant  # Restaurant domain
 
 ## Padrões Implementados
 
+### Domain Patterns
 - **Aggregate Pattern**: Consistência transacional por agregado
-- **Event Sourcing (Parcial)**: Domain Events para notificações
+- **Value Object**: Tipos imutáveis para domínio rico
+- **Domain Events**: Eventos de domínio para notificações
+- **Repository Pattern**: Abstração de persistência
+
+### Application Patterns
+- **Use Case Pattern**: Casos de uso com método `execute()`
+- **DTO Pattern**: Data Transfer Objects para boundaries
 - **CQRS**: Separação leitura/escrita em controllers
+
+### Infrastructure Patterns
+- **Event-Driven**: RabbitMQ para comunicação assíncrona
 - **Outbox Pattern**: Publicação de eventos após commit
+- **Database per Service**: Independência de dados
 - **Retry Pattern**: BullMQ com backoff exponencial
+
+### Testing Patterns
+- **Module-per-file**: NestJS TestingModule reutilizado em `beforeAll`
+- **TestCompose**: Wrapper Docker Compose CLI para testes de integração
+- **Dynamic Imports**: Carregamento de classes de outros serviços para E2E
+
+### Security Patterns
 - **JWT Authentication**: Access tokens (15min) + Refresh tokens (7 dias)
 - **Role-Based Access Control**: CUSTOMER, RESTAURANT, DELIVERY, ADMIN
 
@@ -441,6 +560,10 @@ food-delivery-microservices/
 │   ├── messaging/                 # RabbitMQ wrapper
 │   │   └── src/rabbitmq-connection.ts
 │   │
+│   ├── test-utils/                # Test utilities
+│   │   └── src/compose/
+│   │       └── docker-compose-cli.ts  # TestCompose wrapper
+│   │
 │   ├── api-gateway/              # API Gateway
 │   ├── auth-service/             # Auth bounded context
 │   ├── customer-service/         # Customer bounded context
@@ -453,6 +576,7 @@ food-delivery-microservices/
 │
 ├── docker-compose.infra.yml       # RabbitMQ, Redis
 ├── docker-compose.db.yml          # PostgreSQL databases
+├── docker-compose.test.yml        # Test overrides (expose ports)
 ├── docker-compose.dev.yml         # Application services (dev)
 ├── docker-compose.prod.yml        # Application services (prod)
 ├── DOCKER.md                      # Docker documentation

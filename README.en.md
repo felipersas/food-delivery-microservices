@@ -184,7 +184,8 @@ stateDiagram-v2
 | Job Queue | BullMQ + Redis | Async processing with retry |
 | ORM | TypeORM | Database abstraction, PostgreSQL support |
 | Database | PostgreSQL 16 | ACID, strong consistency per service |
-| Documentation | OpenAPI 3.0 | API contract, auto-documentation |
+| Testing | Docker Compose CLI | Integration/E2E tests with real containers |
+| Documentation | OpenAPI 3.0 + Scalar | API contract, auto-documentation |
 
 ## Domain-Driven Design
 
@@ -249,6 +250,7 @@ interface DomainEvent {
 | `order.created` | Order Service | Payment, Kitchen, Analytics | orderId, items, totalAmountCents |
 | `payment.confirmed` | Payment Service | Order, Kitchen, Notification | orderId, paymentId |
 | `payment.rejected` | Payment Service | Order, Notification | orderId, reason |
+| `payment.refunded` | Payment Service | Analytics, Notification | orderId, refundId, amount |
 | `order.ready` | Kitchen Service | Order, Notification | orderId, kitchenTicketId |
 | `order.completed` | Order Service | Analytics, Notification | orderId, deliveredAt |
 | `user.registered` | Auth Service | Analytics, Notification | userId, email |
@@ -357,17 +359,116 @@ bun run docker:prod:down
 
 ### Testing
 
+#### Test Infrastructure
+
+The project uses **Docker Compose CLI-based testing** with `TestCompose` wrapper for integration and E2E tests. This approach provides:
+
+- **Isolation**: Containers isolated per test suite
+- **Consistency**: Same environment as production (PostgreSQL, RabbitMQ)
+- **Portability**: Works on macOS, Linux, Windows without native dependencies
+
 ```bash
-# Unit tests
+# Test Compose wrapper for tests
+# packages/test-utils/src/compose/docker-compose-cli.ts
+class TestCompose {
+  start(services: string[], env?: Record<string, string>): Promise<Connections>
+  stop(options?: StopOptions): Promise<void>
+  waitForPostgres(url: string): Promise<void>
+  waitForRabbitMQ(url: string): Promise<void>
+}
+```
+
+#### Test Types
+
+| Type | Scope | Stack | Current Coverage |
+|------|-------|-------|------------------|
+| **Unit** | Domain | Bun test | Domain primitives, aggregates |
+| **Integration** | Repositories + Use Cases | NestJS TestingModule + TypeORM | 66 tests |
+| **E2E** | Multi-service flows | Dynamic imports + RabbitMQ | 2 flows |
+
+#### Commands
+
+```bash
+# All tests
 bun test
 
+# Integration + E2E (requires test infra)
+bun run test:integration  # Order, Payment, Kitchen
+bun run test:e2e          # Order-to-Payment flow
+
 # Per service
-bun run test:shared      # Domain primitives
-bun run test:order       # Order domain
-bun run test:kitchen     # Kitchen domain
-bun run test:payment     # Payment domain
-bun run test:auth        # Auth domain
-bun run test:restaurant  # Restaurant domain
+bun run test:shared       # Domain primitives
+bun run test:order        # Order domain + infra
+bun run test:kitchen      # Kitchen domain + infra
+bun run test:payment      # Payment domain + infra
+bun run test:auth         # Auth domain
+bun run test:restaurant   # Restaurant domain
+```
+
+#### Test Coverage
+
+| Service | Repositories | Use Cases | E2E | Unit | Total |
+|---------|--------------|-----------|-----|------|-------|
+| Order | 5 tests | 20 tests | 2 tests | 6 tests | 33 |
+| Payment | 7 tests | 10 tests | 8 tests | - | 25 |
+| Kitchen | 8 tests | - | - | - | 8 |
+| Shared | - | - | - | 243 tests | 243 |
+| **Total** | **20** | **30** | **10** | **249** | **309** |
+
+#### Integration Test Pattern
+
+```typescript
+describe('Repository Integration Tests', () => {
+  let module: TestingModule;
+  let repo: PostgresRepository;
+
+  beforeAll(async () => {
+    // Start Docker Compose services
+    const connections = await TestCompose.start({
+      services: ['postgres-service'],
+      env: { TEST_MODE: 'integration' },
+    });
+
+    // Create NestJS test module ONCE
+    module = await Test.createTestingModule({
+      imports: [TypeOrmModule.forRoot({...})],
+      providers: [Repository],
+    }).compile();
+
+    repo = module.get<Repository>(Repository);
+  }, { timeout: 120000 });
+
+  afterAll(async () => {
+    await TestCompose.stop();
+    await module.close();
+  });
+
+  // Tests...
+});
+```
+
+#### E2E: Order-to-Payment Flow
+
+```typescript
+describe('Order-to-Payment E2E Flow', () => {
+  beforeAll(async () => {
+    connections = await TestCompose.start({
+      services: ['postgres-order', 'postgres-payment', 'rabbitmq'],
+    });
+  });
+
+  it('should complete order creation → payment → confirmation', async () => {
+    // 1. Create order via CreateOrderUseCase
+    const order = await createOrderUseCase.execute({...});
+
+    // 2. Capture order.created event
+    // 3. ProcessPaymentUseCase handles event
+    const payment = await processPaymentUseCase.execute({...});
+
+    // 4. Verify payment.confirmed emitted
+    // 5. Verify order status updated
+  });
+});
 ```
 
 ## API Documentation
@@ -384,11 +485,29 @@ bun run test:restaurant  # Restaurant domain
 
 ## Implemented Patterns
 
+### Domain Patterns
 - **Aggregate Pattern**: Transactional consistency per aggregate
-- **Event Sourcing (Partial)**: Domain Events for notifications
+- **Value Object**: Immutable types for rich domain
+- **Domain Events**: Domain events for notifications
+- **Repository Pattern**: Persistence abstraction
+
+### Application Patterns
+- **Use Case Pattern**: Use cases with single `execute()` method
+- **DTO Pattern**: Data Transfer Objects for boundaries
 - **CQRS**: Read/write separation in controllers
+
+### Infrastructure Patterns
+- **Event-Driven**: RabbitMQ for async communication
 - **Outbox Pattern**: Event publishing after commit
+- **Database per Service**: Data independence
 - **Retry Pattern**: BullMQ with exponential backoff
+
+### Testing Patterns
+- **Module-per-file**: NestJS TestingModule reused in `beforeAll`
+- **TestCompose**: Docker Compose CLI wrapper for integration tests
+- **Dynamic Imports**: Cross-service class loading for E2E
+
+### Security Patterns
 - **JWT Authentication**: Access tokens (15min) + Refresh tokens (7 days)
 - **Role-Based Access Control**: CUSTOMER, RESTAURANT, DELIVERY, ADMIN
 
@@ -441,6 +560,10 @@ food-delivery-microservices/
 │   ├── messaging/                 # RabbitMQ wrapper
 │   │   └── src/rabbitmq-connection.ts
 │   │
+│   ├── test-utils/                # Test utilities
+│   │   └── src/compose/
+│   │       └── docker-compose-cli.ts  # TestCompose wrapper
+│   │
 │   ├── api-gateway/              # API Gateway
 │   ├── auth-service/             # Auth bounded context
 │   ├── customer-service/         # Customer bounded context
@@ -453,6 +576,7 @@ food-delivery-microservices/
 │
 ├── docker-compose.infra.yml       # RabbitMQ, Redis
 ├── docker-compose.db.yml          # PostgreSQL databases
+├── docker-compose.test.yml        # Test overrides (expose ports)
 ├── docker-compose.dev.yml         # Application services (dev)
 ├── docker-compose.prod.yml        # Application services (prod)
 ├── DOCKER.md                      # Docker documentation
