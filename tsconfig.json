@@ -24,11 +24,6 @@
       "@app/messaging": ["./packages/messaging/src"],
       "@app/trpc-definitions": ["./packages/trpc-definitions/src"],
       "@app/health": ["./packages/health/src"],
-      "@domain/*": ["./packages/*/src/domain/*"],
-      "@application/*": ["./packages/*/src/application/*"],
-      "@infra/*": ["./packages/*/src/infra/*"],
-      "@services/*": ["./packages/*/src/services/*"],
-      "@test/*": ["./packages/*/test/*"],
     },
   },
 }
