@@ -1,0 +1,11 @@
+[resolve]
+# Make TypeScript path aliases work with Bun runtime
+aliases = {
+  "@domain/*" = "./packages/*/src/domain/*",
+  "@application/*" = "./packages/*/src/application/*",
+  "@infra/*" = "./packages/*/src/infra/*",
+  "@app/shared" = "./packages/shared/src",
+  "@app/messaging" = "./packages/messaging/src",
+  "@app/trpc-definitions" = "./packages/trpc-definitions/src",
+  "@app/health" = "./packages/health/src",
+}
